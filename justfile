@@ -33,12 +33,25 @@ type:
 cov:
     uv run pytest tests/ --cov=tablecodec --cov-report=term-missing --cov-report=html
 
+# Run pytest-benchmark micro-benchmarks (excluded from default test run)
+bench:
+    uv run pytest tests/benchmarks/ -m benchmark --benchmark-only
+
 # Semgrep meta-rules (SPEC §13, intent.md §6)
 semgrep:
     semgrep --config semgrep.yaml --error src/
 
+# Regenerate docs/format_support.md from the codec registry
+docs:
+    uv run python scripts/gen_format_support.py
+
+# Verify docs/format_support.md is up to date (CI gate)
+docs-check:
+    @uv run python scripts/gen_format_support.py
+    @git diff --quiet docs/format_support.md || (echo "docs/format_support.md is stale; run 'just docs'"; exit 1)
+
 # Full local pre-merge gate
-ci: lint type test semgrep
+ci: lint type test semgrep docs-check
     @echo "OK: all checks passed"
 
 # Wipe local caches and build artifacts
