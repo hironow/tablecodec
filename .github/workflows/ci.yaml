@@ -40,12 +40,12 @@ jobs:
           PY_VERSION: ${{ matrix.python-version }}
         run: uv python install "$PY_VERSION"
 
-      - name: Create venv and install (dev extras)
+      - name: Create venv and install (dev + cli extras)
         env:
           PY_VERSION: ${{ matrix.python-version }}
         run: |
           uv venv --python "$PY_VERSION"
-          uv pip install -e ".[dev]"
+          uv pip install -e ".[dev,cli]"
 
       - name: Lint (ruff check + format)
         run: |

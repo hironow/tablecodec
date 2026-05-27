@@ -36,10 +36,10 @@ jobs:
       - name: Set up Python 3.11
         run: uv python install 3.11
 
-      - name: Create venv and install dev extras
+      - name: Create venv and install dev + cli extras
         run: |
           uv venv --python 3.11
-          uv pip install -e ".[dev]"
+          uv pip install -e ".[dev,cli]"
 
       - name: Run benchmarks
         run: |
