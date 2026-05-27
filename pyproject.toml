@@ -1,0 +1,105 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tablecodec"
+version = "0.0.1"
+description = "Neutral Internal Representation and Codec registry for image-based table-recognition datasets"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [
+    { name = "hironow", email = "hironow365@gmail.com" },
+]
+keywords = ["table", "ocr", "dataset", "pubtabnet", "otsl", "doctags", "fintabnet"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+# SPEC §13: Core has zero third-party runtime dependencies.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/hironow/tablecodec"
+Repository = "https://github.com/hironow/tablecodec"
+Issues = "https://github.com/hironow/tablecodec/issues"
+Changelog = "https://github.com/hironow/tablecodec/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+# SPEC §13: optional extras. Each extra activates a specific feature surface.
+teds = [
+    "apted>=1.0.3",
+    "lxml>=5.0",
+]
+cli = [
+    "click>=8.1",
+]
+fast = [
+    "orjson>=3.10",
+]
+validate = [
+    "pydantic>=2.7",
+]
+all = [
+    "tablecodec[teds,cli,fast,validate]",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "hypothesis>=6.100",
+    "ruff>=0.6",
+    "pyright>=1.1.380",
+    "coverage>=7.5",
+]
+
+[project.scripts]
+# M6 で実装。今は placeholder としてもエントリポイント未公開（cli モジュールは M6 で追加）。
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tablecodec"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/tablecodec",
+    "tests",
+    "docs/spec.md",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
+testpaths = ["tests"]
+markers = [
+    "slow: tests that take a long time (deselect with '-m \"not slow\"')",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["tablecodec"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
