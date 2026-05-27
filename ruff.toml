@@ -1,0 +1,55 @@
+# ruff configuration for tablecodec
+# Aligned with ROOT_AGENTS.md (global) ruff rules.
+# See: https://docs.astral.sh/ruff/rules/
+
+target-version = "py311"
+line-length = 100
+extend-exclude = [
+    ".venv",
+    "build",
+    "dist",
+    "htmlcov",
+]
+
+[lint]
+select = [
+    "FAST", # FastAPI (no-op here, but kept aligned with ROOT_AGENTS.md)
+    "C90",  # mccabe complexity
+    "NPY",  # numpy (no-op here)
+    "PD",   # pandas (no-op here)
+    "B",    # flake8-bugbear
+    "A",    # flake8-builtins
+    "DTZ",  # flake8-datetimez
+    "T20",  # flake8-print
+    "N",    # pep8-naming
+    "I",    # isort
+    "E",    # pycodestyle errors
+    "F",    # Pyflakes
+    "PLE",  # Pylint errors
+    "PLR",  # Pylint refactor
+    "UP",   # pyupgrade
+    "FURB", # refurb
+    "RUF",  # Ruff-specific
+]
+extend-ignore = [
+    "E501",  # line too long: handled by formatter
+    "RUF002", # ambiguous unicode (false positive on Japanese docstrings)
+    "RUF003", # ambiguous comments
+]
+
+[lint.per-file-ignores]
+"tests/**/*.py" = [
+    "PLR2004", # magic-value-comparison: tests routinely use literal values
+    "S101",    # assert is required in pytest
+]
+
+[lint.mccabe]
+max-complexity = 10
+
+[lint.isort]
+known-first-party = ["tablecodec"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
