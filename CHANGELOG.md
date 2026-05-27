@@ -45,5 +45,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`just docs-check`). `tests/benchmarks/` houses pytest-benchmark
   micro-benchmarks (deselected from default run, executed by
   `just bench` and the new `.github/workflows/benchmark.yaml`).
+- OTSL 1.0 codec (M4): `OTSL10Codec` (`otsl-1.0.0`) implements the
+  five-token OTSL grammar from arXiv 2305.03393 (`fcel`, `ecel`,
+  `lcel`, `ucel`, `xcel`, plus `nl`). Square-table assumption is
+  enforced on read (jagged row widths rejected with a clear error).
+  Continuation tokens (lcel/ucel/xcel) extend the anchor cell they
+  reference; the IR is reconstructed in two passes (parse rows →
+  resolve anchors). The implementation is derived from the paper, not
+  copied from `docling-ibm-models/tableformer/otsl.py`. `lossy_read =
+  {"role"}` and `lossy_write = {"extras", "role"}` are honest about
+  the header/body distinction collapsing through OTSL — a property
+  verified by a cross-codec test that round-trips a PubTabNet sample
+  with header cells through OTSL and observes role=body on return.
 
 [Unreleased]: https://github.com/hironow/tablecodec/compare/HEAD...HEAD
