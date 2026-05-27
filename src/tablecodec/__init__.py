@@ -10,15 +10,18 @@ Public API (M1):
 from __future__ import annotations
 
 from tablecodec.ir import BBox, GridCell, TableSample
+from tablecodec.loss import LossReport, analyze_loss
 from tablecodec.validate import Profile, ValidationError, profiles, validate
 
 __all__ = [
     "BBox",
     "GridCell",
+    "LossReport",
     "Profile",
     "TableSample",
     "ValidationError",
     "__version__",
+    "analyze_loss",
     "profiles",
     "validate",
 ]
