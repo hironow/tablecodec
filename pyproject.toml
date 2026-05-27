@@ -65,7 +65,7 @@ dev = [
 ]
 
 [project.scripts]
-# M6 で実装。今は placeholder としてもエントリポイント未公開（cli モジュールは M6 で追加）。
+tablecodec = "tablecodec.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tablecodec"]
