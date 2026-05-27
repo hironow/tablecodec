@@ -41,11 +41,54 @@ from typing import IO, Any, Literal, cast
 
 from tablecodec.ir import BBox, GridCell, TableSample
 
-__all__ = ["PubTabNet20Codec"]
+__all__ = ["PubTabNet10Codec", "PubTabNet20Codec"]
 
 
 _ROWSPAN_RE = re.compile(r'rowspan\s*=\s*"(\d+)"')
 _COLSPAN_RE = re.compile(r'colspan\s*=\s*"(\d+)"')
+
+
+def _looks_like_pubtabnet(payload: object, *, require_no_bbox: bool) -> bool:
+    """Pure (no I/O) shape check used by :func:`_sniff_pubtabnet`."""
+    if not isinstance(payload, dict):
+        return False
+    payload_dict = cast("dict[str, Any]", payload)
+    html: object = payload_dict.get("html")
+    if not isinstance(html, dict):
+        return False
+    html_dict = cast("dict[str, Any]", html)
+    if "structure" not in html_dict or "cells" not in html_dict:
+        return False
+    if not require_no_bbox:
+        return True
+    cells_field: object = html_dict.get("cells", [])
+    if not isinstance(cells_field, list):
+        return False
+    return not any(isinstance(c, dict) and "bbox" in c for c in cast("list[object]", cells_field))
+
+
+def _sniff_pubtabnet(source: IO[str], require_no_bbox: bool) -> bool:
+    """Peek the first non-blank line; verify it is a PubTabNet record.
+
+    If *require_no_bbox* is True, additionally require that no cell in
+    the first record carries a ``bbox`` field — the discriminator
+    between ``pubtabnet-1.0.0`` (no bbox) and ``pubtabnet-2.0.0`` (bbox).
+    Stream position is always restored.
+    """
+    pos = source.tell()
+    try:
+        for raw in source:
+            line = raw.strip()
+            if not line:
+                continue
+            try:
+                payload: object = json.loads(line)
+            except json.JSONDecodeError:
+                return False
+            return _looks_like_pubtabnet(payload, require_no_bbox=require_no_bbox)
+        return False
+    finally:
+        source.seek(pos)
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,27 +140,7 @@ class PubTabNet20Codec:
     # ----- detection delegate (used by codecs.detect) -----
 
     def sniff(self, source: IO[str]) -> bool:
-        pos = source.tell()
-        try:
-            for raw in source:
-                line = raw.strip()
-                if not line:
-                    continue
-                try:
-                    payload: object = json.loads(line)
-                except json.JSONDecodeError:
-                    return False
-                if not isinstance(payload, dict):
-                    return False
-                payload_dict = cast("dict[str, Any]", payload)
-                html: object = payload_dict.get("html")
-                if not isinstance(html, dict):
-                    return False
-                html_dict = cast("dict[str, Any]", html)
-                return "structure" in html_dict and "cells" in html_dict
-            return False
-        finally:
-            source.seek(pos)
+        return _sniff_pubtabnet(source, require_no_bbox=False)
 
 
 # ---------- structure parser ----------
@@ -264,7 +287,7 @@ def _place_cells(specs: list[_CellSpec]) -> tuple[int, int]:
 # ---------- payload <-> sample ----------
 
 
-def _payload_to_sample(payload: dict[str, Any]) -> TableSample:
+def _payload_to_sample(payload: dict[str, Any], *, drop_bbox: bool = False) -> TableSample:
     html = payload["html"]
     structure_tokens = html["structure"]["tokens"]
     cell_payloads = html["cells"]
@@ -279,7 +302,7 @@ def _payload_to_sample(payload: dict[str, Any]) -> TableSample:
     cells: list[GridCell] = []
     for spec, cell_payload in zip(specs, cell_payloads, strict=True):
         tokens = tuple(cell_payload.get("tokens", ()))
-        bbox_raw = cell_payload.get("bbox")
+        bbox_raw = None if drop_bbox else cell_payload.get("bbox")
         bbox: BBox | None = None
         if bbox_raw is not None:
             bbox = (
@@ -318,8 +341,10 @@ def _payload_to_sample(payload: dict[str, Any]) -> TableSample:
     )
 
 
-def _sample_to_payload(sample: TableSample) -> dict[str, Any]:
-    structure_tokens, cell_payloads = _sample_to_structure_and_cells(sample)
+def _sample_to_payload(sample: TableSample, *, include_bbox: bool = True) -> dict[str, Any]:
+    structure_tokens, cell_payloads = _sample_to_structure_and_cells(
+        sample, include_bbox=include_bbox
+    )
     payload: dict[str, Any] = {
         "filename": sample.filename,
         "html": {
@@ -376,15 +401,15 @@ def _emit_section(
     structure.append(span.close_tag)
 
 
-def _cell_to_payload(cell: GridCell) -> dict[str, Any]:
+def _cell_to_payload(cell: GridCell, *, include_bbox: bool = True) -> dict[str, Any]:
     payload: dict[str, Any] = {"tokens": list(cell.tokens)}
-    if cell.bbox is not None:
+    if include_bbox and cell.bbox is not None:
         payload["bbox"] = list(cell.bbox)
     return payload
 
 
 def _sample_to_structure_and_cells(
-    sample: TableSample,
+    sample: TableSample, *, include_bbox: bool = True
 ) -> tuple[list[str], list[dict[str, Any]]]:
     by_row = _group_cells_by_row(sample.cells)
     header_rows = _count_header_rows(by_row, sample.nrows)
@@ -404,7 +429,7 @@ def _sample_to_structure_and_cells(
         _SectionRange("<tbody>", "</tbody>", header_rows, sample.nrows),
     )
 
-    return structure, [_cell_to_payload(c) for c in emitted_order]
+    return structure, [_cell_to_payload(c, include_bbox=include_bbox) for c in emitted_order]
 
 
 def _emit_row(structure: list[str], emitted: list[GridCell], row_cells: list[GridCell]) -> None:
@@ -421,3 +446,54 @@ def _emit_row(structure: list[str], emitted: list[GridCell], row_cells: list[Gri
             structure.extend([">", "</td>"])
         emitted.append(cell)
     structure.append("</tr>")
+
+
+# ---------- PubTabNet 1.0.0 (no bbox) ----------
+
+
+@dataclass(frozen=True, slots=True)
+class PubTabNet10Codec:
+    """Codec for the PubTabNet 1.0.0 jsonl format.
+
+    Identical to 2.0 except that cells carry no ``bbox`` field. Reading
+    a 2.0 file via this codec discards bbox (declared as ``lossy_read``).
+    Writing always omits bbox (declared as ``lossy_write``).
+    """
+
+    name: str = "pubtabnet-1.0.0"
+    spec_version: str = "1.0.0"
+    media_type: str = "application/jsonl"
+
+    def read(self, source: IO[str]) -> Iterator[TableSample]:
+        for line_no, raw in enumerate(source, start=1):
+            line = raw.strip()
+            if not line:
+                continue
+            try:
+                payload: dict[str, Any] = json.loads(line)
+            except json.JSONDecodeError as exc:
+                msg = f"invalid JSON at line {line_no}: {exc.msg}"
+                raise ValueError(msg) from exc
+            try:
+                yield _payload_to_sample(payload, drop_bbox=True)
+            except (KeyError, ValueError, TypeError) as exc:
+                msg = f"malformed PubTabNet 1.0 record at line {line_no}: {exc}"
+                raise ValueError(msg) from exc
+
+    def write(self, samples: Iterable[TableSample], sink: IO[str]) -> None:
+        for sample in samples:
+            sink.write(
+                json.dumps(_sample_to_payload(sample, include_bbox=False), ensure_ascii=False)
+            )
+            sink.write("\n")
+
+    def lossy_read(self) -> frozenset[str]:
+        # bbox is not in the 1.0 source format; if the file we are
+        # reading happens to be 2.0-shaped, bbox is dropped silently.
+        return frozenset({"bbox"})
+
+    def lossy_write(self) -> frozenset[str]:
+        return frozenset({"bbox", "extras"})
+
+    def sniff(self, source: IO[str]) -> bool:
+        return _sniff_pubtabnet(source, require_no_bbox=True)

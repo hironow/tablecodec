@@ -1,0 +1,1 @@
+{"filename": "v10_simple.png", "split": "train", "imgid": 11, "html": {"structure": {"tokens": ["<thead>", "<tr>", "<td>", "</td>", "<td>", "</td>", "</tr>", "</thead>", "<tbody>", "<tr>", "<td>", "</td>", "<td>", "</td>", "</tr>", "</tbody>"]}, "cells": [{"tokens": ["H", "1"]}, {"tokens": ["H", "2"]}, {"tokens": ["a"]}, {"tokens": ["b"]}]}}
