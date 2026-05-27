@@ -1,0 +1,1 @@
+{"filename": "otsl_empty.png", "otsl": ["fcel", "ecel", "nl", "fcel", "fcel", "nl"], "cells": [{"tokens": ["x"], "bbox": [0, 0, 10, 5]}, {"tokens": []}, {"tokens": ["y"], "bbox": [0, 5, 10, 10]}, {"tokens": ["z"], "bbox": [10, 5, 20, 10]}]}
