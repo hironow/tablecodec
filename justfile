@@ -41,14 +41,16 @@ bench:
 semgrep:
     semgrep --config semgrep.yaml --error src/
 
-# Regenerate docs/format_support.md from the codec registry
+# Regenerate auto-generated docs from the codec registry
 docs:
     uv run python scripts/gen_format_support.py
+    uv run python scripts/gen_loss_matrix.py
 
-# Verify docs/format_support.md is up to date (CI gate)
+# Verify auto-generated docs are up to date (CI gate)
 docs-check:
     @uv run python scripts/gen_format_support.py
-    @git diff --quiet docs/format_support.md || (echo "docs/format_support.md is stale; run 'just docs'"; exit 1)
+    @uv run python scripts/gen_loss_matrix.py
+    @git diff --quiet docs/format_support.md docs/loss_matrix.md || (echo "docs/{format_support,loss_matrix}.md is stale; run 'just docs'"; exit 1)
 
 # Full local pre-merge gate
 ci: lint type test semgrep docs-check
