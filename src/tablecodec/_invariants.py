@@ -71,9 +71,7 @@ def check_i02_cell_in_bounds(sample: TableSample) -> list[ValidationError]:
             errors.append(
                 ValidationError(
                     invariant="I-02",
-                    message=(
-                        f"row {cell.row} out of [0, {sample.nrows}) at cell index {idx}"
-                    ),
+                    message=(f"row {cell.row} out of [0, {sample.nrows}) at cell index {idx}"),
                     cell_index=idx,
                 )
             )
@@ -81,9 +79,7 @@ def check_i02_cell_in_bounds(sample: TableSample) -> list[ValidationError]:
             errors.append(
                 ValidationError(
                     invariant="I-02",
-                    message=(
-                        f"col {cell.col} out of [0, {sample.ncols}) at cell index {idx}"
-                    ),
+                    message=(f"col {cell.col} out of [0, {sample.ncols}) at cell index {idx}"),
                     cell_index=idx,
                 )
             )
@@ -187,10 +183,7 @@ def check_i04_grid_exact_cover(sample: TableSample) -> list[ValidationError]:
                     )
 
     gaps: list[tuple[int, int]] = [
-        (r, c)
-        for r, row in enumerate(occupancy)
-        for c, count in enumerate(row)
-        if count == 0
+        (r, c) for r, row in enumerate(occupancy) for c, count in enumerate(row) if count == 0
     ]
     if gaps:
         # Report a single I-04 error with the first few coordinates to
@@ -222,9 +215,7 @@ def check_i05_bbox_well_formed(sample: TableSample) -> list[ValidationError]:
             errors.append(
                 ValidationError(
                     invariant="I-05",
-                    message=(
-                        f"bbox x0 >= x1 ({x0} >= {x1}) at cell index {idx}"
-                    ),
+                    message=(f"bbox x0 >= x1 ({x0} >= {x1}) at cell index {idx}"),
                     cell_index=idx,
                 )
             )
@@ -232,9 +223,7 @@ def check_i05_bbox_well_formed(sample: TableSample) -> list[ValidationError]:
             errors.append(
                 ValidationError(
                     invariant="I-05",
-                    message=(
-                        f"bbox y0 >= y1 ({y0} >= {y1}) at cell index {idx}"
-                    ),
+                    message=(f"bbox y0 >= y1 ({y0} >= {y1}) at cell index {idx}"),
                     cell_index=idx,
                 )
             )

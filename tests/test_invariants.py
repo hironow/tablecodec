@@ -533,9 +533,12 @@ class TestI07:
         # then
         assert any(e.invariant == "I-07" for e in errors)
         # sanity: the well-formed cell would have passed
-        assert check_i07_tokens_is_tuple(
-            TableSample(filename="x.png", nrows=1, ncols=1, cells=(cell,))
-        ) == []
+        assert (
+            check_i07_tokens_is_tuple(
+                TableSample(filename="x.png", nrows=1, ncols=1, cells=(cell,))
+            )
+            == []
+        )
 
 
 # ---------- ValidationError shape ----------

@@ -79,6 +79,4 @@ class TableSample:
         # excluding it preserves the hash/eq contract: equal samples that
         # also have equal extras hash identically, while two samples that
         # differ only in extras may collide (acceptable for a hash).
-        return hash(
-            (self.filename, self.nrows, self.ncols, self.cells, self.split, self.imgid)
-        )
+        return hash((self.filename, self.nrows, self.ncols, self.cells, self.split, self.imgid))

@@ -1,11 +1,26 @@
 """tablecodec — neutral IR + codec registry for image-based table datasets.
 
-This is the M0 bootstrap. Public API surfaces (IR types, codec registry,
-loss analysis, validators) arrive in later milestones; see docs/intent.md.
+Public API (M1):
+
+- :class:`tablecodec.ir.BBox`, :class:`GridCell`, :class:`TableSample`
+- :func:`validate` and :data:`profiles`
+- :class:`ValidationError`
 """
 
 from __future__ import annotations
 
-__all__ = ["__version__"]
+from tablecodec.ir import BBox, GridCell, TableSample
+from tablecodec.validate import Profile, ValidationError, profiles, validate
+
+__all__ = [
+    "BBox",
+    "GridCell",
+    "Profile",
+    "TableSample",
+    "ValidationError",
+    "__version__",
+    "profiles",
+    "validate",
+]
 
 __version__: str = "0.0.1"
