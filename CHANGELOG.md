@@ -23,5 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   samples pass every profile and that a single broken invariant is
   reported by its own check function without spurious cross-talk.
   Coverage 100% across all M1 modules; pyright strict clean.
+- Codec layer (M2): SPEC §6 `Codec` Protocol (`@property` getters so
+  frozen-dataclass implementations satisfy the protocol) in
+  `tablecodec.codecs._base`; in-process registry (`register`, `get`,
+  `list_codecs`, `detect`) in `tablecodec.codecs`. First codec:
+  `PubTabNet20Codec` (`pubtabnet-2.0.0`) with streaming `read` /
+  `write`, span-aware HTML table-placement algorithm, honest
+  `lossy_read` (empty) and `lossy_write` (`{"extras"}`), and a
+  `sniff()` delegate for `codecs.detect()`. Round-trip tests verify
+  that `read → write → read` is the identity for non-extras payloads.
 
 [Unreleased]: https://github.com/hironow/tablecodec/compare/HEAD...HEAD

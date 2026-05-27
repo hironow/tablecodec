@@ -1,0 +1,1 @@
+{"filename": "spanned.png", "split": "val", "imgid": 2, "html": {"structure": {"tokens": ["<tbody>", "<tr>", "<td", " rowspan=\"2\"", ">", "</td>", "<td>", "</td>", "</tr>", "<tr>", "<td>", "</td>", "</tr>", "</tbody>"]}, "cells": [{"tokens": ["Big"], "bbox": [0, 0, 10, 10]}, {"tokens": ["a"], "bbox": [10, 0, 20, 5]}, {"tokens": ["b"], "bbox": [10, 5, 20, 10]}]}}
