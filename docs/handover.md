@@ -6,7 +6,8 @@
 ## Current State
 
 Library is feature-complete against `docs/spec.md`, staying in **0.0.x**
-(no public PyPI release yet). `main` is at **0.0.10**. Shipped:
+(no public PyPI release yet). `main` is at **0.0.11** (= origin/main).
+Shipped:
 
 - IR + invariants (I-01..I-07) + validation profiles + codec registry +
   streaming I/O + static loss analysis + click CLI + in-repo conformance.
@@ -14,7 +15,21 @@ Library is feature-complete against `docs/spec.md`, staying in **0.0.x**
   `fintabnet`, `fintabnet-otsl`, `tableformer`, `tablebank`,
   `pubtables-1m`, `doctags-tables`.
 - `just ci` green (ruff + pyright strict + pytest + semgrep + docs-check).
-  Zero third-party deps in core (semgrep-enforced).
+  Zero third-party deps in core (semgrep-enforced — `loss.py` now included).
+
+### Terminology + consistency audit (this session)
+
+- `docs/glossary.md` added: separates tablecodec-defined terms (Group A)
+  from borrowed terms (Group B, each with an **Origin** = Paper / Dataset /
+  Standard / General / tablecodec) and data-property terms + confusion
+  guards (Group C). The trigger was "degenerate bbox" (data geometry) being
+  read as "loss" (dropped IR fields) — now sharply disambiguated.
+- A doc/version audit fixed stale state: README status, intent.md M8 +
+  roadmap (realigned from the abandoned v0.1.0 / minor-rollout plan to the
+  executed 0.0.x reality), spec.md status (clarified spec-doc v0.1.0 vs the
+  0.0.x package), and the version triple (pyproject / `__init__` / uv.lock)
+  all consistent at 0.0.11. `loss.py` added to the semgrep core list and a
+  CLAUDE.md self-contradiction about it resolved.
 
 ### E2E harness (`scripts/e2e_hf_check.py`)
 
@@ -111,6 +126,7 @@ fintabnet/tablebank natives are deferred (see Next Actions).
 
 - `docs/adr/000{1..6}-*.md` — decisions (0003/0004/0006 = e2e data sources;
   0005 = OTSL port).
+- `docs/glossary.md` — vocabulary (tablecodec vs borrowed terms + origins).
 - `scripts/e2e_hf_check.py` — harness (docling + native adapters, VOC grid
   inference, local-tar source, FindingsRecorder, self_test).
 - `src/tablecodec/codecs/_otslgrid.py` — OTSL grid (attributed port).
