@@ -1,0 +1,11 @@
+{
+  "filename": "conf_p20_003.png",
+  "nrows": 1,
+  "ncols": 2,
+  "split": null,
+  "imgid": 1003,
+  "cells": [
+    {"row": 0, "col": 0, "rowspan": 1, "colspan": 1, "tokens": ["x"], "bbox": [0, 0, 20, 10], "role": "body"},
+    {"row": 0, "col": 1, "rowspan": 1, "colspan": 1, "tokens": [], "bbox": null, "role": "body"}
+  ]
+}

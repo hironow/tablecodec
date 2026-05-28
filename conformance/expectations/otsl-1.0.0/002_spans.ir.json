@@ -1,0 +1,10 @@
+{
+  "filename": "conf_otsl_002.png",
+  "nrows": 2,
+  "ncols": 2,
+  "split": null,
+  "imgid": 2002,
+  "cells": [
+    {"row": 0, "col": 0, "rowspan": 2, "colspan": 2, "tokens": ["Big"], "bbox": [0, 0, 20, 10], "role": "body"}
+  ]
+}

@@ -1,0 +1,1 @@
+{"filename": "conf_p20_002.png", "imgid": 1002, "html": {"structure": {"tokens": ["<tbody>", "<tr>", "<td", " rowspan=\"2\"", ">", "</td>", "<td>", "</td>", "</tr>", "<tr>", "<td>", "</td>", "</tr>", "</tbody>"]}, "cells": [{"tokens": ["Merged"], "bbox": [0, 0, 30, 24]}, {"tokens": ["top"], "bbox": [30, 0, 60, 12]}, {"tokens": ["bot"], "bbox": [30, 12, 60, 24]}]}}

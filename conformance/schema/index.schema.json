@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tablecodec.dev/conformance/index.schema.json",
+  "title": "tablecodec conformance INDEX",
+  "description": "Machine-readable manifest of conformance test cases (SPEC §11).",
+  "type": "object",
+  "required": ["version", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Relative or absolute pointer to this schema."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Conformance corpus version (independent of library version)."
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "required": ["id", "codec", "sample", "expectation"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique case identifier, e.g. 'pubtabnet-2.0.0/001_simple'."
+        },
+        "codec": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Registry name of the codec used to read the sample."
+        },
+        "sample": {
+          "type": "string",
+          "pattern": "^samples/",
+          "description": "Repo-relative path to the input record(s)."
+        },
+        "expectation": {
+          "type": "string",
+          "pattern": "^expectations/",
+          "description": "Repo-relative path to the expected IR JSON."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable summary of what the case exercises."
+        }
+      }
+    }
+  }
+}

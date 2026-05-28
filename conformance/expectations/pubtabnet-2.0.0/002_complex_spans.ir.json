@@ -1,0 +1,12 @@
+{
+  "filename": "conf_p20_002.png",
+  "nrows": 2,
+  "ncols": 2,
+  "split": null,
+  "imgid": 1002,
+  "cells": [
+    {"row": 0, "col": 0, "rowspan": 2, "colspan": 1, "tokens": ["Merged"], "bbox": [0, 0, 30, 24], "role": "body"},
+    {"row": 0, "col": 1, "rowspan": 1, "colspan": 1, "tokens": ["top"], "bbox": [30, 0, 60, 12], "role": "body"},
+    {"row": 1, "col": 1, "rowspan": 1, "colspan": 1, "tokens": ["bot"], "bbox": [30, 12, 60, 24], "role": "body"}
+  ]
+}

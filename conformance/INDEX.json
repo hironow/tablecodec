@@ -1,0 +1,48 @@
+{
+  "$schema": "./schema/index.schema.json",
+  "version": "0.1.0",
+  "cases": [
+    {
+      "id": "pubtabnet-2.0.0/001_simple",
+      "codec": "pubtabnet-2.0.0",
+      "sample": "samples/pubtabnet-2.0.0/001_simple.jsonl",
+      "expectation": "expectations/pubtabnet-2.0.0/001_simple.ir.json",
+      "description": "2x2 table, header row on top, every cell has a bbox"
+    },
+    {
+      "id": "pubtabnet-2.0.0/002_complex_spans",
+      "codec": "pubtabnet-2.0.0",
+      "sample": "samples/pubtabnet-2.0.0/002_complex_spans.jsonl",
+      "expectation": "expectations/pubtabnet-2.0.0/002_complex_spans.ir.json",
+      "description": "rowspan=2 anchor in column 0 over a 2x2 grid"
+    },
+    {
+      "id": "pubtabnet-2.0.0/003_empty_cells",
+      "codec": "pubtabnet-2.0.0",
+      "sample": "samples/pubtabnet-2.0.0/003_empty_cells.jsonl",
+      "expectation": "expectations/pubtabnet-2.0.0/003_empty_cells.ir.json",
+      "description": "empty cell carries no bbox and an empty token tuple"
+    },
+    {
+      "id": "otsl-1.0.0/001_simple",
+      "codec": "otsl-1.0.0",
+      "sample": "samples/otsl-1.0.0/001_simple.jsonl",
+      "expectation": "expectations/otsl-1.0.0/001_simple.ir.json",
+      "description": "2x2 fcel-only table, all role=body"
+    },
+    {
+      "id": "otsl-1.0.0/002_spans",
+      "codec": "otsl-1.0.0",
+      "sample": "samples/otsl-1.0.0/002_spans.jsonl",
+      "expectation": "expectations/otsl-1.0.0/002_spans.ir.json",
+      "description": "2x2 cross-merged cell (fcel/lcel/ucel/xcel)"
+    },
+    {
+      "id": "otsl-1.0.0/003_empty",
+      "codec": "otsl-1.0.0",
+      "sample": "samples/otsl-1.0.0/003_empty.jsonl",
+      "expectation": "expectations/otsl-1.0.0/003_empty.ir.json",
+      "description": "ecel empty anchor next to a filled cell"
+    }
+  ]
+}

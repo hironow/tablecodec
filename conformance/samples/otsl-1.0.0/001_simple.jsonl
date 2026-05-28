@@ -1,0 +1,1 @@
+{"filename": "conf_otsl_001.png", "split": "test", "imgid": 2001, "otsl": ["fcel", "fcel", "nl", "fcel", "fcel", "nl"], "cells": [{"tokens": ["a"], "bbox": [0, 0, 10, 5]}, {"tokens": ["b"], "bbox": [10, 0, 20, 5]}, {"tokens": ["c"], "bbox": [0, 5, 10, 10]}, {"tokens": ["d"], "bbox": [10, 5, 20, 10]}]}
