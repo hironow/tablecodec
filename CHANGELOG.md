@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- OTSL reconstruction follow-up (`_otslgrid.py`): `check_right`/`check_down`
+  now stop at cells already claimed by a 2D-span `registry`. Without this a
+  long `lcel` run in one row swallowed `xcel` cells belonging to a 2D span
+  from above, overlapping it (real SynthTabNet rows, e.g. imgid 6075). The
+  remaining SynthTabNet I-04 are genuine OTSL span ambiguity (L-shaped
+  regions that cannot form an exact-cover grid), matching the HTML path.
+
 ### Added
 
 - E2E native PubTables-1M coverage (`scripts/e2e_hf_check.py`): reads the

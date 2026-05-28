@@ -9,8 +9,8 @@ OTSL grammar (Lysak et al., arXiv 2305.03393):
 - ``xcel`` — cross-merged continuation (both row and column extension)
 - ``nl``   — new line / row separator
 
-Reference algorithm derived from the paper, not copied from
-docling-ibm-models/tableformer/otsl.py.
+Reconstruction logic is adapted (with attribution, MIT) from
+docling-ibm-models/tableformer/otsl.py — see ADR 0005 / THIRD_PARTY_NOTICES.
 """
 
 from __future__ import annotations
@@ -170,6 +170,37 @@ class TestComplexSpanReconstruction:
         assert len(sample.cells) == 1
         assert sample.cells[0].rowspan == 2
         assert sample.cells[0].colspan == 2
+
+    def test_lcel_run_does_not_swallow_2d_span(self, codec: OTSL10Codec) -> None:
+        # given — G is a 2x2 span over cols 2-3 (rows 1-2); H's row-2 lcel
+        # run reaches xcel cells that belong to G's span. Counting that xcel
+        # into H's colspan overlapped G (the real SynthTabNet failure); the
+        # 2D-span registry must stop H's run at G's claimed cells. (G is on
+        # rows 1-2, not row 0, so edge-normalization leaves its xcel intact.)
+        otsl = [
+            "fcel",
+            "fcel",
+            "fcel",
+            "fcel",
+            "nl",
+            "fcel",
+            "fcel",
+            "fcel",
+            "xcel",
+            "nl",
+            "fcel",
+            "lcel",
+            "xcel",
+            "xcel",
+            "nl",
+        ]  # row1: E F G(2D right+down); row2: H (2,1)=lcel (2,2)(2,3)=G's span
+        sample = self._read(codec, otsl, ncells=8)
+
+        # then — exact, non-overlapping cover; H stays within cols 0-1.
+        errors = validate(sample, profile=profiles.DEFAULT)
+        assert [e.invariant for e in errors] == [], errors
+        h = next(c for c in sample.cells if c.row == 2 and c.col == 0)
+        assert h.colspan == 2
 
 
 # ---------- write + round-trip ----------

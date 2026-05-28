@@ -141,19 +141,31 @@ class _OtslReader:
     def _check_right(self, r: int, c: int) -> int:
         # colspan: extend right over horizontal continuations (lcel/xcel);
         # stop at an anchor, an up-merge, or the edge (docling check_right).
+        # Also stop at a cell already claimed by a 2D span above: an `xcel`
+        # there belongs to that span, not to this row's run — counting it
+        # would overlap (the irregular case real SynthTabNet rows hit).
         dist = 1
         x = c
-        while x + 1 < self.ncols and self.grid[r][x + 1] in {"lcel", "xcel"}:
+        while (
+            x + 1 < self.ncols
+            and self.grid[r][x + 1] in {"lcel", "xcel"}
+            and not self.registry[r][x + 1]
+        ):
             x += 1
             dist += 1
         return dist
 
     def _check_down(self, r: int, c: int) -> int:
         # rowspan: extend down over vertical continuations (ucel/xcel);
-        # stop at an anchor, a left-merge, or the edge (docling check_down).
+        # stop at an anchor, a left-merge, the edge, or a cell already
+        # claimed by another 2D span (symmetric to _check_right).
         dist = 1
         y = r
-        while y + 1 < self.nrows and self.grid[y + 1][c] in {"ucel", "xcel"}:
+        while (
+            y + 1 < self.nrows
+            and self.grid[y + 1][c] in {"ucel", "xcel"}
+            and not self.registry[y + 1][c]
+        ):
             y += 1
             dist += 1
         return dist
