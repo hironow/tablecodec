@@ -105,6 +105,48 @@ fintabnet/tablebank natives are deferred (see Next Actions).
    TableBank is a 24 GB split zip. Both stay Docling-covered.
 3. **Deferred PyPI publish** (unchanged): `private/PYPI_RELEASE_STEPS.md`.
 
+## Spec conformance gaps (docs/spec.md vs code, audited + fact-checked 2026-05-29)
+
+Every item below was confirmed against the code. All are acceptable under
+0.x (§14). Split by the resolution the maintainer prefers: for the minor
+ones the **implementation decision is canonical → amend the spec**; the
+rest are genuine feature/roadmap work.
+
+**Minor — implementation is canonical; reconcile the spec text:**
+
+- **§6.1.2 — `read` does not validate I-01..I-05 per sample** (confirmed:
+  e.g. `pubtabnet.read` only `parse_html_table` + `yield`, raising on
+  malformed JSON/records; I-04/I-05 are not run). Separate `validate(...)`
+  is the deliberate, cleaner design — amend §6.1.2 to describe it rather
+  than force validation into every read.
+- **§12 — CLI surface drift.** Code uses `--codec` for `stats`/`diff`
+  (spec says `--format`); `validate --strict` and `convert --parallel N`
+  are absent (`--profile strict` and `--dry-run` cover the intent). The
+  CLI naming is the better choice — reconcile §12.
+- **§14 — `--version` prints only the library version** (`click
+  .version_option(package_name=...)`). The "three versions (library + IR
+  + codec)" idea has no IR-version constant; treat single-version as
+  canonical unless an IR version is genuinely needed.
+
+**Feature / roadmap — genuinely unimplemented (by design for now):**
+
+- **§6.2 — no third-party entry-point registration.** Only the static
+  `codecs/builtins.py`; no `tablecodec.codecs` entry-point group/loader.
+  `register`/`get`/`detect` exist. Implement when an external codec ships.
+- **§8 — STRICT profile == DEFAULT.** The bbox×image-dimension cross-check
+  needs image metadata the IR does not carry (relates to OQ-3). Confirmed
+  `profiles.STRICT` uses the DEFAULT check tuple.
+- **§7/§13 — `[teds]` / `[validate]` / `[fast]` extras declared but
+  unused** in `src/` (apted/lxml, pydantic, orjson). Roadmap (intent.md
+  §8 lists TEDS). Either implement or drop the extras before 1.0.
+- **§11 — conformance suite is in-repo**, not the separate vendor-neutral
+  `tablecodec/conformance` repo (ADR 0001 temporary deviation).
+
+Spec-acknowledged open (§17, not gaps): OQ-1 cell ordering, OQ-2 cell
+tokenization, **OQ-3 float bbox** (PubTables-1M uses floats; we int-cast —
+relates to the degenerate-bbox findings + §8 STRICT), OQ-4 JSON Schema
+for the IR.
+
 ## Known Risks / Blockers
 
 - **CI is account-blocked**: GitHub Actions ends in ~2s / 0 steps
