@@ -13,12 +13,14 @@ from pathlib import Path
 from textwrap import dedent
 
 from tablecodec import analyze_loss, codecs
+from tablecodec.codecs.fintabnet import FinTabNetCodec
 from tablecodec.codecs.otsl import OTSL10Codec
 from tablecodec.codecs.pubtabnet import PubTabNet10Codec, PubTabNet20Codec
 
 _BUILTINS = [
     PubTabNet10Codec(),
     PubTabNet20Codec(),
+    FinTabNetCodec(),
     OTSL10Codec(),
 ]
 

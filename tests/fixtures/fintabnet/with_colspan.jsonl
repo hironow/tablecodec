@@ -1,0 +1,1 @@
+{"filename": "fin_colspan.png", "table_id": 8, "html": {"structure": {"tokens": ["<tbody>", "<tr>", "<td", " colspan=\"2\"", ">", "</td>", "</tr>", "<tr>", "<td>", "</td>", "<td>", "</td>", "</tr>", "</tbody>"]}, "cells": [{"tokens": ["Total"], "bbox": [0, 0, 80, 10]}, {"tokens": ["a"], "bbox": [0, 10, 40, 20]}, {"tokens": ["b"], "bbox": [40, 10, 80, 20]}]}}

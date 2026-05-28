@@ -13,12 +13,16 @@ from pathlib import Path
 from textwrap import dedent
 
 from tablecodec import codecs
+from tablecodec.codecs.fintabnet import FinTabNetCodec
+from tablecodec.codecs.otsl import OTSL10Codec
 from tablecodec.codecs.pubtabnet import PubTabNet10Codec, PubTabNet20Codec
 
 # Seed built-in codecs deterministically — order shapes the rendered table.
 _BUILTINS = [
     PubTabNet10Codec(),
     PubTabNet20Codec(),
+    FinTabNetCodec(),
+    OTSL10Codec(),
 ]
 
 _OUT = Path(__file__).parent.parent / "docs" / "format_support.md"
