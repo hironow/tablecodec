@@ -40,6 +40,7 @@ class TableBankCodec:
     name: str = "tablebank"
     spec_version: str = "1.0.0"
     media_type: str = "application/jsonl"
+    writable: bool = True
 
     def read(self, source: IO[str]) -> Iterator[TableSample]:
         for line_no, raw in enumerate(source, start=1):

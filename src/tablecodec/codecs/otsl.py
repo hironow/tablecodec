@@ -47,6 +47,7 @@ class OTSL10Codec:
     name: str = "otsl-1.0.0"
     spec_version: str = "1.0.0"
     media_type: str = "application/jsonl"
+    writable: bool = True
 
     def read(self, source: IO[str]) -> Iterator[TableSample]:
         for line_no, raw in enumerate(source, start=1):

@@ -19,6 +19,7 @@ class _DummyCodec:
     name: str = "dummy-1.0.0"
     spec_version: str = "1.0.0"
     media_type: str = "application/x-dummy"
+    writable: bool = True
 
     def read(self, source: IO[str]) -> Iterator[TableSample]:
         return iter(())

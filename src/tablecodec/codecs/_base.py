@@ -44,6 +44,17 @@ class Codec(Protocol):
         """Canonical MIME type, e.g. ``"application/jsonl"``."""
         ...
 
+    @property
+    def writable(self) -> bool:
+        """Whether this codec supports :meth:`write`.
+
+        Read-only codecs (SPEC §7, e.g. PubTables-1M) return ``False`` and
+        raise ``NotImplementedError`` from :meth:`write`. ``analyze_loss``
+        short-circuits to ``"unwritable"`` when a read-only codec is used
+        as a conversion target (see ADR 0002).
+        """
+        ...
+
     def read(self, source: IO[str]) -> Iterator[TableSample]:
         """Yield :class:`TableSample` instances lazily from *source*.
 

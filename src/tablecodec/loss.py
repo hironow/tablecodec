@@ -29,7 +29,7 @@ __all__ = ["LossReport", "analyze_loss"]
 # A round-trip that loses only these is "structure-preserving".
 _AUXILIARY_FIELDS = frozenset({"bbox", "role", "extras"})
 
-Classification = Literal["lossless", "structure-preserving", "lossy"]
+Classification = Literal["lossless", "structure-preserving", "lossy", "unwritable"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,7 +44,8 @@ class LossReport:
         ir_fields_unrepresentable_in_target: IR fields that the target
             codec cannot persist during ``write``.
         round_trip_classification: ``"lossless"``, ``"structure-preserving"``,
-            or ``"lossy"``.
+            ``"lossy"``, or ``"unwritable"`` (target is a read-only codec;
+            see ADR 0002).
     """
 
     source: str
@@ -64,6 +65,16 @@ def analyze_loss(source: str, target: str) -> LossReport:
     tgt_codec = codecs.get(target)
 
     dropped = src_codec.lossy_read()
+    if not tgt_codec.writable:
+        # ADR 0002: a read-only target cannot be written; its lossy_write
+        # is not meaningful, so report "unwritable" and stop.
+        return LossReport(
+            source=source,
+            target=target,
+            source_fields_dropped_on_read=dropped,
+            ir_fields_unrepresentable_in_target=frozenset(),
+            round_trip_classification="unwritable",
+        )
     unrepresentable = tgt_codec.lossy_write()
     return LossReport(
         source=source,
