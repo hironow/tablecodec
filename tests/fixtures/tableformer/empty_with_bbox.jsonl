@@ -1,0 +1,1 @@
+{"filename": "tf_empty_bbox.png", "imgid": 32, "html": {"structure": {"tokens": ["<tbody>", "<tr>", "<td>", "</td>", "<td>", "</td>", "</tr>", "</tbody>"]}, "cells": [{"tokens": ["x"], "bbox": [0, 0, 10, 5]}, {"tokens": [], "bbox": [10, 0, 20, 5]}]}}

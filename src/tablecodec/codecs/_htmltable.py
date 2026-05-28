@@ -341,15 +341,43 @@ def serialize_html_table(
 # ---------- detection ----------
 
 
-def _no_cell_has_bbox(html_dict: dict[str, Any]) -> bool:
+def _cells_list(html_dict: dict[str, Any]) -> list[object] | None:
     cells_field: object = html_dict.get("cells", [])
     if not isinstance(cells_field, list):
+        return None
+    return cast("list[object]", cells_field)
+
+
+def _no_cell_has_bbox(html_dict: dict[str, Any]) -> bool:
+    cells = _cells_list(html_dict)
+    if cells is None:
         return False
-    return not any(isinstance(c, dict) and "bbox" in c for c in cast("list[object]", cells_field))
+    return not any(isinstance(c, dict) and "bbox" in c for c in cells)
+
+
+def _all_cells_have_bbox(html_dict: dict[str, Any]) -> bool:
+    cells = _cells_list(html_dict)
+    if cells is None:
+        return False
+    return all(isinstance(c, dict) and "bbox" in c for c in cells)
+
+
+def _bbox_constraint_ok(
+    html_dict: dict[str, Any], *, require_no_bbox: bool, require_all_bbox: bool
+) -> bool:
+    if require_no_bbox:
+        return _no_cell_has_bbox(html_dict)
+    if require_all_bbox:
+        return _all_cells_have_bbox(html_dict)
+    return True
 
 
 def looks_like_html_table(
-    payload: object, *, require_no_bbox: bool = False, require_field: str | None = None
+    payload: object,
+    *,
+    require_no_bbox: bool = False,
+    require_all_bbox: bool = False,
+    require_field: str | None = None,
 ) -> bool:
     """Pure (no I/O) shape check for an HTML-token table record."""
     if not isinstance(payload, dict):
@@ -363,11 +391,17 @@ def looks_like_html_table(
     html_dict = cast("dict[str, Any]", html)
     if "structure" not in html_dict or "cells" not in html_dict:
         return False
-    return _no_cell_has_bbox(html_dict) if require_no_bbox else True
+    return _bbox_constraint_ok(
+        html_dict, require_no_bbox=require_no_bbox, require_all_bbox=require_all_bbox
+    )
 
 
 def sniff_html_table(
-    source: IO[str], *, require_no_bbox: bool = False, require_field: str | None = None
+    source: IO[str],
+    *,
+    require_no_bbox: bool = False,
+    require_all_bbox: bool = False,
+    require_field: str | None = None,
 ) -> bool:
     """Peek the first non-blank line; verify it is an HTML-token table.
 
@@ -384,7 +418,10 @@ def sniff_html_table(
             except json.JSONDecodeError:
                 return False
             return looks_like_html_table(
-                payload, require_no_bbox=require_no_bbox, require_field=require_field
+                payload,
+                require_no_bbox=require_no_bbox,
+                require_all_bbox=require_all_bbox,
+                require_field=require_field,
             )
         return False
     finally:

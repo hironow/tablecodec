@@ -16,11 +16,13 @@ from tablecodec import analyze_loss, codecs
 from tablecodec.codecs.fintabnet import FinTabNetCodec
 from tablecodec.codecs.otsl import OTSL10Codec
 from tablecodec.codecs.pubtabnet import PubTabNet10Codec, PubTabNet20Codec
+from tablecodec.codecs.tableformer import TableFormerCodec
 
 _BUILTINS = [
     PubTabNet10Codec(),
     PubTabNet20Codec(),
     FinTabNetCodec(),
+    TableFormerCodec(),
     OTSL10Codec(),
 ]
 

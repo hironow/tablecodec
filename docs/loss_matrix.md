@@ -11,9 +11,10 @@ Each cell shows the static `round_trip_classification` returned by
   survive the round trip.
 - 🔴 **lossy** — at least one structural / content field lost.
 
-| source \ target | fintabnet | otsl-1.0.0 | pubtabnet-1.0.0 | pubtabnet-2.0.0 |
-|---|---|---|---|---|
-| `fintabnet` | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure |
-| `otsl-1.0.0` | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure |
-| `pubtabnet-1.0.0` | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure |
-| `pubtabnet-2.0.0` | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure |
+| source \ target | fintabnet | otsl-1.0.0 | pubtabnet-1.0.0 | pubtabnet-2.0.0 | tableformer |
+|---|---|---|---|---|---|
+| `fintabnet` | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure |
+| `otsl-1.0.0` | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure |
+| `pubtabnet-1.0.0` | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure |
+| `pubtabnet-2.0.0` | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure |
+| `tableformer` | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure | 🟡 structure |
