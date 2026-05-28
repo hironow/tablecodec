@@ -11,6 +11,12 @@ is authoritative; this file **expands** it and, deliberately, separates:
   describe the *input data*, not this library — kept here because they are
   the ones most often misread (e.g. "degenerate" vs "loss").
 
+Groups B and C carry an explicit **Origin** column — **Paper** (which
+paper), **Dataset** (which dataset), **Standard**, **General**, or
+**tablecodec** (a word we coined for an external concept). The point is
+that a borrowed term is never silently confused with a tablecodec (IR /
+Group A) concept just because it shows up next to one here.
+
 Each entry says what the word **does** mean and, where it bites, what it
 does **NOT** mean.
 
@@ -44,20 +50,26 @@ does **NOT** mean.
 
 ## B. Borrowed terms (only what Group A needs)
 
-| Term | Means (brief) | Why it appears here |
+The **Origin** column says where each term comes from — a **Paper**, a
+specific **Dataset**, an external **Standard**, **General** usage, or a
+**tablecodec** word coined for an external concept — so a borrowed term is
+never mistaken for a Group A (tablecodec-defined) concept when you land on
+it next to the IR.
+
+| Term | Origin | Means + why it appears |
 |---|---|---|
-| **HTML table structure tokens** | `<thead>/<tbody>/<tr>/<td>` with optional `rowspan`/`colspan` attributes, plus cell content tokens. | The envelope of the PubTabNet / FinTabNet / TableFormer codecs. |
-| **rowspan / colspan** | How many grid rows/columns a cell occupies (HTML attribute; ≥ 1). | A `GridCell` field; the unit of I-03 / I-04. |
-| **OTSL** | "Optimized Table Structure Language" (Lysak et al., arXiv 2305.03393): a 5-token grid language. | The `otsl-1.0.0` / `fintabnet-otsl` / `doctags-tables` codecs; grid reconstruction in `_otslgrid.py`. |
-| **fcel / ecel / lcel / ucel / xcel / nl** | OTSL cell tokens: filled / empty **anchor**; left- / up- / cross-merged **continuation**; newline. | The token vocabulary `build_anchors` reconstructs from. |
-| **anchor** (OTSL / grid reconstruction) | The cell that *owns* a span — the `fcel`/`ecel` in OTSL, or the `<td>` opening in HTML — which continuations extend. tablecodec models it as `AnchorPlacement`. | Used in both the HTML and OTSL reconstruction paths; becomes one `GridCell`. Not an HTML `<a>` anchor. |
-| **continuation** (OTSL) | An `lcel`/`ucel`/`xcel` that carries no content; it only extends an anchor's span. | Skipped on read — it is not a separate cell. |
-| **square-table assumption** (OTSL) | The OTSL requirement (from the paper) that every row produced by `nl` has the **same number of cells** — i.e. the token grid is **rectangular**. `ensure_square` enforces it. | NOTE: "square" here means **uniform row width**, **NOT** a literally square `nrows == ncols` table. A 3x7 grid is "square" in this sense. |
-| **spanning cell** | A cell occupying more than one grid square (`rowspan > 1` or `colspan > 1`) — i.e. a merged cell. An explicit object in PASCAL VOC; an `xcel`-bordered region in OTSL. | A `GridCell` with span > 1; the thing I-03 / I-04 reason about. |
-| **PASCAL VOC** | An object-detection XML annotation (`<object><name><bndbox>`). PubTables-1M's native structure format, with object names like `table row`, `table column`, `table spanning cell`, `table projected row header`, `table column header`. | The native `pubtables-1m` source; the grid is *reconstructed* from VOC row/column/cell regions. |
-| **DocTags** | IBM Granite-Docling's document-token output format (a table subset reuses the OTSL grid). | The `doctags-tables` codec; it is a model **output** format with no ground-truth dataset. |
-| **PubTabNet / FinTabNet / PubTables-1M / TableBank / SynthTabNet** | Public table-recognition datasets, each with its own annotation format. | Each codec targets one of these; the e2e harness reads them. |
-| **streaming** | Iterating records lazily at constant memory (never `f.read()` the whole file). | The required behavior of every `read` (spec §10). |
+| **HTML table structure tokens** | Standard — HTML (as serialized by the PubTabNet/FinTabNet annotations) | `<thead>/<tbody>/<tr>/<td>` + optional `rowspan`/`colspan`, plus cell content tokens. The envelope of the PubTabNet / FinTabNet / TableFormer codecs. |
+| **rowspan / colspan** | Standard — HTML | How many grid rows/columns a cell occupies (≥ 1). A `GridCell` field; the unit of I-03 / I-04. |
+| **OTSL** | Paper — Lysak et al., arXiv 2305.03393 | "Optimized Table Structure Language": a 5-token grid language. Used by the `otsl-1.0.0` / `fintabnet-otsl` / `doctags-tables` codecs; reconstructed in `_otslgrid.py`. |
+| **fcel / ecel / lcel / ucel / xcel / nl** | Paper concept (OTSL); these exact spellings from the **docling** datasets | OTSL cell tokens: filled / empty **anchor**; left- / up- / cross-merged **continuation**; newline. The vocabulary `build_anchors` reconstructs from. |
+| **anchor / continuation** | tablecodec's words for the OTSL roles (not literal paper terms) | *Anchor* = the cell that owns a span (`fcel`/`ecel`, or the `<td>` opening); *continuation* = an `lcel`/`ucel`/`xcel` that only extends it. Modeled as `AnchorPlacement`; a continuation is skipped on read. Not an HTML `<a>` anchor. |
+| **square-table assumption** | Paper — OTSL | Every row produced by `nl` has the **same number of cells** — the token grid is **rectangular**. `ensure_square` enforces it. NOTE: "square" = **uniform row width**, **NOT** `nrows == ncols`; a 3x7 grid is "square" here. |
+| **spanning cell** | General (HTML/tables); also an explicit object in PubTables-1M | A merged cell (`rowspan > 1` or `colspan > 1`). A `GridCell` with span > 1; what I-03 / I-04 reason about. |
+| **PASCAL VOC** | Standard — PASCAL VOC object-detection annotation | XML of `<object><name><bndbox>`. PubTables-1M's native structure format; the grid is *reconstructed* from its regions. |
+| **table row / table column / table spanning cell / table projected row header / table column header** | Dataset — PubTables-1M (Smock et al., Microsoft) object labels | The VOC `<object><name>` values the native PubTables-1M adapter reads. They are dataset annotation labels, **not** IR fields. |
+| **DocTags** | Tooling — IBM Granite-Docling (model output) | A document-token output format; its table subset reuses the OTSL grid. The `doctags-tables` codec; an OUTPUT format with no ground-truth dataset. |
+| **PubTabNet / FinTabNet / PubTables-1M / TableBank / SynthTabNet** | Datasets — IBM (PubTabNet, FinTabNet, SynthTabNet), Microsoft (PubTables-1M, TableBank) | Public table-recognition datasets, each with its own annotation format. Each codec targets one; the e2e harness reads them. |
+| **streaming** | General (CS) | Iterating records lazily at constant memory (never `f.read()` the whole file). Required of every `read` (spec §10). |
 
 ---
 
@@ -65,13 +77,15 @@ does **NOT** mean.
 
 These describe the **input data**, not tablecodec. They exist because real
 datasets carry imperfect annotations that validation correctly surfaces.
+The **Origin** column distinguishes general/geometry terms from labels
+tablecodec coined to describe a finding.
 
-| Term | Means | Confusion guard (what it is NOT) |
+| Term | Origin | Means + confusion guard (what it is NOT) |
 |---|---|---|
-| **degenerate bbox** | A bounding box with non-positive area: `x0 >= x1` (zero-width / inverted) or `y0 >= y1`. Rejected by **I-05**. | **NOT a conversion "loss".** Verified across 16k real rows: every degenerate bbox was already degenerate in the *source* floats; tablecodec's float→int cast introduced **zero**. It is a *data-quality* property, not something the library does to your data. |
-| **inverted bbox** | The `x0 > x1` (or `y0 > y1`) sub-case of degenerate — coordinates in the wrong order in the source. | A genuine upstream annotation error, not a rendering of "loss". |
-| **ragged table** | A table whose rows do not all span the same number of columns (some rows under-cover the grid). Surfaced by **I-04** (exact cover); passes `LENIENT`. | NOT a parse failure and NOT a library bug — the tokens faithfully describe a non-rectangular grid. |
-| **OTSL span ambiguity** | An OTSL token stream whose merge region is not a clean rectangle (e.g. L-shaped), so it cannot reconstruct to an exact-cover grid. | NOT a reconstruction bug — the same ambiguity shows in the HTML path; it is an inherent limit of the compressed encoding for that table. |
+| **degenerate bbox** | General (geometry) | A bounding box with non-positive area: `x0 >= x1` or `y0 >= y1`. Rejected by **I-05**. **NOT a conversion "loss"** — verified across 16k rows, every degenerate box was already degenerate in the SOURCE floats; our float→int cast introduced zero. A *data-quality* property. |
+| **inverted bbox** | General (geometry) | The `x0 > x1` (or `y0 > y1`) sub-case — coordinates in the wrong order in the source. A genuine upstream annotation error, not a "loss". |
+| **ragged table** | General (descriptive) | A table whose rows do not all span the same number of columns (some under-cover the grid). Surfaced by **I-04**; passes `LENIENT`. NOT a parse failure or library bug — the tokens faithfully describe a non-rectangular grid. |
+| **OTSL span ambiguity** | tablecodec (our shorthand) | An OTSL token stream whose merge region is not a clean rectangle (e.g. L-shaped), so it cannot reconstruct to an exact-cover grid. NOT a reconstruction bug — the same ambiguity shows in the HTML path; an inherent limit of the compressed encoding. (Not a term from the OTSL paper — our label for the observed case.) |
 
 ### Words most likely to mislead
 
