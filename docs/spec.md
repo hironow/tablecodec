@@ -324,7 +324,13 @@ A pull request that introduces a new third-party dependency to the core package 
 - **LTS**: Each major version is supported (security and codec compatibility fixes) for at least **3 years** from its initial release.
 - **Format spec drift**: When an upstream format changes (e.g. PubTabNet publishes 3.0.0), a new codec name is registered (`pubtabnet-3.0.0`). Old codecs are kept until their corresponding upstream format is officially deprecated.
 
-The library version, the IR version, and each codec's spec version are tracked **independently**. `tablecodec --version` prints all three.
+The library version and each codec's `spec_version` are tracked
+**independently** — the library version is `tablecodec.__version__`
+(printed by `tablecodec --version`), while each codec carries its own
+`spec_version` attribute and encodes the format version in its registry
+name (e.g. `pubtabnet-2.0.0`). The IR has no separate runtime version
+constant: in the 0.x line it evolves with the library, and this document
+(see the Status header) is the versioned description of the IR.
 
 ---
 

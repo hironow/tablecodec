@@ -123,10 +123,10 @@ rest are genuine feature/roadmap work.
   canonical CLI: `--codec` for validate/stats/diff with auto-detect;
   `--strict`/`--parallel` removed as `--profile strict` / single-pass
   cover them).
-- **§14 — `--version` prints only the library version** (`click
-  .version_option(package_name=...)`). The "three versions (library + IR
-  + codec)" idea has no IR-version constant; treat single-version as
-  canonical unless an IR version is genuinely needed.
+- **§14 — `--version`. RESOLVED** (spec §14 reconciled: `--version`
+  prints the library version; each codec's `spec_version`/registry name
+  carries the format version; the IR has no separate runtime version
+  constant — the spec document versions the IR).
 
 **Feature / roadmap — genuinely unimplemented (by design for now):**
 
