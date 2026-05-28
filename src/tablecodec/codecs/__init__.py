@@ -1,18 +1,22 @@
 """Codec registry (SPEC §6.2).
 
-Third-party codecs are expected to ship as separate PyPI packages and
-self-register via the entry-point group ``tablecodec.codecs``.
-Entry-point discovery is wired in a later milestone; for M2 the registry
-is in-process only and seeded by built-in codecs at import time.
+Third-party codecs ship as separate PyPI packages and self-register via the
+entry-point group ``tablecodec.codecs``; :func:`load_plugins` discovers and
+registers them. The library does not auto-register anything at import time —
+callers register the built-ins they need (the CLI does) and call
+``load_plugins`` to pick up installed third-party codecs.
 """
 
 from __future__ import annotations
 
+import importlib.metadata
 from typing import IO
 
 from tablecodec.codecs._base import Codec
 
-__all__ = ["Codec", "detect", "get", "list_codecs", "register"]
+__all__ = ["Codec", "detect", "get", "list_codecs", "load_plugins", "register"]
+
+_PLUGIN_GROUP = "tablecodec.codecs"
 
 
 # Module-level mutable registry. Tests use _snapshot/_restore to isolate.
@@ -72,6 +76,25 @@ def detect(source: IO[str]) -> str | None:
     finally:
         source.seek(pos)
     return None
+
+
+def load_plugins() -> tuple[str, ...]:
+    """Discover and register third-party codecs (SPEC §6.2).
+
+    Scans the ``tablecodec.codecs`` entry-point group; each entry point
+    references a :class:`Codec` class (instantiated with no arguments) or a
+    ready instance. Names already registered are skipped, so this is safe to
+    call more than once. Returns the names newly registered, in load order.
+    """
+    loaded: list[str] = []
+    for entry_point in importlib.metadata.entry_points(group=_PLUGIN_GROUP):
+        obj = entry_point.load()
+        codec: Codec = obj() if isinstance(obj, type) else obj
+        if codec.name in _registry:
+            continue
+        register(codec)
+        loaded.append(codec.name)
+    return tuple(loaded)
 
 
 # ---------- test helpers (intentionally underscore-prefixed) ----------

@@ -48,6 +48,9 @@ def _ensure_builtins_registered() -> None:
     for codec in BUILTIN_CODECS:
         if codec.name not in existing:
             codecs.register(codec)
+    # SPEC §6.2: also pick up third-party codecs that self-register via the
+    # `tablecodec.codecs` entry-point group (idempotent / no-op if none).
+    codecs.load_plugins()
 
 
 def _resolve_codec_name(name: str) -> Codec:
