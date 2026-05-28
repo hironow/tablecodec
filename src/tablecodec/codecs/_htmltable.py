@@ -27,7 +27,9 @@ from tablecodec.ir import BBox, GridCell, TableSample
 
 __all__ = [
     "looks_like_html_table",
+    "parse_html_structure_only",
     "parse_html_table",
+    "serialize_html_structure_only",
     "serialize_html_table",
     "sniff_html_table",
 ]
@@ -232,6 +234,38 @@ def parse_html_table(
     )
 
 
+def parse_html_structure_only(payload: dict[str, Any], *, id_field: str = "imgid") -> TableSample:
+    """Build a :class:`TableSample` from structure tokens alone.
+
+    For formats that ship table structure without per-cell content
+    (e.g. TableBank): every anchor becomes an empty cell (``tokens=()``,
+    ``bbox=None``). The record has no ``html.cells`` array.
+    """
+    structure_tokens = payload["html"]["structure"]["tokens"]
+    specs = _parse_structure_tokens(structure_tokens)
+    nrows, ncols = _place_cells(specs)
+    cells = tuple(
+        GridCell(
+            row=spec.row,
+            col=spec.col,
+            rowspan=spec.rowspan,
+            colspan=spec.colspan,
+            tokens=(),
+            bbox=None,
+            role=spec.role,
+        )
+        for spec in specs
+    )
+    return TableSample(
+        filename=str(payload["filename"]),
+        nrows=nrows,
+        ncols=ncols,
+        cells=cells,
+        split=_normalize_split(payload.get("split")),
+        imgid=payload.get(id_field),
+    )
+
+
 # ---------- sample -> payload ----------
 
 
@@ -338,6 +372,26 @@ def serialize_html_table(
     return payload
 
 
+def serialize_html_structure_only(
+    sample: TableSample, *, id_field: str = "imgid"
+) -> dict[str, Any]:
+    """Serialize structure tokens only (no ``cells``).
+
+    For structure-only formats (TableBank): cell tokens and bboxes are
+    dropped (declared in the codec's ``lossy_write``).
+    """
+    structure_tokens, _ = _structure_and_cells(sample, include_bbox=False)
+    payload: dict[str, Any] = {
+        "filename": sample.filename,
+        "html": {"structure": {"tokens": structure_tokens}},
+    }
+    if sample.split is not None:
+        payload["split"] = sample.split
+    if sample.imgid is not None:
+        payload[id_field] = sample.imgid
+    return payload
+
+
 # ---------- detection ----------
 
 
@@ -372,14 +426,37 @@ def _bbox_constraint_ok(
     return True
 
 
+def _cells_constraint_ok(
+    html_dict: dict[str, Any],
+    *,
+    require_no_bbox: bool,
+    require_all_bbox: bool,
+    require_no_cells: bool,
+) -> bool:
+    has_cells = "cells" in html_dict
+    if require_no_cells:
+        return not has_cells
+    if not has_cells:
+        return False
+    return _bbox_constraint_ok(
+        html_dict, require_no_bbox=require_no_bbox, require_all_bbox=require_all_bbox
+    )
+
+
 def looks_like_html_table(
     payload: object,
     *,
     require_no_bbox: bool = False,
     require_all_bbox: bool = False,
+    require_no_cells: bool = False,
     require_field: str | None = None,
 ) -> bool:
-    """Pure (no I/O) shape check for an HTML-token table record."""
+    """Pure (no I/O) shape check for an HTML-token table record.
+
+    ``html.structure`` is always required. ``html.cells`` is required
+    unless *require_no_cells* is True (structure-only formats like
+    TableBank), in which case its absence is required instead.
+    """
     if not isinstance(payload, dict):
         return False
     payload_dict = cast("dict[str, Any]", payload)
@@ -389,10 +466,13 @@ def looks_like_html_table(
     if not isinstance(html, dict):
         return False
     html_dict = cast("dict[str, Any]", html)
-    if "structure" not in html_dict or "cells" not in html_dict:
+    if "structure" not in html_dict:
         return False
-    return _bbox_constraint_ok(
-        html_dict, require_no_bbox=require_no_bbox, require_all_bbox=require_all_bbox
+    return _cells_constraint_ok(
+        html_dict,
+        require_no_bbox=require_no_bbox,
+        require_all_bbox=require_all_bbox,
+        require_no_cells=require_no_cells,
     )
 
 
@@ -401,6 +481,7 @@ def sniff_html_table(
     *,
     require_no_bbox: bool = False,
     require_all_bbox: bool = False,
+    require_no_cells: bool = False,
     require_field: str | None = None,
 ) -> bool:
     """Peek the first non-blank line; verify it is an HTML-token table.
@@ -421,6 +502,7 @@ def sniff_html_table(
                 payload,
                 require_no_bbox=require_no_bbox,
                 require_all_bbox=require_all_bbox,
+                require_no_cells=require_no_cells,
                 require_field=require_field,
             )
         return False

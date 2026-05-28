@@ -1,0 +1,1 @@
+{"filename": "tb_rowspan.png", "imgid": 52, "html": {"structure": {"tokens": ["<tbody>", "<tr>", "<td", " rowspan=\"2\"", ">", "</td>", "<td>", "</td>", "</tr>", "<tr>", "<td>", "</td>", "</tr>", "</tbody>"]}}}
