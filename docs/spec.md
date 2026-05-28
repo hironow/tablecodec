@@ -3,7 +3,7 @@
 **Status:** Draft — spec document v0.1.0 (this is the specification's own
 version; the `tablecodec` package is independently versioned in the 0.0.x
 series — see the package metadata / CHANGELOG for its current version).
-**Last updated:** 2026-05-28
+**Last updated:** 2026-05-29
 **License of this document:** CC BY 4.0
 
 ---
@@ -283,13 +283,18 @@ Vendors (Docling, PaddleOCR, MMOCR, internal pipelines) are invited to certify t
 Available with `pip install "tablecodec[cli]"`.
 
 ```
-tablecodec validate <file>           [--profile NAME] [--strict] [--json]
-tablecodec convert  <in> <out>       --from <codec> --to <codec> [--parallel N] [--dry-run]
-tablecodec stats    <file>           [--format <codec>] [--json]
-tablecodec diff     <a> <b>          [--format <codec>]
+tablecodec validate <file>           [--profile NAME] [--codec <codec>] [--json]
+tablecodec convert  <in> <out>       --from <codec> --to <codec> [--dry-run]
+tablecodec stats    <file>           [--codec <codec>] [--json]
+tablecodec diff     <a> <b>          [--codec <codec>]
 tablecodec analyze-loss --from <codec> --to <codec>
 tablecodec codecs   list
 ```
+
+`--codec` selects the reader; when omitted, the codec is auto-detected
+from the file (`codecs.detect`). (`--strict` is just `--profile strict`;
+parallel conversion is not offered — `convert` is a constant-memory
+single-pass stream.)
 
 All commands stream input and exit non-zero on validation failures, suitable for use in CI / data pipelines.
 

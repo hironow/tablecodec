@@ -119,10 +119,10 @@ rest are genuine feature/roadmap work.
   malformed JSON/records; I-04/I-05 are not run). Separate `validate(...)`
   is the deliberate, cleaner design — amend §6.1.2 to describe it rather
   than force validation into every read.
-- **§12 — CLI surface drift.** Code uses `--codec` for `stats`/`diff`
-  (spec says `--format`); `validate --strict` and `convert --parallel N`
-  are absent (`--profile strict` and `--dry-run` cover the intent). The
-  CLI naming is the better choice — reconcile §12.
+- **§12 — CLI surface drift. RESOLVED** (spec §12 reconciled to the
+  canonical CLI: `--codec` for validate/stats/diff with auto-detect;
+  `--strict`/`--parallel` removed as `--profile strict` / single-pass
+  cover them).
 - **§14 — `--version` prints only the library version** (`click
   .version_option(package_name=...)`). The "three versions (library + IR
   + codec)" idea has no IR-version constant; treat single-version as
