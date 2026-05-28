@@ -65,17 +65,31 @@ the adapters through the real codecs on a synthetic Docling-shaped row.
 
 ### Positive
 
-- One adapter validates 5+ codecs (OTSL + HTML families) against four
-  real corpora totalling >1.5M tables.
+- All nine shipped codecs are exercised against at least one official
+  corpus (PubTabNet / FinTabNet / PubTables-1M / SynthTabNet via the
+  Docling OTSL family), totalling >1.5M real tables.
 - Exercises the genuinely risky logic — square-table assumption,
   anchor/cell-count alignment, HTML structure parsing — on real tables.
+- Failures are recorded under `output/e2e_findings/` (JSONL, gitignored)
+  with full provenance + the exact replayable `input_payload`, so each
+  finding can be audited as library-bug / data-bug / over-strict
+  invariant. `verdict` is always `needs-review`.
 
 ### Negative
 
-- `pubtables-1m` (object-detection / VOC XML), `tablebank`, and
-  `doctags-tables` have no public dataset in the codec's exact shape, so
-  they are **not** covered by this harness; each needs its own adapter
-  (or remains synthetic-only). Recorded as out of scope here.
+- Three codecs have **no public dataset in their native envelope**, so
+  their coverage is reconstructed from the Docling OTSL content rather
+  than read from a native file — honest but not equivalent to the real
+  on-disk format:
+  - `tablebank`: fed the Docling HTML structure tokens with cells
+    omitted (faithful field-mapping; TableBank really is structure-only).
+  - `pubtables-1m`: grid coordinates are **derived** from OTSL anchor
+    placement (real bbox/tokens, computed row/col) — mild circularity.
+  - `doctags-tables`: a real-content **round-trip** (build the IR from
+    Docling, serialize to DocTags, read it back). DocTags is a model
+    OUTPUT format with no ground-truth dataset.
+  Validating these against their truly-native sources (PubTables-1M
+  PASCAL VOC, the original TableBank release) is tracked as follow-up.
 - The harness depends on network access and the optional `[hf]` extra.
 
 ### Neutral

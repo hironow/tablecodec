@@ -20,6 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   local-only (not CI-gated); a network-free `--self-test` /
   `just e2e-selftest` verifies the adapters through the real codecs.
   See `docs/adr/0003-e2e-against-docling-otsl-family.md`.
+  All nine shipped codecs now have at least one official-corpus check:
+  the FinTabNet_OTSL checks route through the actual `fintabnet` /
+  `fintabnet-otsl` codecs (adapter bridges Docling's `imgid` to
+  `table_id`); `pubtabnet-1.0.0` / `tableformer` read the Docling HTML;
+  `tablebank` reads the HTML structure with cells omitted; `pubtables-1m`
+  reads object-detection records whose grid coords are derived from OTSL
+  placement; and `doctags-tables` is a real-content round-trip. Every
+  failed row is recorded as a JSONL finding
+  under `output/e2e_findings/` (gitignored) — with full provenance
+  (dataset/split/codec/seed/row_index), the offending cell, and the
+  exact `input_payload` so a finding can be replayed and judged
+  (library bug vs. malformed upstream data vs. over-strict invariant);
+  `verdict` is always `needs-review`.
 
 ## [0.0.9] - 2026-05-28
 

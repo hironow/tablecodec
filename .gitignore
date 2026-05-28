@@ -46,6 +46,9 @@ env/
 .env
 .env.local
 
+# Generated artifacts (e.g. e2e findings records for local audit)
+output/
+
 # Local-only, untracked working area (e.g. draft release workflow kept
 # out of the public repo until release automation is enabled).
 private/
