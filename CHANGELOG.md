@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.6] - 2026-05-28
+
+### Added
+
+- PubTables-1M codec (`pubtables-1m`): the first **read-only** codec.
+  Reads the object-detection format (cells carry explicit
+  row/col/rowspan/colspan/bbox in detection order) and normalises to
+  row-major IR; derives nrows/ncols when absent. `write` raises
+  `NotImplementedError`.
+- `Codec.writable` flag (ADR 0002): boolean capability on the Codec
+  Protocol. All writable codecs default to `True`; read-only codecs set
+  `False`. `analyze_loss` short-circuits to a new
+  `round_trip_classification` value **`"unwritable"`** when the target
+  is read-only, and the loss matrix renders it as ⚫. `format_support.md`
+  gains a "Writable" column.
+
+### Changed
+
+- Every built-in codec now declares `writable` (mechanical, defaults to
+  `True`).
+
 ## [0.0.5] - 2026-05-28
 
 ### Added
@@ -137,7 +158,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.5...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.6...HEAD
+[0.0.6]: https://github.com/hironow/tablecodec/releases/tag/v0.0.6
 [0.0.5]: https://github.com/hironow/tablecodec/releases/tag/v0.0.5
 [0.0.4]: https://github.com/hironow/tablecodec/releases/tag/v0.0.4
 [0.0.3]: https://github.com/hironow/tablecodec/releases/tag/v0.0.3
