@@ -88,9 +88,16 @@ local-only** (network + multi-GB datasets), not part of CI.
 
 ```bash
 just e2e-selftest              # network-free adapter smoke test
-just e2e 200                   # sample 200 rows per check (needs [hf] extra)
+just e2e 200                   # 200 randomly-sampled rows per check (needs [hf] extra)
 uv run --extra hf python scripts/e2e_hf_check.py --dataset FinTabNet_OTSL --limit 50
 ```
+
+Rows are sampled randomly (streaming shuffle reshuffles shard order), so
+repeated runs progressively cover the multi-hundred-thousand-row corpora.
+Each run prints its `--seed` so a finding can be reproduced; pass
+`--seed N` to fix it or `--no-shuffle` for a deterministic head read.
+The harness reports parse errors and validation findings — e.g. it
+surfaces real upstream rows with geometrically invalid bboxes (I-05).
 
 See [`docs/adr/0003-e2e-against-docling-otsl-family.md`](docs/adr/0003-e2e-against-docling-otsl-family.md)
 for the data-source decision and the canonical-vs-real-shape caveats.

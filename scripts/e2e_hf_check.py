@@ -25,15 +25,37 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import logging
+import os
+import random
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from tablecodec import profiles, validate
-from tablecodec.codecs._base import Codec
-from tablecodec.codecs.otsl import OTSL10Codec
-from tablecodec.codecs.pubtabnet import PubTabNet20Codec
+# Quiet the Hugging Face stack BEFORE `datasets` is imported (env vars are
+# read at import time). Keeps the e2e output to our own summary lines.
+os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
+os.environ.setdefault("DATASETS_VERBOSITY", "error")
+
+from tablecodec import profiles, validate  # noqa: E402
+from tablecodec.codecs._base import Codec  # noqa: E402
+from tablecodec.codecs.otsl import OTSL10Codec  # noqa: E402
+from tablecodec.codecs.pubtabnet import PubTabNet20Codec  # noqa: E402
+
+
+def _silence_hf_logging() -> None:
+    """Raise log levels of the HF / network stack to ERROR (hide retries)."""
+    for name in ("datasets", "huggingface_hub", "urllib3", "fsspec", "filelock"):
+        logging.getLogger(name).setLevel(logging.ERROR)
+    try:
+        import datasets  # noqa: PLC0415
+
+        datasets.disable_progress_bars()
+        datasets.utils.logging.set_verbosity_error()
+    except (ImportError, AttributeError):
+        pass
 
 # ---------- Docling row -> canonical codec payload ----------
 
@@ -137,11 +159,31 @@ def _check_row(check: Check, row: dict[str, Any], profile: Any, report: Report) 
         report.ok += 1
 
 
-def run_check(check: Check, limit: int, profile: Any) -> Report:
-    from datasets import load_dataset  # lazy: only needed for live runs
+def run_check(
+    check: Check,
+    limit: int,
+    profile: Any,
+    *,
+    seed: int | None = None,
+    shuffle_buffer: int = 1000,
+) -> Report:
+    from datasets import Image, load_dataset  # lazy: only needed for live runs
 
+    _silence_hf_logging()
     report = Report(label=check.label)
     stream = load_dataset(check.dataset, split=check.split, streaming=True)
+    # Turn off image decoding so `datasets` does not require Pillow — we
+    # only read the textual structure / cells, never the image bytes.
+    try:
+        stream = stream.cast_column("image", Image(decode=False))
+    except (ValueError, KeyError):
+        pass  # no image column in this dataset
+    # Random sampling: shuffle() also reshuffles shard order, so repeated
+    # runs with different seeds sample different regions of the (huge)
+    # dataset — approximating full coverage over many runs. seed=None
+    # disables shuffling for a deterministic head-of-stream read.
+    if seed is not None:
+        stream = stream.shuffle(seed=seed, buffer_size=shuffle_buffer)
     for i, row in enumerate(stream):
         if limit and i >= limit:
             break
@@ -209,6 +251,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=200, help="rows per check (0 = all)")
     parser.add_argument("--dataset", default=None, help="substring filter on dataset name")
     parser.add_argument("--profile", default="DEFAULT", help="validation profile")
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="shuffle seed; omitted = a fresh random seed each run (random sampling)",
+    )
+    parser.add_argument(
+        "--shuffle-buffer", type=int, default=1000, help="streaming shuffle buffer size"
+    )
+    parser.add_argument(
+        "--no-shuffle",
+        action="store_true",
+        help="deterministic head-of-stream read (no random sampling)",
+    )
     parser.add_argument("--list", action="store_true", help="list checks and exit")
     parser.add_argument("--self-test", action="store_true", help="network-free adapter check")
     args = parser.parse_args(argv)
@@ -224,8 +280,24 @@ def main(argv: list[str] | None = None) -> int:
             sys.stdout.write(f"{c.label}  ({c.dataset})\n")
         return 0
 
+    # Random sampling by default: pick a fresh seed each run unless one is
+    # given (or --no-shuffle requests a deterministic head read). The seed
+    # is printed so any finding can be reproduced exactly.
+    seed: int | None
+    if args.no_shuffle:
+        seed = None
+    elif args.seed is not None:
+        seed = args.seed
+    else:
+        seed = random.randrange(1_000_000)
+    if seed is not None:
+        sys.stdout.write(f"random sampling with --seed {seed} (buffer {args.shuffle_buffer})\n")
+
     profile = getattr(profiles, args.profile.upper())
-    reports = [run_check(c, args.limit, profile) for c in selected]
+    reports = [
+        run_check(c, args.limit, profile, seed=seed, shuffle_buffer=args.shuffle_buffer)
+        for c in selected
+    ]
     for report in reports:
         _print_report(report)
     total_problems = sum(r.parse_errors + r.validation_failures for r in reports)
