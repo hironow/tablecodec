@@ -22,6 +22,7 @@ rules:
         - /src/tablecodec/codecs/_base.py
         - /src/tablecodec/codecs/__init__.py
         - /src/tablecodec/codecs/_htmltable.py
+        - /src/tablecodec/codecs/_otslgrid.py
         - /src/tablecodec/codecs/pubtabnet.py
         - /src/tablecodec/codecs/otsl.py
         - /src/tablecodec/codecs/fintabnet.py
