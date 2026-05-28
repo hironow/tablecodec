@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.9] - 2026-05-28
+
+### Added
+
+- FinTabNet_OTSL codec (`fintabnet-otsl`, HF `ds4sd/FinTabNet_OTSL`):
+  OTSL structure with FinTabNet provenance — a `table_id` identifier
+  (mapped onto `imgid`) and an `extras` dict (e.g. `otsl_raw`). It is the
+  **first codec that round-trips IR `extras`**, so `extras` is
+  deliberately absent from `lossy_write` (`lossy_read = {"role"}`,
+  `lossy_write = {"role"}`). Structure handling is shared with OTSL via
+  `_otslgrid`. `sniff()` requires both `otsl` and `table_id` keys. This
+  brings the SPEC §7 initial codec set to nine.
+- `_otslgrid` gains `otsl_to_cells` / `cells_to_otsl` so OTSL and
+  FinTabNet_OTSL share the OTSL payload↔GridCell mapping.
+
+### Changed
+
+- `otsl.py` delegates its payload↔sample mapping to the new `_otslgrid`
+  helpers (Tidy First, no behaviour change).
+
 ## [0.0.8] - 2026-05-28
 
 ### Fixed
@@ -195,7 +215,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.8...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.9...HEAD
+[0.0.9]: https://github.com/hironow/tablecodec/releases/tag/v0.0.9
 [0.0.8]: https://github.com/hironow/tablecodec/releases/tag/v0.0.8
 [0.0.7]: https://github.com/hironow/tablecodec/releases/tag/v0.0.7
 [0.0.6]: https://github.com/hironow/tablecodec/releases/tag/v0.0.6

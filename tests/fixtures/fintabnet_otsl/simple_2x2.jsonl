@@ -1,0 +1,1 @@
+{"filename": "fto_simple.png", "split": "train", "table_id": 91, "otsl": ["fcel", "fcel", "nl", "fcel", "fcel", "nl"], "cells": [{"tokens": ["a"], "bbox": [0, 0, 10, 5]}, {"tokens": ["b"], "bbox": [10, 0, 20, 5]}, {"tokens": ["c"], "bbox": [0, 5, 10, 10]}, {"tokens": ["d"], "bbox": [10, 5, 20, 10]}], "extras": {"otsl_raw": "fcel fcel nl fcel fcel nl", "source": "FinTabNet_OTSL"}}

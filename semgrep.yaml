@@ -27,6 +27,7 @@ rules:
         - /src/tablecodec/codecs/pubtabnet.py
         - /src/tablecodec/codecs/otsl.py
         - /src/tablecodec/codecs/fintabnet.py
+        - /src/tablecodec/codecs/fintabnet_otsl.py
         - /src/tablecodec/codecs/tableformer.py
         - /src/tablecodec/codecs/doctags.py
         - /src/tablecodec/codecs/pubtables1m.py
