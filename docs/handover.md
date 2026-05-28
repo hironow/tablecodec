@@ -6,7 +6,8 @@
 ## Current State
 
 Library is feature-complete against `docs/spec.md`, staying in **0.0.x**
-(no public PyPI release yet). `main` is at **0.0.11** (= origin/main).
+(no public PyPI release yet). `main` is at **0.0.12** (origin is one
+release behind until the next push).
 Shipped:
 
 - IR + invariants (I-01..I-07) + validation profiles + codec registry +
@@ -28,7 +29,7 @@ Shipped:
   roadmap (realigned from the abandoned v0.1.0 / minor-rollout plan to the
   executed 0.0.x reality), spec.md status (clarified spec-doc v0.1.0 vs the
   0.0.x package), and the version triple (pyproject / `__init__` / uv.lock)
-  all consistent at 0.0.11. `loss.py` added to the semgrep core list and a
+  all consistent (now 0.0.12). `loss.py` added to the semgrep core list and a
   CLAUDE.md self-contradiction about it resolved.
 
 ### E2E harness (`scripts/e2e_hf_check.py`)
@@ -66,19 +67,18 @@ a validation finding on genuine upstream DATA quirks (recorded in
   registry-stop follow-up so span scans halt at cells already claimed by a
   2D span. SynthTabNet I-04 overlaps dropped to ~0.2% (2/1000); the rest is
   genuine OTSL span ambiguity (L-shaped regions; matches the HTML path).
-- **I-05 degenerate bbox**: DATA quirk. Verified across 16k rows — every
-  degenerate box was already degenerate in the SOURCE floats (empty cells
-  with zero-area point bboxes; `[x0,y0,x1,y1,cell_class]`); our float→int
-  cast introduced ZERO. SynthTabNet has many (synthetic empty cells, 45%);
-  FinTabNet/PubTabNet rare. Not a library bug.
+- **I-05 degenerate bbox**: was a DATA quirk (empty cells with zero-area
+  placeholder boxes — degenerate already in the SOURCE floats, our
+  float→int cast introduced zero; ~45% of SynthTabNet). RESOLVED in 0.0.12:
+  I-05 now geometry-checks only **content-bearing** cells (spec §5.2, ADR
+  0007). The fix is validation-layer only — codecs still read/keep the bbox
+  faithfully (no read-path "lie"). Live: SynthTabNet otsl ok ~50% → 294/300;
+  residual = I-04 ambiguity + genuine degenerate boxes on content cells.
 - **I-04 ragged / I-03 over-span** (native PubTabNet ~1%): DATA property
-  surfaced by strict exact-cover; passes LENIENT.
+  surfaced by strict exact-cover; passes LENIENT. (No change planned.)
 - **doctags parse_error (1/16k)**: HARNESS bug — the e2e doctags round-trip
   adapter's `json.loads(...splitlines()[0])` mis-cuts a record. Fix in
-  `scripts/e2e_hf_check.py`, not the codec.
-- **Open policy question** (TRIAGE.md): whether to drop empty-cell bboxes on
-  read (would clear ~all SynthTabNet I-05). Touches codec read + SPEC §5/§8
-  — propose a spec change first, do NOT silently change.
+  `scripts/e2e_hf_check.py`, not the codec. (Still open — Next Actions.)
 
 ## In Progress
 
@@ -88,17 +88,14 @@ fintabnet/tablebank natives are deferred (see Next Actions).
 
 ## Next Actions
 
-1. **Empty-cell bbox policy** (the one open library decision): decide
-   whether an empty cell's bbox should be dropped on read (→ I-05 skips it),
-   which would clear ~all SynthTabNet I-05 legitimately. It is a SPEC §5/§8
-   change — propose a spec PR first; do NOT change behaviour silently.
-2. **doctags round-trip adapter** in `scripts/e2e_hf_check.py`: replace
+1. **doctags round-trip adapter** in `scripts/e2e_hf_check.py`: replace
    `splitlines()[0]` with a whole-record parse (the 1/16k parse_error).
-3. **fintabnet / tablebank native: deferred** (maintainer decision, ADR
+   (Harness-only; not a codec bug.)
+2. **fintabnet / tablebank native: deferred** (maintainer decision, ADR
    0006). FinTabNet.c is VOC (redundant with pubtables-1m, wrong codec);
    the real fintabnet native is IBM-only (developer.ibm.com, not HF).
    TableBank is a 24 GB split zip. Both stay Docling-covered.
-4. **Deferred PyPI publish** (unchanged): `private/PYPI_RELEASE_STEPS.md`.
+3. **Deferred PyPI publish** (unchanged): `private/PYPI_RELEASE_STEPS.md`.
 
 ## Known Risks / Blockers
 
