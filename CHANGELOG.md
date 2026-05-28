@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.8] - 2026-05-28
+
+### Fixed
+
+- `tablecodec codecs list` now lists every built-in codec. The CLI's
+  built-in registration had drifted — it still seeded only the three
+  codecs that existed when the CLI was written (pubtabnet-1.0.0,
+  pubtabnet-2.0.0, otsl-1.0.0), omitting fintabnet, tableformer,
+  tablebank, pubtables-1m, and doctags-tables.
+
+### Changed
+
+- Introduced `tablecodec.codecs.builtins.BUILTIN_CODECS` as the single
+  source of truth for the shipped codecs. The CLI and both doc
+  generators now consume it instead of each maintaining their own list
+  (no doc-output change; removes the triplicated registration).
+
 ## [0.0.7] - 2026-05-28
 
 ### Added
@@ -178,7 +195,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.7...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.8...HEAD
+[0.0.8]: https://github.com/hironow/tablecodec/releases/tag/v0.0.8
 [0.0.7]: https://github.com/hironow/tablecodec/releases/tag/v0.0.7
 [0.0.6]: https://github.com/hironow/tablecodec/releases/tag/v0.0.6
 [0.0.5]: https://github.com/hironow/tablecodec/releases/tag/v0.0.5

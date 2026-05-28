@@ -35,24 +35,17 @@ import click
 from tablecodec import codecs
 from tablecodec import io as tio
 from tablecodec.codecs._base import Codec
-from tablecodec.codecs.otsl import OTSL10Codec
-from tablecodec.codecs.pubtabnet import PubTabNet10Codec, PubTabNet20Codec
+from tablecodec.codecs.builtins import BUILTIN_CODECS
 from tablecodec.ir import TableSample
 from tablecodec.loss import analyze_loss
 from tablecodec.validate import Profile, profiles, validate
-
-_BUILTIN_CODECS: list[Codec] = [
-    PubTabNet10Codec(),
-    PubTabNet20Codec(),
-    OTSL10Codec(),
-]
 
 _PROFILE_NAMES = ["LENIENT", "DEFAULT", "PUBTABNET_2_0", "TABLEFORMER", "STRICT"]
 
 
 def _ensure_builtins_registered() -> None:
     existing = set(codecs.list_codecs())
-    for codec in _BUILTIN_CODECS:
+    for codec in BUILTIN_CODECS:
         if codec.name not in existing:
             codecs.register(codec)
 

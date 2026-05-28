@@ -32,12 +32,20 @@ def runner() -> CliRunner:
 
 
 class TestCodecsList:
-    def test_lists_all_three_builtins(self, runner: CliRunner) -> None:
+    def test_lists_every_builtin_codec(self, runner: CliRunner) -> None:
         result = runner.invoke(main, ["codecs", "list"])
         assert result.exit_code == 0
-        assert "pubtabnet-2.0.0" in result.output
-        assert "pubtabnet-1.0.0" in result.output
-        assert "otsl-1.0.0" in result.output
+        for name in (
+            "pubtabnet-1.0.0",
+            "pubtabnet-2.0.0",
+            "fintabnet",
+            "tableformer",
+            "tablebank",
+            "pubtables-1m",
+            "otsl-1.0.0",
+            "doctags-tables",
+        ):
+            assert name in result.output
 
 
 # ---------- analyze-loss ----------
