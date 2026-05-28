@@ -49,6 +49,12 @@ env/
 # Generated artifacts (e.g. e2e findings records for local audit)
 output/
 
+# Downloaded raw datasets for local-only native-format e2e (large; never
+# committed). e.g. PubTables-1M PASCAL VOC, FinTabNet.c, TableBank.
+input/
+
 # Local-only, untracked working area (e.g. draft release workflow kept
 # out of the public repo until release automation is enabled).
 private/
+
+.claude/scheduled_tasks.lock

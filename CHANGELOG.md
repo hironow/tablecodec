@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- E2E native PubTables-1M coverage (`scripts/e2e_hf_check.py`): reads the
+  original PASCAL VOC structure annotation (`bsmock/pubtables-1m`,
+  download-only) from a local tar under `input/` and reconstructs the
+  logical grid (rows × columns intersection, spanning-cell merge,
+  column-header role) for the `pubtables-1m` codec. The harness gained a
+  local-tar source alongside HF streaming; XML is parsed with `defusedxml`
+  (added to the `[hf]` extra). A live run reads 200/200 real VOC tables
+  clean. FinTabNet / TableBank natives remain download-only and
+  Docling-covered. See `docs/adr/0006-native-datasets-via-local-download.md`.
+
 ## [0.0.10] - 2026-05-28
 
 ### Fixed

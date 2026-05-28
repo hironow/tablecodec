@@ -29,12 +29,14 @@ from __future__ import annotations
 import argparse
 import ast
 import functools
+import importlib.util
 import io
 import json
 import logging
 import os
 import random
 import sys
+import tarfile
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -230,6 +232,121 @@ def apoidea_to_pubtabnet_payload(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# ---------- native PubTables-1M (PASCAL VOC) -> pubtables-1m payload ----------
+
+_VocBox = tuple[float, float, float, float]
+
+
+def _voc_objects(xml: str) -> list[tuple[str, _VocBox]]:
+    # defusedxml is imported lazily so --self-test runs on a bare interpreter
+    # (it lives in the [hf] extra alongside datasets); parsing is hardened
+    # against entity/DTD/external-reference attacks by defusedxml's defaults.
+    from defusedxml.ElementTree import fromstring  # noqa: PLC0415
+
+    root = fromstring(xml)
+    out: list[tuple[str, _VocBox]] = []
+    for obj in root.findall("object"):
+        name_el = obj.find("name")
+        bnd = obj.find("bndbox")
+        if name_el is None or name_el.text is None or bnd is None:
+            continue
+        coords = tuple(
+            float(bnd.find(t).text or 0) if bnd.find(t) is not None else 0.0
+            for t in ("xmin", "ymin", "xmax", "ymax")
+        )
+        out.append((name_el.text, (coords[0], coords[1], coords[2], coords[3])))
+    return out
+
+
+def _in(value: float, lo: float, hi: float) -> bool:
+    return lo <= value <= hi
+
+
+def _voc_owners(
+    rows: list[_VocBox], cols: list[_VocBox], spanning: list[_VocBox], proj: list[_VocBox]
+) -> dict[tuple[int, int], int]:
+    # Map every base grid cell (i, j) to the spanning region (if any) that
+    # contains its centre. Projected row headers span all columns and get a
+    # synthetic per-row group id so they collapse to one wide cell.
+    owner: dict[tuple[int, int], int] = {}
+    for gid, span in enumerate(spanning):
+        for i, rb in enumerate(rows):
+            for j, cb in enumerate(cols):
+                if _in((cb[0] + cb[2]) / 2, span[0], span[2]) and _in(
+                    (rb[1] + rb[3]) / 2, span[1], span[3]
+                ):
+                    owner[(i, j)] = gid
+    for i, rb in enumerate(rows):
+        if any(_in((rb[1] + rb[3]) / 2, p[1], p[3]) for p in proj):
+            for j in range(len(cols)):
+                owner.setdefault((i, j), 1_000_000 + i)
+    return owner
+
+
+def _voc_cell(
+    r: int, c: int, rs: int, cs: int, rows: list[_VocBox], cols: list[_VocBox], *, header: bool
+) -> dict[str, Any]:
+    return {
+        "row": r,
+        "col": c,
+        "rowspan": rs,
+        "colspan": cs,
+        "tokens": [],
+        "bbox": [
+            int(cols[c][0]),
+            int(rows[r][1]),
+            int(cols[c + cs - 1][2]),
+            int(rows[r + rs - 1][3]),
+        ],
+        "role": "header" if header else "body",
+    }
+
+
+def voc_to_pubtables1m_payload(row: dict[str, Any]) -> dict[str, Any]:
+    # Native PubTables-1M structure annotation is PASCAL VOC object detection
+    # (geometric row / column / spanning-cell / header regions, NO grid
+    # indices). Reconstruct the logical grid: rows x columns intersection,
+    # merge cells whose centres fall inside a spanning region, mark
+    # column-header rows. tokens are empty (VOC carries no cell content).
+    objs = _voc_objects(row["xml"])
+    rows = sorted((b for n, b in objs if n == "table row"), key=lambda b: b[1])
+    cols = sorted((b for n, b in objs if n == "table column"), key=lambda b: b[0])
+    if not rows or not cols:
+        msg = f"degenerate VOC grid {len(rows)}x{len(cols)}"
+        raise ValueError(msg)
+    headers = [b for n, b in objs if n == "table column header"]
+    proj = [b for n, b in objs if n == "table projected row header"]
+    spanning = [b for n, b in objs if n == "table spanning cell"]
+    header_rows = {
+        i for i, rb in enumerate(rows) if any(_in((rb[1] + rb[3]) / 2, h[1], h[3]) for h in headers)
+    }
+    owner = _voc_owners(rows, cols, spanning, proj)
+    cells: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    for i in range(len(rows)):
+        for j in range(len(cols)):
+            gid = owner.get((i, j))
+            if gid is None:
+                cells.append(_voc_cell(i, j, 1, 1, rows, cols, header=i in header_rows))
+            elif gid not in seen:
+                seen.add(gid)
+                members = [k for k, g in owner.items() if g == gid]
+                r0, c0 = min(m[0] for m in members), min(m[1] for m in members)
+                r1, c1 = max(m[0] for m in members), max(m[1] for m in members)
+                cells.append(
+                    _voc_cell(
+                        r0, c0, r1 - r0 + 1, c1 - c0 + 1, rows, cols, header=r0 in header_rows
+                    )
+                )
+    return {
+        "filename": row.get("filename", "<voc>"),
+        "imgid": row.get("imgid"),
+        "nrows": len(rows),
+        "ncols": len(cols),
+        "cells": cells,
+    }
+
+
 # ---------- check registry ----------
 
 
@@ -239,6 +356,12 @@ class Check:
     split: str
     codec: Codec
     to_payload: Callable[[dict[str, Any]], dict[str, Any]]
+    # When set, rows are read from a local tar.gz under input/ (members
+    # matching local_suffix) instead of streamed from the HF hub. Used for
+    # the download-only native datasets (e.g. PubTables-1M PASCAL VOC) whose
+    # archives the Datasets viewer does not expose.
+    local_tar: str | None = None
+    local_suffix: str = ".xml"
 
     @property
     def label(self) -> str:
@@ -268,10 +391,13 @@ _html_table_id = functools.partial(docling_to_html_payload, id_key="table_id")
 #
 # The pubtabnet codecs additionally read their FIRST-PUBLISHED dataset in
 # its NATIVE shape via apoidea/pubtabnet-html (the original PubTabNet 2.0
-# `html` annotation, not the Docling OTSL conversion). The other codecs'
-# truly-native originals (FinTabNet, TableBank, PubTables-1M PASCAL VOC)
-# ship as tar.gz / image files not exposed through the HF Datasets viewer,
-# so they cannot be streamed here — recorded as a gap in ADR 0003.
+# `html` annotation, not the Docling OTSL conversion). pubtables-1m also
+# reads its NATIVE PASCAL VOC annotation (object-detection geometry, grid
+# reconstructed) from a local tar under input/ (download-only; see
+# README + ADR 0004). FinTabNet / TableBank natives remain download-only
+# and Docling-covered.
+_PUBTABLES1M_VOC_TAR = "input/pubtables-1m/PubTables-1M-Structure_Annotations_Val.tar.gz"
+
 CHECKS: tuple[Check, ...] = (
     Check("docling-project/PubTabNet_OTSL", "val", _OTSL, docling_to_otsl_payload),
     Check("docling-project/PubTabNet_OTSL", "val", _PUBTABNET20, docling_to_html_payload),
@@ -288,6 +414,15 @@ CHECKS: tuple[Check, ...] = (
     Check("docling-project/FinTabNet_OTSL", "test", _TABLEFORMER, docling_to_html_payload),
     Check("docling-project/PubTables-1M_OTSL", "val", _OTSL, docling_to_otsl_payload),
     Check("docling-project/PubTables-1M_OTSL", "val", _PUBTABLES1M, docling_to_pubtables1m_payload),
+    # Native first-published PubTables-1M (PASCAL VOC, local download).
+    Check(
+        "bsmock/pubtables-1m",
+        "val",
+        _PUBTABLES1M,
+        voc_to_pubtables1m_payload,
+        local_tar=_PUBTABLES1M_VOC_TAR,
+        local_suffix=".xml",
+    ),
     Check("docling-project/SynthTabNet_OTSL", "val", _OTSL, docling_to_otsl_payload),
 )
 
@@ -480,6 +615,41 @@ def _build_record(
     }
 
 
+def _run_local_tar(
+    check: Check,
+    limit: int,
+    profile: Any,
+    recorder: FindingsRecorder,
+    *,
+    seed: int | None,
+) -> Report:
+    """Iterate XML members of a local tar.gz (download-only native datasets)."""
+    report = Report(label=check.label)
+    tar_path = Path(check.local_tar or "")
+    if not tar_path.exists():
+        report.note(f"missing local archive: {tar_path} (download it first)")
+        report.parse_errors += 1
+        return report
+    with tarfile.open(tar_path, "r:gz") as tar:
+        names = [m.name for m in tar.getmembers() if m.name.endswith(check.local_suffix)]
+    if seed is not None:
+        random.Random(seed).shuffle(names)
+    chosen = set(names[:limit] if limit else names)
+    with tarfile.open(tar_path, "r:gz") as tar:
+        i = 0
+        for member in tar:
+            if member.name not in chosen:
+                continue
+            fobj = tar.extractfile(member)
+            if fobj is None:
+                continue
+            xml = fobj.read().decode("utf-8", errors="replace")
+            row = {"xml": xml, "filename": Path(member.name).name, "imgid": None}
+            _check_row(check, row, i, profile, report, recorder)
+            i += 1
+    return report
+
+
 def run_check(
     check: Check,
     limit: int,
@@ -489,6 +659,9 @@ def run_check(
     seed: int | None = None,
     shuffle_buffer: int = 1000,
 ) -> Report:
+    if check.local_tar is not None:
+        return _run_local_tar(check, limit, profile, recorder, seed=seed)
+
     from datasets import Image, load_dataset  # lazy: only needed for live runs
 
     _silence_hf_logging()
@@ -584,8 +757,30 @@ def _synthetic_apoidea_row() -> dict[str, Any]:
     return {"split": "val", "imgid": 7, "html": json.dumps(html), "html_table": "<html></html>"}
 
 
-def _synthetic_row_for(dataset: str) -> dict[str, Any]:
-    if dataset.startswith("apoidea/"):
+def _synthetic_voc_row() -> dict[str, Any]:
+    """A row shaped like PubTables-1M VOC (2x2, header on row 0)."""
+    xml = (
+        "<annotation><size><width>20</width><height>10</height></size>"
+        "<object><name>table</name><bndbox><xmin>0</xmin><ymin>0</ymin>"
+        "<xmax>20</xmax><ymax>10</ymax></bndbox></object>"
+        "<object><name>table row</name><bndbox><xmin>0</xmin><ymin>0</ymin>"
+        "<xmax>20</xmax><ymax>5</ymax></bndbox></object>"
+        "<object><name>table row</name><bndbox><xmin>0</xmin><ymin>5</ymin>"
+        "<xmax>20</xmax><ymax>10</ymax></bndbox></object>"
+        "<object><name>table column</name><bndbox><xmin>0</xmin><ymin>0</ymin>"
+        "<xmax>10</xmax><ymax>10</ymax></bndbox></object>"
+        "<object><name>table column</name><bndbox><xmin>10</xmin><ymin>0</ymin>"
+        "<xmax>20</xmax><ymax>10</ymax></bndbox></object>"
+        "<object><name>table column header</name><bndbox><xmin>0</xmin><ymin>0</ymin>"
+        "<xmax>20</xmax><ymax>5</ymax></bndbox></object></annotation>"
+    )
+    return {"xml": xml, "filename": "synthetic.xml", "imgid": None}
+
+
+def _synthetic_row_for(check: Check) -> dict[str, Any]:
+    if check.local_tar is not None:
+        return _synthetic_voc_row()
+    if check.dataset.startswith("apoidea/"):
         return _synthetic_apoidea_row()
     return _synthetic_docling_row()
 
@@ -595,7 +790,9 @@ def self_test() -> int:
 
     Proves each (codec, adapter) wiring in CHECKS reads its adapted form of
     a shape-matched synthetic row and the resulting IR passes DEFAULT — so
-    the e2e coverage map (incl. the native-PubTabNet adapter) is wired.
+    the e2e coverage map (native PubTabNet + native PubTables-1M VOC
+    included) is wired. Local (download-only) checks need the `[hf]` extra's
+    defusedxml; they are skipped with a note when it is absent.
     """
     profile = profiles.DEFAULT
     recorder = FindingsRecorder(
@@ -605,20 +802,25 @@ def self_test() -> int:
         profile_name="DEFAULT",
         enabled=False,
     )
+    have_voc = importlib.util.find_spec("defusedxml") is not None
     failures: list[str] = []
+    skipped = 0
     for check in CHECKS:
+        if check.local_tar is not None and not have_voc:
+            skipped += 1
+            continue
         report = Report(label=check.label)
-        _check_row(check, _synthetic_row_for(check.dataset), 0, profile, report, recorder)
+        _check_row(check, _synthetic_row_for(check), 0, profile, report, recorder)
         if report.ok != 1:
             failures.append(f"{check.label}: {report.examples}")
     if failures:
         sys.stdout.write("SELF-TEST FAILED:\n" + "\n".join(failures) + "\n")
         return 1
     codecs_covered = sorted({c.codec.name for c in CHECKS})
+    tail = f" ({skipped} local check(s) skipped: defusedxml absent)" if skipped else ""
     sys.stdout.write(
-        f"self-test OK: {len(CHECKS)} checks across {len(codecs_covered)} codecs "
-        f"read their adapted synthetic row and pass DEFAULT "
-        f"({', '.join(codecs_covered)})\n"
+        f"self-test OK: {len(CHECKS) - skipped} checks across {len(codecs_covered)} codecs "
+        f"read their adapted synthetic row and pass DEFAULT{tail}\n"
     )
     return 0
 

@@ -89,7 +89,11 @@ official-corpus check. Two data sources are used:
   (`docling-project/{PubTabNet,FinTabNet,PubTables-1M,SynthTabNet}_OTSL`)
   — a uniform converted schema that feeds all nine codecs;
 - the **native** first-published PubTabNet annotation
-  (`apoidea/pubtabnet-html`) fed unmodified to the `pubtabnet` codecs.
+  (`apoidea/pubtabnet-html`) fed unmodified to the `pubtabnet` codecs;
+- the **native** PubTables-1M PASCAL VOC structure annotation
+  (`bsmock/pubtables-1m`, download-only) read from a local tar under
+  `input/` with the logical grid reconstructed for the `pubtables-1m`
+  codec (FinTabNet / TableBank natives stay download-only + Docling-covered).
 
 It is **occasional / local-only** (network + multi-GB datasets), not part
 of CI.
@@ -98,6 +102,8 @@ of CI.
 just e2e-selftest              # network-free adapter smoke test
 just e2e 200                   # 200 randomly-sampled rows per check (needs [hf] extra)
 uv run --extra hf python scripts/e2e_hf_check.py --dataset apoidea --limit 50
+just e2e-fetch-pubtables1m     # download native PubTables-1M VOC (~30MB) into input/
+uv run --extra hf python scripts/e2e_hf_check.py --dataset bsmock --limit 200
 ```
 
 Rows are sampled randomly (streaming shuffle reshuffles shard order), so

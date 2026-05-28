@@ -46,6 +46,11 @@ e2e-selftest:
 e2e limit="200":
     uv run --extra hf python scripts/e2e_hf_check.py --limit {{limit}}
 
+# Download the native PubTables-1M VOC structure annotations (~30MB) into
+# input/ for the native pubtables-1m e2e check (download-only dataset).
+e2e-fetch-pubtables1m:
+    uv run --extra hf python -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='bsmock/pubtables-1m', repo_type='dataset', filename='PubTables-1M-Structure_Annotations_Val.tar.gz', local_dir='input/pubtables-1m')"
+
 # Semgrep meta-rules (SPEC §13, intent.md §6)
 semgrep:
     semgrep --config semgrep.yaml --error src/
