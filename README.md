@@ -15,8 +15,8 @@ PubTables-1M, TableBank.
 
 ## Status
 
-**0.0.2 (pre-alpha).** Not yet published to PyPI; codecs are being added
-incrementally within the 0.0.x series. The 0.x line makes no
+**0.0.10 (pre-alpha).** Not yet published to PyPI; the nine codecs were
+added incrementally within the 0.0.x series. The 0.x line makes no
 API-stability promises; the public surface freezes at 1.0 (see
 [docs/spec.md](docs/spec.md) §14). The specification is the source of
 truth. Auto-generated codec / loss tables live at
