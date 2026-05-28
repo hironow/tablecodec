@@ -81,15 +81,23 @@ failures or diffs (suitable for CI / data pipelines).
 
 ## End-to-end check against real datasets
 
-`scripts/e2e_hf_check.py` streams the Docling OTSL dataset family
-(`docling-project/{PubTabNet,FinTabNet,PubTables-1M,SynthTabNet}_OTSL`)
-through the codecs and validates the resulting IR. It is **occasional /
-local-only** (network + multi-GB datasets), not part of CI.
+`scripts/e2e_hf_check.py` streams real datasets through the codecs and
+validates the resulting IR. Every shipped codec gets at least one
+official-corpus check. Two data sources are used:
+
+- the Docling OTSL family
+  (`docling-project/{PubTabNet,FinTabNet,PubTables-1M,SynthTabNet}_OTSL`)
+  — a uniform converted schema that feeds all nine codecs;
+- the **native** first-published PubTabNet annotation
+  (`apoidea/pubtabnet-html`) fed unmodified to the `pubtabnet` codecs.
+
+It is **occasional / local-only** (network + multi-GB datasets), not part
+of CI.
 
 ```bash
 just e2e-selftest              # network-free adapter smoke test
 just e2e 200                   # 200 randomly-sampled rows per check (needs [hf] extra)
-uv run --extra hf python scripts/e2e_hf_check.py --dataset FinTabNet_OTSL --limit 50
+uv run --extra hf python scripts/e2e_hf_check.py --dataset apoidea --limit 50
 ```
 
 Rows are sampled randomly (streaming shuffle reshuffles shard order), so
@@ -97,10 +105,13 @@ repeated runs progressively cover the multi-hundred-thousand-row corpora.
 Each run prints its `--seed` so a finding can be reproduced; pass
 `--seed N` to fix it or `--no-shuffle` for a deterministic head read.
 The harness reports parse errors and validation findings — e.g. it
-surfaces real upstream rows with geometrically invalid bboxes (I-05).
+surfaces real upstream rows with geometrically invalid bboxes (I-05) —
+and appends each failed row to `output/e2e_findings/` (gitignored) with
+its full provenance and replayable payload for later audit.
 
 See [`docs/adr/0003-e2e-against-docling-otsl-family.md`](docs/adr/0003-e2e-against-docling-otsl-family.md)
-for the data-source decision and the canonical-vs-real-shape caveats.
+and [`docs/adr/0004-e2e-native-first-published-datasets.md`](docs/adr/0004-e2e-native-first-published-datasets.md)
+for the data-source decisions and the canonical-vs-real-shape caveats.
 
 ## Documents
 

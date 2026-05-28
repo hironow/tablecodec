@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""End-to-end check: stream Docling OTSL-family datasets through tablecodec.
+"""End-to-end check: stream real table-recognition datasets through tablecodec.
 
 Occasional / local-only (see docs/adr/0003). For each streamed row this
-builds the canonical input of a target codec, runs the *actual*
-``codec.read()``, and validates the resulting IR — so the risky logic
-(square-table assumption, anchor/cell alignment, HTML structure parsing)
-is exercised against real tables.
+builds the input of a target codec, runs the *actual* ``codec.read()``,
+and validates the resulting IR — so the risky logic (square-table
+assumption, anchor/cell alignment, HTML structure parsing) is exercised
+against real tables.
+
+Sources: the Docling OTSL family (uniform converted schema across
+PubTabNet / FinTabNet / PubTables-1M / SynthTabNet) plus the native
+first-published PubTabNet annotation via apoidea/pubtabnet-html.
 
 Usage:
     # network-free smoke test of the adapters through the real codecs
@@ -23,6 +27,7 @@ The live path imports ``datasets`` lazily so ``--self-test`` and
 from __future__ import annotations
 
 import argparse
+import ast
 import functools
 import io
 import json
@@ -68,6 +73,7 @@ def _silence_hf_logging() -> None:
         datasets.utils.logging.set_verbosity_error()
     except (ImportError, AttributeError):
         pass
+
 
 # ---------- Docling row -> canonical codec payload ----------
 
@@ -178,6 +184,52 @@ def docling_to_doctags_payload(row: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
+# ---------- native (first-published) row -> codec payload ----------
+
+
+def _parse_struct(value: Any) -> dict[str, Any]:
+    """Parse a serialized ``{cells, structure}`` blob into a dict.
+
+    ``apoidea/pubtabnet-html`` stores the original PubTabNet ``html``
+    annotation as a string column. In practice it is a Python ``repr``
+    (single-quoted), not JSON, so ``json.loads`` fails; we fall back to
+    ``ast.literal_eval``, which parses Python *literals only* (no name
+    lookup, no calls, no code execution) and raises on anything else. The
+    Datasets viewer may also hand back an already-parsed mapping. A value
+    that is neither yields a recorded parse_error rather than a silent
+    coercion.
+    """
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            parsed = ast.literal_eval(value)
+        if not isinstance(parsed, dict):
+            msg = f"html parsed to {type(parsed).__name__}, expected dict"
+            raise TypeError(msg)
+        return parsed
+    msg = f"unexpected html field type: {type(value).__name__}"
+    raise TypeError(msg)
+
+
+def apoidea_to_pubtabnet_payload(row: dict[str, Any]) -> dict[str, Any]:
+    # apoidea/pubtabnet-html is the ORIGINAL PubTabNet 2.0 annotation (the
+    # first-published dataset for the pubtabnet codecs): its `html` column
+    # is the exact value of the upstream jsonl `html` field — the native
+    # {cells:[{tokens,bbox}], structure:{tokens}} shape the codec reads.
+    # No structural reshaping: we only wrap it back into a record.
+    html = _parse_struct(row["html"])
+    imgid = row.get("imgid")
+    return {
+        "filename": f"{imgid}.png" if imgid is not None else "<apoidea>",
+        "split": row.get("split"),
+        "imgid": imgid,
+        "html": html,
+    }
+
+
 # ---------- check registry ----------
 
 
@@ -213,12 +265,22 @@ _html_table_id = functools.partial(docling_to_html_payload, id_key="table_id")
 # family). Most are direct field-mappings; pubtables-1m derives grid coords
 # from OTSL placement and doctags-tables is a real-content round-trip — see
 # the adapter docstrings and ADR 0003 for the honesty caveats.
+#
+# The pubtabnet codecs additionally read their FIRST-PUBLISHED dataset in
+# its NATIVE shape via apoidea/pubtabnet-html (the original PubTabNet 2.0
+# `html` annotation, not the Docling OTSL conversion). The other codecs'
+# truly-native originals (FinTabNet, TableBank, PubTables-1M PASCAL VOC)
+# ship as tar.gz / image files not exposed through the HF Datasets viewer,
+# so they cannot be streamed here — recorded as a gap in ADR 0003.
 CHECKS: tuple[Check, ...] = (
     Check("docling-project/PubTabNet_OTSL", "val", _OTSL, docling_to_otsl_payload),
     Check("docling-project/PubTabNet_OTSL", "val", _PUBTABNET20, docling_to_html_payload),
     Check("docling-project/PubTabNet_OTSL", "val", _PUBTABNET10, docling_to_html_payload),
     Check("docling-project/PubTabNet_OTSL", "val", _TABLEBANK, docling_to_tablebank_payload),
     Check("docling-project/PubTabNet_OTSL", "val", _DOCTAGS, docling_to_doctags_payload),
+    # Native first-published PubTabNet (original annotation, not OTSL).
+    Check("apoidea/pubtabnet-html", "validation", _PUBTABNET20, apoidea_to_pubtabnet_payload),
+    Check("apoidea/pubtabnet-html", "validation", _PUBTABNET10, apoidea_to_pubtabnet_payload),
     Check("docling-project/FinTabNet_OTSL", "test", _OTSL, docling_to_otsl_payload),
     Check("docling-project/FinTabNet_OTSL", "test", _PUBTABNET20, docling_to_html_payload),
     Check("docling-project/FinTabNet_OTSL", "test", _FINTABNET_OTSL, _otsl_table_id),
@@ -348,8 +410,12 @@ def _check_row(
         report.note(f"parse: {type(exc).__name__}: {exc}")
         recorder.record(
             _build_record(
-                check, row_index, recorder, kind="parse_error",
-                message=f"{type(exc).__name__}: {exc}", payload=payload,
+                check,
+                row_index,
+                recorder,
+                kind="parse_error",
+                message=f"{type(exc).__name__}: {exc}",
+                payload=payload,
             )
         )
         return
@@ -365,9 +431,14 @@ def _check_row(
                 offending = cells[first.cell_index]
         recorder.record(
             _build_record(
-                check, row_index, recorder, kind="validation_failure",
-                message=first.message, payload=payload,
-                invariant=first.invariant, cell_index=first.cell_index,
+                check,
+                row_index,
+                recorder,
+                kind="validation_failure",
+                message=first.message,
+                payload=payload,
+                invariant=first.invariant,
+                cell_index=first.cell_index,
                 offending_cell=offending,
             )
         )
@@ -454,8 +525,22 @@ def _synthetic_docling_row() -> dict[str, Any]:
         "dataset": "PubTabNet",
         "otsl": ["fcel", "fcel", "nl", "fcel", "fcel", "nl"],
         "html": [
-            "<thead>", "<tr>", "<td>", "</td>", "<td>", "</td>", "</tr>", "</thead>",
-            "<tbody>", "<tr>", "<td>", "</td>", "<td>", "</td>", "</tr>", "</tbody>",
+            "<thead>",
+            "<tr>",
+            "<td>",
+            "</td>",
+            "<td>",
+            "</td>",
+            "</tr>",
+            "</thead>",
+            "<tbody>",
+            "<tr>",
+            "<td>",
+            "</td>",
+            "<td>",
+            "</td>",
+            "</tr>",
+            "</tbody>",
         ],
         "cells": [
             [{"tokens": ["a"], "bbox": [0, 0, 10, 5]}, {"tokens": ["b"], "bbox": [10, 0, 20, 5]}],
@@ -466,36 +551,74 @@ def _synthetic_docling_row() -> dict[str, Any]:
     }
 
 
-def self_test() -> int:
-    """Drive every codec's adapter on a synthetic Docling row (no network).
+def _synthetic_apoidea_row() -> dict[str, Any]:
+    """A row shaped like apoidea/pubtabnet-html (native PubTabNet `html`)."""
+    html = {
+        "structure": {
+            "tokens": [
+                "<thead>",
+                "<tr>",
+                "<td>",
+                "</td>",
+                "<td>",
+                "</td>",
+                "</tr>",
+                "</thead>",
+                "<tbody>",
+                "<tr>",
+                "<td>",
+                "</td>",
+                "<td>",
+                "</td>",
+                "</tr>",
+                "</tbody>",
+            ]
+        },
+        "cells": [
+            {"tokens": ["a"], "bbox": [0, 0, 10, 5]},
+            {"tokens": ["b"], "bbox": [10, 0, 20, 5]},
+            {"tokens": ["c"], "bbox": [0, 5, 10, 10]},
+            {"tokens": ["d"], "bbox": [10, 5, 20, 10]},
+        ],
+    }
+    return {"split": "val", "imgid": 7, "html": json.dumps(html), "html_table": "<html></html>"}
 
-    Proves each of the nine codecs reads its adapted form of a row and the
-    resulting IR passes DEFAULT — i.e. the e2e coverage map is wired for
-    every shipped codec.
+
+def _synthetic_row_for(dataset: str) -> dict[str, Any]:
+    if dataset.startswith("apoidea/"):
+        return _synthetic_apoidea_row()
+    return _synthetic_docling_row()
+
+
+def self_test() -> int:
+    """Drive every registered check's adapter on a synthetic row (no network).
+
+    Proves each (codec, adapter) wiring in CHECKS reads its adapted form of
+    a shape-matched synthetic row and the resulting IR passes DEFAULT — so
+    the e2e coverage map (incl. the native-PubTabNet adapter) is wired.
     """
-    row = _synthetic_docling_row()
     profile = profiles.DEFAULT
     recorder = FindingsRecorder(
-        path=Path("/dev/null"), seed=None, shuffle_buffer=0,
-        profile_name="DEFAULT", enabled=False,
+        path=Path("/dev/null"),
+        seed=None,
+        shuffle_buffer=0,
+        profile_name="DEFAULT",
+        enabled=False,
     )
-    # One representative check per codec — the CHECKS registry, but with
-    # the synthetic row instead of a live dataset.
-    seen: dict[str, Check] = {}
-    for check in CHECKS:
-        seen.setdefault(check.codec.name, check)
     failures: list[str] = []
-    for codec_name, check in seen.items():
+    for check in CHECKS:
         report = Report(label=check.label)
-        _check_row(check, row, 0, profile, report, recorder)
+        _check_row(check, _synthetic_row_for(check.dataset), 0, profile, report, recorder)
         if report.ok != 1:
-            failures.append(f"{codec_name}: {report.examples}")
+            failures.append(f"{check.label}: {report.examples}")
     if failures:
         sys.stdout.write("SELF-TEST FAILED:\n" + "\n".join(failures) + "\n")
         return 1
+    codecs_covered = sorted({c.codec.name for c in CHECKS})
     sys.stdout.write(
-        f"self-test OK: {len(seen)} codecs read their adapted synthetic Docling row "
-        f"and pass DEFAULT ({', '.join(sorted(seen))})\n"
+        f"self-test OK: {len(CHECKS)} checks across {len(codecs_covered)} codecs "
+        f"read their adapted synthetic row and pass DEFAULT "
+        f"({', '.join(codecs_covered)})\n"
     )
     return 0
 
@@ -536,9 +659,7 @@ def main(argv: list[str] | None = None) -> int:
         default="output/e2e_findings",
         help="directory for per-run JSONL findings records (for later audit)",
     )
-    parser.add_argument(
-        "--no-record", action="store_true", help="do not write findings records"
-    )
+    parser.add_argument("--no-record", action="store_true", help="do not write findings records")
     parser.add_argument("--list", action="store_true", help="list checks and exit")
     parser.add_argument("--self-test", action="store_true", help="network-free adapter check")
     args = parser.parse_args(argv)
@@ -578,7 +699,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     try:
         reports = [
-            run_check(c, args.limit, profile, recorder, seed=seed, shuffle_buffer=args.shuffle_buffer)
+            run_check(
+                c, args.limit, profile, recorder, seed=seed, shuffle_buffer=args.shuffle_buffer
+            )
             for c in selected
         ]
     finally:

@@ -33,6 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   exact `input_payload` so a finding can be replayed and judged
   (library bug vs. malformed upstream data vs. over-strict invariant);
   `verdict` is always `needs-review`.
+  The PubTabNet codecs additionally read their first-published dataset in
+  its **native** shape via `apoidea/pubtabnet-html` (the original
+  PubTabNet 2.0 `html` annotation, fed unmodified — not the Docling OTSL
+  conversion). The other codecs' native originals (FinTabNet, TableBank,
+  PubTables-1M PASCAL VOC) ship as tar.gz / image files not exposed
+  through the HF Datasets viewer, so they stay Docling-covered.
+  See `docs/adr/0004-e2e-native-first-published-datasets.md`.
 
 ## [0.0.9] - 2026-05-28
 
