@@ -1,6 +1,8 @@
 # tablecodec — Specification
 
-**Status:** Draft (v0.1.0)
+**Status:** Draft — spec document v0.1.0 (this is the specification's own
+version; the `tablecodec` package is independently versioned in the 0.0.x
+series — see the package metadata / CHANGELOG for its current version).
 **Last updated:** 2026-05-28
 **License of this document:** CC BY 4.0
 
