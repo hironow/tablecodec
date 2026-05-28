@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-05-28
+## [0.0.2] - 2026-05-28
 
-First public release. Stdlib-only core, three codecs, streaming I/O,
-static loss analysis, optional CLI, and an in-repo conformance suite.
+Development preview (0.0.x makes no stability promises). Stdlib-only
+core, three codecs, streaming I/O, static loss analysis, optional CLI,
+and an in-repo conformance suite. Not published to PyPI yet — codecs
+are being added incrementally within the 0.0.x series.
 
 ### Added
 
@@ -89,5 +91,5 @@ static loss analysis, optional CLI, and an in-repo conformance suite.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/hironow/tablecodec/releases/tag/v0.1.0
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/hironow/tablecodec/releases/tag/v0.0.2
