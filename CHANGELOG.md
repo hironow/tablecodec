@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.10] - 2026-05-28
+
+### Fixed
+
+- OTSL grid reconstruction (`codecs/_otslgrid.py::build_anchors`): complex
+  2D span topologies were mis-decoded — a diagonal `xcel` resolution plus
+  independent `max` colspan/rowspan inflated vertical-only spans into
+  overlapping boxes, and a column-0 `xcel` was wrongly rejected. A live
+  e2e sweep exposed this: `SynthTabNet_OTSL` through `otsl-1.0.0` scored
+  48/300 while every other corpus scored 300/300, and an HTML-vs-OTSL
+  cross-check on the same rows proved the token streams were well-formed.
+  `build_anchors` now reconstructs the grid with the anchor-centric
+  algorithm adapted (with attribution) from docling-ibm-models'
+  `otsl_to_html` — `check_right`/`check_down` span runs over `lcel`/`xcel`
+  and `ucel`/`xcel`, a 2D-span registry preventing double-claims, and
+  continuation tokens skipped rather than erroring. Fixes `otsl-1.0.0`,
+  `fintabnet-otsl`, `doctags-tables`, `pubtables-1m` (all call
+  `build_anchors`). License is unchanged (MIT → MIT requires only
+  attribution; see `THIRD_PARTY_NOTICES.md` and
+  `docs/adr/0005-port-otsl-reconstruction.md`).
+
 ### Added
 
 - E2E harness (`scripts/e2e_hf_check.py`, `[hf]` extra): streams the
@@ -249,7 +270,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.9...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.10...HEAD
+[0.0.10]: https://github.com/hironow/tablecodec/releases/tag/v0.0.10
 [0.0.9]: https://github.com/hironow/tablecodec/releases/tag/v0.0.9
 [0.0.8]: https://github.com/hironow/tablecodec/releases/tag/v0.0.8
 [0.0.7]: https://github.com/hironow/tablecodec/releases/tag/v0.0.7

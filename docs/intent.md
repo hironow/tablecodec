@@ -276,7 +276,7 @@ tablecodec/
 - [ ] OTSL → IR → OTSL のラウンドトリップが完全一致
 - [ ] OTSL → IR → PubTabNet HTML の変換が SPEC §9 の loss 申告どおりに動作
 
-**重要**: IBM の `otsl.py` のコードをコピペしないこと。アルゴリズムは論文（arXiv 2305.03393）から自前で実装し、実装後に IBM のコードと挙動比較する形を取る。これは将来のライセンス境界を保つため。
+**重要（2026-05-28 更新, ADR 0005 で改訂）**: 当初はクリーンルーム方針（IBM の `otsl.py` を逐語コピーせず論文から自前実装）だった。しかし live e2e で SynthTabNet の複雑な span 構造に対し自前 reconstruction が誤動作することが判明し（HTML 経路は同一テーブルを正しく解釈）、docling の `otsl_to_html` アルゴリズムを **帰属付きで適応移植**する方針に改めた。docling-ibm-models は私たち同様 **MIT**（Copyright (c) 2024 IBM）なので、著作権表示と MIT 文を保持すれば再利用可。帰属は `_otslgrid.py` ヘッダ・`THIRD_PARTY_NOTICES.md`・ADR 0005 に記録。ライセンスは MIT のまま（Apache 化は不要）。クリーンルームは依然デフォルトで、許諾ライセンス + 帰属記録 + core invariant 維持を満たす場合のみ適応移植を許す。
 
 ---
 

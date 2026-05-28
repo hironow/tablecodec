@@ -124,4 +124,6 @@ for the data-source decisions and the canonical-vs-real-shape caveats.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). The OTSL grid-reconstruction logic is
+adapted (with attribution) from the MIT-licensed docling-ibm-models — see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

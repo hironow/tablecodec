@@ -21,8 +21,9 @@ from pathlib import Path
 
 import pytest
 
+from tablecodec import profiles, validate
 from tablecodec.codecs.otsl import OTSL10Codec
-from tablecodec.ir import GridCell
+from tablecodec.ir import GridCell, TableSample
 
 FIXTURES = Path(__file__).parent.parent / "fixtures" / "otsl"
 
@@ -116,6 +117,59 @@ class TestSquareTableAssumption:
         source = io.StringIO(json.dumps(payload) + "\n")
         with pytest.raises(ValueError, match="unknown OTSL token"):
             list(codec.read(source))
+
+
+# ---------- complex span reconstruction (regression: SynthTabNet) ----------
+
+
+class TestComplexSpanReconstruction:
+    """OTSL grids with span topologies that the diagonal/max reconstruction
+    mishandled. Confirmed against real SynthTabNet_OTSL rows: those tables
+    parse cleanly via the HTML structure path, so the OTSL token streams are
+    valid and reconstruction must agree (no overlap, no false 'no anchor').
+    """
+
+    @staticmethod
+    def _read(codec: OTSL10Codec, otsl: list[str], ncells: int) -> TableSample:
+        payload: dict[str, object] = {
+            "filename": "x.png",
+            "otsl": otsl,
+            "cells": [{"tokens": [str(i)]} for i in range(ncells)],
+        }
+        return next(iter(codec.read(io.StringIO(json.dumps(payload) + "\n"))))
+
+    def test_col0_xcel_merges_up_not_rejected(self, codec: OTSL10Codec) -> None:
+        # given — a 1-wide vertical span whose lower cell is encoded xcel.
+        # col 0 has no left neighbour, so xcel must resolve as an up-merge,
+        # NOT raise "continuation 'xcel' ... has no anchor".
+        sample = self._read(codec, ["fcel", "nl", "xcel", "nl"], ncells=1)
+
+        # then
+        assert sample.nrows == 2
+        assert sample.ncols == 1
+        assert len(sample.cells) == 1
+        assert sample.cells[0].rowspan == 2
+        assert sample.cells[0].colspan == 1
+
+    def test_xcel_does_not_overlap_neighbours(self, codec: OTSL10Codec) -> None:
+        # given — an xcel at (1,1) whose up and left are both anchors (B, C).
+        # The diagonal resolution wrongly grew the (0,0) anchor into a 2x2
+        # box, overlapping B and C.
+        sample = self._read(codec, ["fcel", "fcel", "nl", "fcel", "xcel", "nl"], ncells=3)
+
+        # then — the reconstructed grid must be an exact, non-overlapping cover.
+        errors = validate(sample, profile=profiles.DEFAULT)
+        assert [e.invariant for e in errors] == [], errors
+        assert sample.nrows == 2
+        assert sample.ncols == 2
+
+    def test_clean_2x2_span_unchanged(self, codec: OTSL10Codec) -> None:
+        # guard the happy path: a canonical 2x2 span still resolves to one
+        # cell spanning the whole grid (matches the serializer's output).
+        sample = self._read(codec, ["fcel", "lcel", "nl", "ucel", "xcel", "nl"], ncells=1)
+        assert len(sample.cells) == 1
+        assert sample.cells[0].rowspan == 2
+        assert sample.cells[0].colspan == 2
 
 
 # ---------- write + round-trip ----------

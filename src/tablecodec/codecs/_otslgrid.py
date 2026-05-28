@@ -16,7 +16,19 @@ not duplicate it. DocTags additionally interleaves location and content
 tokens, which it strips before calling :func:`build_anchors`, and
 re-inserts when serialising from :func:`build_token_grid`.
 
-Derived from the paper, not copied from upstream reference code.
+The grid-reconstruction logic in :func:`build_anchors` (the anchor-centric
+scan, the ``check_right``/``check_down`` span runs, and the 2D-span
+registry) is adapted from docling-ibm-models' ``otsl_to_html``:
+
+    https://github.com/docling-project/docling-ibm-models
+    docling_ibm_models/tableformer/otsl.py
+    Copyright (c) 2024 International Business Machines
+    Licensed under the MIT License.
+
+It is reimplemented here for the neutral IR (it emits ``GridCell`` spans
+rather than HTML strings) and carries no third-party imports. See
+THIRD_PARTY_NOTICES.md and docs/adr/0005-port-otsl-reconstruction.md.
+
 Stdlib-only (SPEC §13).
 """
 
@@ -89,50 +101,123 @@ def ensure_square(rows: list[list[str]]) -> int:
     return next(iter(widths))
 
 
-def _resolve_anchor_at(
-    anchors: list[list[AnchorPlacement | None]], r: int, c: int, kind: str
-) -> AnchorPlacement:
-    """Return the anchor referenced by a continuation token at (r, c)."""
-    if kind == "lcel":
-        ref = anchors[r][c - 1] if c > 0 else None
-    elif kind == "ucel":
-        ref = anchors[r - 1][c] if r > 0 else None
-    elif kind == "xcel":
-        ref = anchors[r - 1][c - 1] if r > 0 and c > 0 else None
-    else:  # pragma: no cover - defensive
-        msg = f"unexpected continuation kind {kind!r}"
-        raise ValueError(msg)
-    if ref is None:
-        msg = f"OTSL continuation {kind!r} at (row={r}, col={c}) has no anchor"
-        raise ValueError(msg)
-    return ref
+def _normalize_edge_continuations(rows: list[list[str]], nrows: int, ncols: int) -> list[list[str]]:
+    """Repair structurally-impossible continuations at the grid edges.
+
+    A continuation cannot merge in a direction that has no neighbour:
+    row 0 has nothing above, column 0 has nothing to the left. Real
+    encoders (and the docling OTSL decoder's "structure error correction")
+    emit ``xcel``/``ucel`` in row 0 and ``xcel``/``lcel`` in column 0 that
+    must be read as the only possible merge:
+
+    - row 0: ``ucel``/``xcel`` -> ``lcel`` (can only merge left).
+    - col 0: ``lcel``/``xcel`` -> ``ucel`` (can only merge up).
+
+    A copy is returned; the caller's rows are not mutated.
+    """
+    grid = [list(row) for row in rows]
+    for c in range(ncols):
+        if grid[0][c] in {"ucel", "xcel"}:
+            grid[0][c] = "lcel"
+    for r in range(nrows):
+        if grid[r][0] in {"lcel", "xcel"}:
+            grid[r][0] = "ucel"
+    return grid
+
+
+@dataclass(slots=True)
+class _OtslReader:
+    """Anchor-centric OTSL grid reader (logic adapted from docling, see header).
+
+    ``registry`` mirrors docling's ``registry_2d_span``: cells already
+    claimed by a 2D (``xcel``) span, so a later anchor cannot re-claim them.
+    """
+
+    grid: list[list[str]]
+    nrows: int
+    ncols: int
+    registry: list[list[bool]]
+
+    def _check_right(self, r: int, c: int) -> int:
+        # colspan: extend right over horizontal continuations (lcel/xcel);
+        # stop at an anchor, an up-merge, or the edge (docling check_right).
+        dist = 1
+        x = c
+        while x + 1 < self.ncols and self.grid[r][x + 1] in {"lcel", "xcel"}:
+            x += 1
+            dist += 1
+        return dist
+
+    def _check_down(self, r: int, c: int) -> int:
+        # rowspan: extend down over vertical continuations (ucel/xcel);
+        # stop at an anchor, a left-merge, or the edge (docling check_down).
+        dist = 1
+        y = r
+        while y + 1 < self.nrows and self.grid[y + 1][c] in {"ucel", "xcel"}:
+            y += 1
+            dist += 1
+        return dist
+
+    def _claim_2d(self, r: int, c: int, rowspan: int, colspan: int) -> bool:
+        # Mark the rectangle in the registry iff none of it is already
+        # claimed (docling's double-count guard); returns whether it claimed.
+        for dr in range(rowspan):
+            for dc in range(colspan):
+                if self.registry[r + dr][c + dc]:
+                    return False
+        for dr in range(rowspan):
+            for dc in range(colspan):
+                self.registry[r + dr][c + dc] = True
+        return True
+
+    def span_of(self, r: int, c: int) -> tuple[int, int]:
+        """Compute (rowspan, colspan) for the anchor at (r, c) from its neighbours."""
+        colspan = rowspan = 1
+        right = self.grid[r][c + 1] if c + 1 < self.ncols else ""
+        below = self.grid[r + 1][c] if r + 1 < self.nrows else ""
+        if right == "lcel":
+            colspan = self._check_right(r, c)
+        if below == "ucel":
+            rowspan = self._check_down(r, c)
+        if right == "xcel":
+            xr = self._check_right(r, c)
+            xd = self._check_down(r, c)
+            if self._claim_2d(r, c, xd, xr):
+                colspan, rowspan = xr, xd
+        return rowspan, colspan
 
 
 def build_anchors(rows: list[list[str]]) -> tuple[int, int, list[AnchorPlacement]]:
     """Walk the row × col grid; return (nrows, ncols, ordered anchors).
 
-    Anchors are returned in row-major order — the same order the source
-    cell content (OTSL ``cells[]`` / DocTags content tokens) appears in.
+    Anchor-centric reconstruction (adapted from docling's ``otsl_to_html``,
+    see the module header): each ``fcel``/``ecel`` is an anchor whose span
+    is read from its neighbouring continuation tokens — a right ``lcel`` run
+    gives colspan, a below ``ucel`` run gives rowspan, and a right ``xcel``
+    gives a 2D span guarded by the registry against double-claiming.
+    Continuation tokens carry no content and are skipped; anchors are
+    returned in row-major order — the order the source ``cells[]`` appear in.
     """
     nrows = len(rows)
     ncols = ensure_square(rows)
-    anchors: list[list[AnchorPlacement | None]] = [[None] * ncols for _ in range(nrows)]
+    reader = _OtslReader(
+        grid=_normalize_edge_continuations(rows, nrows, ncols),
+        nrows=nrows,
+        ncols=ncols,
+        registry=[[False] * ncols for _ in range(nrows)],
+    )
     ordered: list[AnchorPlacement] = []
-
     for r in range(nrows):
         for c in range(ncols):
-            tok = rows[r][c]
-            if tok in ANCHOR_TOKENS:
-                anchor = AnchorPlacement(row=r, col=c, is_empty=(tok == "ecel"))
-                anchors[r][c] = anchor
-                ordered.append(anchor)
-            else:
-                anchor = _resolve_anchor_at(anchors, r, c, tok)
-                anchors[r][c] = anchor
-                if tok in {"lcel", "xcel"}:
-                    anchor.colspan = max(anchor.colspan, c - anchor.col + 1)
-                if tok in {"ucel", "xcel"}:
-                    anchor.rowspan = max(anchor.rowspan, r - anchor.row + 1)
+            tok = reader.grid[r][c]
+            if tok not in ANCHOR_TOKENS:
+                continue
+            rowspan, colspan = reader.span_of(r, c)
+            ordered.append(
+                AnchorPlacement(
+                    row=r, col=c, rowspan=rowspan, colspan=colspan, is_empty=(tok == "ecel")
+                )
+            )
     return nrows, ncols, ordered
 
 
