@@ -1,121 +1,117 @@
 # Handover
 
-**Last updated:** 2026-05-28 13:40 (JST)
+**Last updated:** 2026-05-28 (JST)
 **Updated by:** Claude (Opus 4.7, 1M context)
 
 ## Current State
 
-M0 → M8 implemented end-to-end on `main`, with M8 (release) prepared up
-to — but deliberately stopping short of — the actual PyPI publish. The
-library is feature-complete against `docs/spec.md` for the v0.1.0
-surface: IR + invariants + profiles + codec registry + three codecs
-(pubtabnet-1.0.0, pubtabnet-2.0.0, otsl-1.0.0) + streaming I/O + static
-loss analysis + click-based CLI + an in-repo conformance suite. Every
-milestone is its own logical commit chain following Kent Beck TDD
-(Red → Green → Refactor) and Conventional Commits; one commit ≈ one TDD
-step.
+Library is feature-complete against `docs/spec.md` and staying in the
+**0.0.x** series (no public PyPI release yet — one codec ≈ one patch
+bump). `main` is at **0.0.9**. Shipped:
 
-- 163 tests pass locally (`just ci` green); +2 benchmark tests deselected.
-- pyright strict, ruff, ruff-format, semgrep all clean.
-- coverage 100% on `ir.py`, `_invariants.py`, `validate.py`; codec /
-  cli modules in the 80–100% range.
-- `docs/format_support.md` and `docs/loss_matrix.md` are
-  auto-regenerated and CI-gated via `just docs-check`.
-- GitHub Actions CI matrix: Python 3.11/3.12/3.13 × Ubuntu/macOS,
-  plus a separate semgrep job and a pip-install-check job that proves
-  the core still installs with zero third-party dependencies.
-- Version is `0.1.0`; CHANGELOG has a `[0.1.0] - 2026-05-28` section.
-- `uv build` verified locally: sdist + wheel build, wheel installs into
-  a clean venv with an empty `Requires`, `[cli]` extra wires the
-  `tablecodec` console script.
+- IR + invariants (I-01..I-07) + validation profiles + codec registry +
+  streaming I/O + static loss analysis + click-based CLI + in-repo
+  conformance suite.
+- **All nine codecs**: `pubtabnet-1.0.0`, `pubtabnet-2.0.0`,
+  `otsl-1.0.0`, `fintabnet`, `fintabnet-otsl`, `tableformer`,
+  `tablebank`, `pubtables-1m`, `doctags-tables`.
+- `just ci` green (lint + pyright strict + pytest + semgrep + docs-check).
+  Zero third-party deps in core (enforced by `semgrep.yaml`).
+
+### E2E harness (this session's work)
+
+`scripts/e2e_hf_check.py` streams REAL datasets through the actual
+`codec.read()` and validates the IR. Occasional / local-only (network +
+`[hf]` extra), NOT in CI.
+
+- **Coverage**: every shipped codec has ≥1 official-corpus check (Docling
+  OTSL family for all nine; some via derived grid coords / round-trip —
+  see ADR 0003 caveats). Plus the **native** first-published PubTabNet
+  via `apoidea/pubtabnet-html` feeding the two pubtabnet codecs (ADR
+  0004). 15 checks total; `--self-test` / `just e2e-selftest` exercises
+  every adapter offline.
+- **Random sampling**: streaming `shuffle(seed)` reshuffles shard order;
+  a fresh seed each run (printed) → repeated runs approximate full
+  coverage. `--seed N` to reproduce, `--no-shuffle` for head read.
+- **Findings recorder**: every failed row → JSONL under
+  `output/e2e_findings/` (gitignored) with provenance + replayable
+  `input_payload`; `verdict` always `needs-review`. A generated
+  `README.md` documents the schema + replay recipe.
+
+### Live findings so far (need human audit, NOT yet triaged)
+
+- PubTabNet_OTSL / FinTabNet_OTSL (Docling): occasional I-05 on real
+  degenerate bboxes — `x0>=x1`, `y0>=y1`, and **5-element bbox arrays**
+  (our 4-element assumption may be wrong, OR upstream quirk). ~1/100 rows.
+- Native PubTabNet (apoidea, seed 128869): pubtabnet-2.0.0 +
+  pubtabnet-1.0.0 both **80/80 clean** — the native original envelope
+  passes cleanly.
 
 ## In Progress
 
-Nothing in active development. The PyPI publish is intentionally **on
-hold** (maintainer decision): the human-side Trusted Publishing setup is
-deferred. The release workflow is committed and will fire on a `v*` tag,
-but its publish job cannot authenticate until PyPI is configured.
+Nothing in active development. The user's "native first-published
+dataset per codec" request is satisfied as far as HF streaming allows
+(only PubTabNet's native original is viewer-streamable).
 
 ## Next Actions
 
-The only remaining work is the deferred PyPI publish, which needs
-out-of-band setup. The full procedure is written up in
-**`private/PYPI_RELEASE_STEPS.md`** (gitignored, local-only).
-
-1. When ready, follow `private/PYPI_RELEASE_STEPS.md`:
-   register Trusted Publishing on PyPI (owner `hironow`, repo
-   `tablecodec`, workflow `release.yaml`, environment `pypi`),
-   optionally test on TestPyPI, then `git tag v0.1.0 && git push origin
-   v0.1.0` to trigger `.github/workflows/release.yaml`.
-2. Post-release: verify `pip install tablecodec` / `[cli]`, confirm the
-   PyPI page renders the README, set the GitHub "About" blurb + SPEC
-   link.
-3. (Optional) Set up GitHub Discussions / issue templates per intent.md
-   M8 acceptance criteria.
+1. **Audit the recorded e2e findings** before concluding anything: run
+   `just e2e 200` a few times, then inspect `output/e2e_findings/*.jsonl`.
+   Decide per finding: library bug / upstream data bug / over-strict
+   invariant. The 5-element bbox case is the most interesting — confirm
+   whether PubTabNet bbox can carry a 5th element and whether `_bbox4`
+   truncation is correct.
+2. **Deferred native-original gaps** (ADR 0004): `fintabnet`,
+   `pubtables-1m` (PASCAL VOC XML), `tablebank` originals are file-based
+   (tar.gz / images) and not exposed via the HF Datasets viewer. Adding
+   them needs a downloader + format parser — only invest if there's a
+   reason.
+3. **Deferred PyPI publish**: still on hold (maintainer decision).
+   Procedure in `private/PYPI_RELEASE_STEPS.md` (gitignored). Release
+   workflow fires on a `v*` tag but can't authenticate until Trusted
+   Publishing is configured.
 
 ## Known Risks / Blockers
 
-- **Conformance is in-repo, not vendor-neutral yet**: M7 was bootstrapped
-  inside `conformance/` under ADR 0001 as a temporary deviation from
-  SPEC §11. Before v1.0 it must be extracted to a separate MIT repo;
-  a superseding ADR should record that move and flip ADR 0001 to
-  "Superseded".
-- **OTSL canonical jsonl shape is bespoke**: M4 defined
-  `{filename, otsl: [...], cells: [...]}` because the SPEC does not
-  pin a canonical envelope. If a published OTSL corpus (e.g.
-  FinTabNet_OTSL on HF) lands and uses a different envelope, the
-  fixture / sniff logic will need a minor PR.
-- **Semgrep deprecation warnings** were silenced via anchored paths;
-  the warnings will return if Semgrepignore v2 stops accepting `/`-
-  anchored entries. Re-check on every semgrep major upgrade.
+- **CI is account-blocked**: GitHub Actions runs end in ~2s with 0 steps
+  (account-level billing/quota/disabled-Actions issue, NOT code). Fix is
+  user-side at github.com/settings/billing. **Local `just ci` is the
+  real gate** and is green.
+- **`apoidea/pubtabnet-html` `html` is a Python repr** (single-quoted),
+  not JSON — `_parse_struct` falls back to `ast.literal_eval` (safe
+  literal-only parser). A note-worthy gotcha: the repo author serialized
+  with `str(dict)`, not `json.dumps`.
+- **Conformance is in-repo, not vendor-neutral yet** (ADR 0001): must be
+  extracted to a separate repo before v1.0.
 
 ## Context the Next Actor Needs
 
-- **TDD strictness**: 1 commit = 1 step. Mixing structural and
-  behavioural changes in one commit is a review-reject (intent.md §2.2).
-- **Codec contract pitfalls**: codec dataclasses must be frozen with
-  `slots=True`. The `Codec` Protocol declares `name`/`spec_version`/
-  `media_type` as `@property` getters precisely so frozen dataclasses
-  satisfy them (pyright otherwise complains about writability mismatch).
-- **Registry isolation in tests**: any test that registers codecs must
-  bookend with `codecs._snapshot()` / `codecs._restore(saved)`,
-  otherwise it pollutes sibling tests. See `tests/codecs/test_registry.py`
-  for the canonical fixture.
-- **`docs-check`** lives inside `just ci`. After ANY change to a
-  codec's `name` / `spec_version` / `media_type` / `lossy_*`, regenerate
-  with `just docs` before committing or CI will reject.
-- **`__hash__` on TableSample** intentionally excludes `extras`
-  because `Mapping` is not generally hashable; `__eq__` still considers
-  it. This is the only spot in the codebase where the hash/eq contract
-  is loosened deliberately — do not "fix" it.
-- **Serialization round-trip is verified via `copy.deepcopy`** in
-  tests (exercises the same `__reduce_ex__` protocol that the stdlib
-  serializer uses) rather than importing the serializer module directly
-  into the test tree.
+- **TDD strictness**: 1 commit = 1 step; structural vs behavioural never
+  mixed. Conventional Commits type encodes which.
+- **scripts/ is NOT in CI scope** (`just ci` runs `pyright src/ tests/`,
+  `ruff check src/ tests/`). Editor pyright flags unresolved
+  `tablecodec.*` imports in `scripts/e2e_hf_check.py` — expected/ungated.
+- **A security hook hard-blocks any edit containing the substring
+  "eval"** (PreToolUse). `ast.literal_eval` trips it; the user approved
+  it for `_parse_struct`. Do NOT obfuscate around the hook.
+- **`tests/codecs/` must NOT have `__init__.py`** (it would shadow stdlib
+  `codecs`). Registry tests bookend with `_snapshot()` / `_restore()`.
+- **`TableSample.__hash__` excludes `extras`** on purpose; `__eq__`
+  includes it. Don't "fix".
+- **`docs-check` is in `just ci`**: after any codec `name`/`spec_version`/
+  `media_type`/`lossy_*` change, run `just docs` before committing.
 
 ## Relevant Files and Commands
 
-- `docs/spec.md` — source of truth (CC BY 4.0).
-- `docs/intent.md` — implementation brief / milestones / Definition of Done.
-- `docs/format_support.md`, `docs/loss_matrix.md` — auto-generated; do
-  not hand-edit.
-- `src/tablecodec/{ir,_invariants,validate,io,loss}.py` — stdlib-only core.
-- `src/tablecodec/codecs/{_base,__init__,pubtabnet,otsl}.py` — codec
-  layer; protocol + registry + concrete codecs.
-- `src/tablecodec/cli.py` — click app, only loaded when `[cli]` extra
-  is installed.
-- `conformance/` — in-repo conformance corpus (INDEX.json + schema +
-  samples + hand-authored expectations); see `docs/adr/0001-*.md`.
-- `tests/test_conformance.py` — runs the conformance suite.
-- `.github/workflows/release.yaml` — tag-triggered build + PyPI publish
-  (OIDC) + GitHub Release. Inert until PyPI Trusted Publishing is set up.
-- `private/PYPI_RELEASE_STEPS.md` — gitignored, local-only; the deferred
-  human-side PyPI release procedure.
-- `tests/strategies.py` — hypothesis strategies (intent.md M1 names).
-- `scripts/gen_format_support.py`, `scripts/gen_loss_matrix.py` — doc
-  regenerators wired into `just docs` / `just docs-check`.
-- `just ci` — full pre-commit gate (lint + type + test + semgrep + docs).
-- `just bench` — pytest-benchmark micro-benchmarks (deselected from
-  default test run).
-- `gh run list --workflow=ci.yaml --limit 1` — quickest way to check
-  the matrix status from the CLI.
+- `docs/spec.md` — source of truth. `docs/intent.md` — brief.
+- `docs/adr/000{1,2,3,4}-*.md` — decision history (0003/0004 = e2e data
+  sources + caveats).
+- `src/tablecodec/codecs/` — the nine codecs + `_htmltable.py` /
+  `_otslgrid.py` shared parsers + `builtins.py` (BUILTIN_CODECS).
+- `scripts/e2e_hf_check.py` — the e2e harness (adapters, CHECKS registry,
+  FindingsRecorder, self_test).
+- `output/e2e_findings/` — gitignored; per-run JSONL findings for audit.
+- `just ci` — full local gate. `just e2e-selftest` — offline adapter
+  smoke. `just e2e 200` — live sampled run (needs `[hf]`).
+- `uv run --extra hf python scripts/e2e_hf_check.py --dataset apoidea --limit 80`
+  — native PubTabNet run.
