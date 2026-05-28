@@ -77,8 +77,9 @@ a validation finding on genuine upstream DATA quirks (recorded in
 - **I-04 ragged / I-03 over-span** (native PubTabNet ~1%): DATA property
   surfaced by strict exact-cover; passes LENIENT. (No change planned.)
 - **doctags parse_error (1/16k)**: HARNESS bug — the e2e doctags round-trip
-  adapter's `json.loads(...splitlines()[0])` mis-cuts a record. Fix in
-  `scripts/e2e_hf_check.py`, not the codec. (Still open — Next Actions.)
+  adapter's `json.loads(...splitlines()[0])` broke on a cell token with a
+  Unicode line separator (U+2028 etc.). FIXED — parses the whole record;
+  `--self-test` gained a U+2028 guard. The DocTags codec was always correct.
 
 ## In Progress
 
@@ -88,14 +89,14 @@ fintabnet/tablebank natives are deferred (see Next Actions).
 
 ## Next Actions
 
-1. **doctags round-trip adapter** in `scripts/e2e_hf_check.py`: replace
-   `splitlines()[0]` with a whole-record parse (the 1/16k parse_error).
-   (Harness-only; not a codec bug.)
-2. **fintabnet / tablebank native: deferred** (maintainer decision, ADR
+Nothing pressing — the e2e findings are all triaged and the actionable
+ones are done. Remaining are deferred-by-decision:
+
+1. **fintabnet / tablebank native: deferred** (maintainer decision, ADR
    0006). FinTabNet.c is VOC (redundant with pubtables-1m, wrong codec);
    the real fintabnet native is IBM-only (developer.ibm.com, not HF).
    TableBank is a 24 GB split zip. Both stay Docling-covered.
-3. **Deferred PyPI publish** (unchanged): `private/PYPI_RELEASE_STEPS.md`.
+2. **Deferred PyPI publish** (unchanged): `private/PYPI_RELEASE_STEPS.md`.
 
 ## Known Risks / Blockers
 
