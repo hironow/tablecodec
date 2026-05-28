@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11] - 2026-05-29
+
 ### Fixed
 
 - OTSL reconstruction follow-up (`_otslgrid.py`): `check_right`/`check_down`
@@ -291,7 +293,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.10...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.11...HEAD
+[0.0.11]: https://github.com/hironow/tablecodec/releases/tag/v0.0.11
 [0.0.10]: https://github.com/hironow/tablecodec/releases/tag/v0.0.10
 [0.0.9]: https://github.com/hironow/tablecodec/releases/tag/v0.0.9
 [0.0.8]: https://github.com/hironow/tablecodec/releases/tag/v0.0.8
