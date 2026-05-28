@@ -158,7 +158,7 @@ class Codec(Protocol):
 ### 6.1 Required behavior
 
 1. `read` MUST yield samples lazily. No full-file slurp.
-2. `read` MUST validate at least **I-01 through I-05** for every yielded sample. Stricter profiles may be opted into.
+2. `read` parses each record into a `TableSample` and MUST raise (with the record offset, see 4) on any record it cannot parse — invalid JSON, unknown tokens, structure/cell-count mismatch, etc. `read` does **not** evaluate the structural invariants (§5.2). Invariant checking is a separate, opt-in step performed by `validate(sample, profile)` (§8), so the caller chooses the strictness and pays the cost only when wanted, and may still read records that are parseable but invariant-invalid (common in real corpora). See ADR 0008.
 3. `write` MUST produce output that, when re-read by the same codec, round-trips losslessly **except** for the fields declared in `lossy_write`.
 4. Errors during streaming MUST include the source line / record offset.
 5. `lossy_read` and `lossy_write` MUST be honest. CI in this repository enforces this via round-trip tests.

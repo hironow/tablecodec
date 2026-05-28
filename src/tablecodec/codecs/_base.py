@@ -58,9 +58,11 @@ class Codec(Protocol):
     def read(self, source: IO[str]) -> Iterator[TableSample]:
         """Yield :class:`TableSample` instances lazily from *source*.
 
-        Implementations MUST stream — no full-file slurp. Validation of
-        at least I-01..I-05 is required per SPEC §6.1; stricter profiles
-        are opt-in via :mod:`tablecodec.validate`.
+        Implementations MUST stream — no full-file slurp. ``read`` parses
+        and raises (with the record offset) on records it cannot parse; it
+        does NOT evaluate the structural invariants. Invariant checking is
+        a separate, opt-in step via :func:`tablecodec.validate` (SPEC §6.1
+        / §8, ADR 0008).
         """
         ...
 

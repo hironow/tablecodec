@@ -114,11 +114,10 @@ rest are genuine feature/roadmap work.
 
 **Minor — implementation is canonical; reconcile the spec text:**
 
-- **§6.1.2 — `read` does not validate I-01..I-05 per sample** (confirmed:
-  e.g. `pubtabnet.read` only `parse_html_table` + `yield`, raising on
-  malformed JSON/records; I-04/I-05 are not run). Separate `validate(...)`
-  is the deliberate, cleaner design — amend §6.1.2 to describe it rather
-  than force validation into every read.
+- **§6.1.2 — `read` does not validate. RESOLVED** (spec §6.1.2 + the
+  `Codec.read` docstring reconciled: `read` parses and raises on
+  unparseable records; invariant checking is the separate opt-in
+  `validate(sample, profile)` step. Rationale in ADR 0008.)
 - **§12 — CLI surface drift. RESOLVED** (spec §12 reconciled to the
   canonical CLI: `--codec` for validate/stats/diff with auto-detect;
   `--strict`/`--parallel` removed as `--profile strict` / single-pass
