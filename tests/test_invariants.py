@@ -362,12 +362,12 @@ class TestI05:
         assert errors == []
 
     def test_rejects_degenerate_x(self) -> None:
-        # given — x0 == x2
+        # given — x0 == x2 on a content-bearing cell (I-05 guards these)
         sample = TableSample(
             filename="x.png",
             nrows=1,
             ncols=1,
-            cells=(GridCell(row=0, col=0, bbox=(5, 0, 5, 20)),),
+            cells=(GridCell(row=0, col=0, tokens=("a",), bbox=(5, 0, 5, 20)),),
         )
 
         # when
@@ -377,12 +377,12 @@ class TestI05:
         assert any(e.invariant == "I-05" for e in errors)
 
     def test_rejects_inverted_y(self) -> None:
-        # given — y0 > y2
+        # given — y0 > y2 on a content-bearing cell
         sample = TableSample(
             filename="x.png",
             nrows=1,
             ncols=1,
-            cells=(GridCell(row=0, col=0, bbox=(0, 20, 10, 0)),),
+            cells=(GridCell(row=0, col=0, tokens=("a",), bbox=(0, 20, 10, 0)),),
         )
 
         # when
@@ -390,6 +390,23 @@ class TestI05:
 
         # then
         assert any(e.invariant == "I-05" for e in errors)
+
+    def test_skips_degenerate_bbox_on_empty_cell(self) -> None:
+        # given — an EMPTY cell (tokens == ()) with a zero-area placeholder
+        # bbox. Datasets routinely emit these; I-05 only guards boxes that
+        # localize content, so this must NOT be flagged (spec §5.2, ADR 0007).
+        sample = TableSample(
+            filename="x.png",
+            nrows=1,
+            ncols=1,
+            cells=(GridCell(row=0, col=0, tokens=(), bbox=(5, 5, 5, 5)),),
+        )
+
+        # when
+        errors = check_i05_bbox_well_formed(sample)
+
+        # then
+        assert errors == []
 
 
 # ---------- I-06: header cells form a contiguous top region ----------

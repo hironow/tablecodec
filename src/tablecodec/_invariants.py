@@ -210,6 +210,12 @@ def check_i05_bbox_well_formed(sample: TableSample) -> list[ValidationError]:
         bbox = cell.bbox
         if bbox is None:
             continue
+        if not cell.tokens:
+            # I-05 guards a box that *localizes content*. An empty cell
+            # localizes nothing and datasets routinely give it a zero-area
+            # placeholder box, so its geometry is out of scope (spec §5.2,
+            # ADR 0007). The bbox itself is still kept on the IR.
+            continue
         x0, y0, x1, y1 = bbox
         if x0 >= x1:
             errors.append(

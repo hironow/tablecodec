@@ -79,8 +79,12 @@ def test_broken_nrows_reports_i01_only_in_its_checker(sample: TableSample, bad_n
     suppress_health_check=[HealthCheck.too_slow, HealthCheck.data_too_large],
 )
 def test_broken_bbox_reports_i05_only_in_its_checker(sample: TableSample) -> None:
-    # given — set every cell's bbox to a degenerate one (x0 == x1).
-    broken_cells = tuple(dataclasses.replace(cell, bbox=(0, 0, 0, 10)) for cell in sample.cells)
+    # given — make every cell content-bearing (I-05 guards only those; an
+    # empty cell's bbox is a placeholder, see ADR 0007) with a degenerate
+    # bbox (x0 == x1).
+    broken_cells = tuple(
+        dataclasses.replace(cell, tokens=("x",), bbox=(0, 0, 0, 10)) for cell in sample.cells
+    )
     broken = dataclasses.replace(sample, cells=broken_cells)
 
     # when

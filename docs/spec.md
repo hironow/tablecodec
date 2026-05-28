@@ -111,9 +111,19 @@ A `TableSample` is **valid** when **all** of the following hold:
 | I-02  | For every cell, `0 <= row < nrows` and `0 <= col < ncols`. |
 | I-03  | For every cell, `row + rowspan <= nrows` and `col + colspan <= ncols`. |
 | I-04  | The union of cell footprints (using rowspan / colspan) **exactly covers** the `nrows × ncols` grid. No overlaps, no gaps. |
-| I-05  | When `bbox` is set: `bbox[0] < bbox[2]` and `bbox[1] < bbox[3]`. |
+| I-05  | When `bbox` is set **on a content-bearing cell** (`tokens` non-empty): `bbox[0] < bbox[2]` and `bbox[1] < bbox[3]`. A bbox on an **empty cell** (`tokens == ()`) is a placeholder region and is **not** geometry-checked. |
 | I-06  | Header cells form a contiguous top-region of the grid (no header rows below body rows). |
 | I-07  | `tokens` may be empty (empty cell), but the tuple itself is never `None`. |
+
+I-05 guards the geometry of a box that **localizes content**. An empty
+cell localizes nothing, and source datasets routinely assign zero-area
+placeholder boxes to empty cells (e.g. SynthTabNet, where ~45% of sampled
+tables carry such boxes), so an empty cell's bbox geometry is out of
+scope for I-05. Codecs still read and keep the bbox faithfully — it
+remains on the IR and is preserved on round-trip; only the geometry check
+is skipped for empty cells. (Profiles that require bbox *presence* —
+`tableformer`, `pubtabnet-2.0` — are unaffected: a placeholder box is
+still present.)
 
 The `extras` field is **opaque to validation** but must be JSON-serializable for codecs that round-trip through it.
 
