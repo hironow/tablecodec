@@ -41,9 +41,16 @@ XML is parsed with `defusedxml` (added to the `[hf]` extra) to harden
 against entity/DTD/external-reference attacks. A live run reads 200/200
 real VOC tables into valid IR (DEFAULT-clean).
 
-`fintabnet` (FinTabNet.c, 3.2 GB) is **deferred** — feasible but heavy,
-and a separate native parser; revisit on demand. `tablebank` (~24 GB
-split zip) is **out of scope** for local sampling.
+`fintabnet` native coverage is **deferred** (maintainer decision). Note
+the nuance: `bsmock/FinTabNet.c` (3.2 GB) is by the same authors as
+PubTables-1M and uses the same **PASCAL VOC** format, so it would feed the
+`pubtables-1m` codec (geometry) — redundant with the coverage added here —
+and does NOT serve the `fintabnet` codec, whose envelope is HTML-token.
+The `fintabnet` codec's true native is the **original IBM FinTabNet** HTML
+jsonl (developer.ibm.com), which is not HF-streamable and needs IBM-side
+registration. So `fintabnet` stays covered via `docling-project/
+FinTabNet_OTSL`. `tablebank` (~24 GB split zip) is **out of scope** for
+local sampling.
 
 ## Consequences
 
