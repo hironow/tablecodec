@@ -23,6 +23,7 @@ Stdlib-only (SPEC §13).
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 from tablecodec.ir import GridCell, TableSample
 
@@ -34,7 +35,9 @@ __all__ = [
     "AnchorPlacement",
     "build_anchors",
     "build_token_grid",
+    "cells_to_otsl",
     "ensure_square",
+    "otsl_to_cells",
     "split_rows",
 ]
 
@@ -157,3 +160,62 @@ def build_token_grid(sample: TableSample) -> tuple[list[list[str]], list[GridCel
                 else:
                     grid[rr][cc] = "xcel"
     return grid, anchored
+
+
+# ---------- OTSL payload <-> GridCells ----------
+
+
+def otsl_to_cells(
+    otsl_tokens: list[str], cell_payloads: list[dict[str, object]]
+) -> tuple[int, int, tuple[GridCell, ...]]:
+    """Map an OTSL token stream + positional ``cells[]`` to GridCells.
+
+    Returns ``(nrows, ncols, cells)``. Every cell defaults to
+    ``role="body"`` (the OTSL core has no header marker). Raises if the
+    anchor count and ``cells[]`` length disagree.
+    """
+    rows = split_rows(otsl_tokens)
+    nrows, ncols, anchors = build_anchors(rows)
+    if len(anchors) != len(cell_payloads):
+        msg = (
+            f"OTSL declares {len(anchors)} anchored cells but cells[] has "
+            f"{len(cell_payloads)} entries"
+        )
+        raise ValueError(msg)
+
+    cells: list[GridCell] = []
+    for anchor, cell_payload in zip(anchors, cell_payloads, strict=True):
+        tokens = tuple(cast("tuple[str, ...]", cell_payload.get("tokens", ())))
+        bbox_raw = cell_payload.get("bbox")
+        bbox = None
+        if bbox_raw is not None:
+            seq = cast("list[int]", bbox_raw)
+            bbox = (int(seq[0]), int(seq[1]), int(seq[2]), int(seq[3]))
+        cells.append(
+            GridCell(
+                row=anchor.row,
+                col=anchor.col,
+                rowspan=anchor.rowspan,
+                colspan=anchor.colspan,
+                tokens=tokens,
+                bbox=bbox,
+                role="body",
+            )
+        )
+    return nrows, ncols, tuple(cells)
+
+
+def cells_to_otsl(sample: TableSample) -> tuple[list[str], list[dict[str, object]]]:
+    """Serialize a sample to an OTSL token stream + positional ``cells[]``."""
+    grid, emitted_order = build_token_grid(sample)
+    tokens: list[str] = []
+    for row in grid:
+        tokens.extend(row)
+        tokens.append("nl")
+    cell_payloads: list[dict[str, object]] = []
+    for cell in emitted_order:
+        payload: dict[str, object] = {"tokens": list(cell.tokens)}
+        if cell.bbox is not None:
+            payload["bbox"] = list(cell.bbox)
+        cell_payloads.append(payload)
+    return tokens, cell_payloads

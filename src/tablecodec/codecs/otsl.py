@@ -29,8 +29,8 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from typing import IO, Any, cast
 
-from tablecodec.codecs._otslgrid import build_anchors, build_token_grid, split_rows
-from tablecodec.ir import BBox, GridCell, TableSample
+from tablecodec.codecs._otslgrid import cells_to_otsl, otsl_to_cells
+from tablecodec.ir import TableSample
 
 __all__ = ["OTSL10Codec"]
 
@@ -100,51 +100,16 @@ def _looks_like_otsl(payload: object) -> bool:
     return "otsl" in payload_dict and "cells" in payload_dict
 
 
-# ---------- token → grid (delegates to _otslgrid) ----------
+# ---------- payload <-> sample (delegates to _otslgrid) ----------
 
 
 def _payload_to_sample(payload: dict[str, Any]) -> TableSample:
-    otsl_tokens = list(payload["otsl"])
-    cell_payloads = list(payload["cells"])
-    rows = split_rows(otsl_tokens)
-    nrows, ncols, anchors = build_anchors(rows)
-
-    if len(anchors) != len(cell_payloads):
-        msg = (
-            f"OTSL declares {len(anchors)} anchored cells but cells[] has "
-            f"{len(cell_payloads)} entries"
-        )
-        raise ValueError(msg)
-
-    cells: list[GridCell] = []
-    for anchor, cell_payload in zip(anchors, cell_payloads, strict=True):
-        tokens = tuple(cell_payload.get("tokens", ()))
-        bbox_raw = cell_payload.get("bbox")
-        bbox: BBox | None = None
-        if bbox_raw is not None:
-            bbox = (
-                int(bbox_raw[0]),
-                int(bbox_raw[1]),
-                int(bbox_raw[2]),
-                int(bbox_raw[3]),
-            )
-        cells.append(
-            GridCell(
-                row=anchor.row,
-                col=anchor.col,
-                rowspan=anchor.rowspan,
-                colspan=anchor.colspan,
-                tokens=tokens,
-                bbox=bbox,
-                role="body",  # OTSL grammar has no header marker.
-            )
-        )
-
+    nrows, ncols, cells = otsl_to_cells(list(payload["otsl"]), list(payload["cells"]))
     return TableSample(
         filename=str(payload["filename"]),
         nrows=nrows,
         ncols=ncols,
-        cells=tuple(cells),
+        cells=cells,
         split=_normalize_split(payload.get("split")),
         imgid=payload.get("imgid"),
     )
@@ -159,11 +124,8 @@ def _normalize_split(value: object) -> Any:
     raise ValueError(msg)
 
 
-# ---------- IR → OTSL ----------
-
-
 def _sample_to_payload(sample: TableSample) -> dict[str, Any]:
-    tokens, cell_payloads = _sample_to_otsl_and_cells(sample)
+    tokens, cell_payloads = cells_to_otsl(sample)
     out: dict[str, Any] = {
         "filename": sample.filename,
         "otsl": tokens,
@@ -174,24 +136,3 @@ def _sample_to_payload(sample: TableSample) -> dict[str, Any]:
     if sample.imgid is not None:
         out["imgid"] = sample.imgid
     return out
-
-
-def _sample_to_otsl_and_cells(
-    sample: TableSample,
-) -> tuple[list[str], list[dict[str, Any]]]:
-    """Lay anchors back onto the grid (via _otslgrid) and flatten to tokens."""
-    grid, emitted_order = build_token_grid(sample)
-
-    tokens: list[str] = []
-    for row in grid:
-        tokens.extend(row)
-        tokens.append("nl")
-
-    cell_payloads: list[dict[str, Any]] = []
-    for cell in emitted_order:
-        payload: dict[str, Any] = {"tokens": list(cell.tokens)}
-        if cell.bbox is not None:
-            payload["bbox"] = list(cell.bbox)
-        cell_payloads.append(payload)
-
-    return tokens, cell_payloads
