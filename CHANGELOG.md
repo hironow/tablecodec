@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-05-28
+
+### Added
+
+- TableFormer Format codec (`tableformer`): PubTabNet 2.0's HTML-token
+  structure plus the invariant that EVERY cell — including empty ones —
+  carries a bbox. The codec enforces this on read (raising a clear error
+  if any cell lacks a bbox), so its output always satisfies
+  `profiles.TABLEFORMER`. `sniff()` requires all cells to have a bbox,
+  which distinguishes it from PubTabNet (whose empty cells omit bbox).
+  `lossy_read = {}`, `lossy_write = {"extras"}`.
+
 ## [0.0.3] - 2026-05-28
 
 ### Added
@@ -110,6 +122,7 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.4...HEAD
+[0.0.4]: https://github.com/hironow/tablecodec/releases/tag/v0.0.4
 [0.0.3]: https://github.com/hironow/tablecodec/releases/tag/v0.0.3
 [0.0.2]: https://github.com/hironow/tablecodec/releases/tag/v0.0.2
