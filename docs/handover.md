@@ -6,8 +6,7 @@
 ## Current State
 
 Library is feature-complete against `docs/spec.md`, staying in **0.0.x**
-(no public PyPI release yet). `main` is at **0.0.12** (origin is one
-release behind until the next push).
+(no public PyPI release yet). `main` is at **0.0.13**.
 Shipped:
 
 - IR + invariants (I-01..I-07) + validation profiles + codec registry +
@@ -29,7 +28,7 @@ Shipped:
   roadmap (realigned from the abandoned v0.1.0 / minor-rollout plan to the
   executed 0.0.x reality), spec.md status (clarified spec-doc v0.1.0 vs the
   0.0.x package), and the version triple (pyproject / `__init__` / uv.lock)
-  all consistent (now 0.0.12). `loss.py` added to the semgrep core list and a
+  all consistent (now 0.0.13). `loss.py` added to the semgrep core list and a
   CLAUDE.md self-contradiction about it resolved.
 
 ### E2E harness (`scripts/e2e_hf_check.py`)
@@ -129,9 +128,11 @@ rest are genuine feature/roadmap work.
 
 **Feature / roadmap — genuinely unimplemented (by design for now):**
 
-- **§6.2 — no third-party entry-point registration.** Only the static
-  `codecs/builtins.py`; no `tablecodec.codecs` entry-point group/loader.
-  `register`/`get`/`detect` exist. Implement when an external codec ships.
+- **§6.2 — third-party entry-point registration. RESOLVED (0.0.13).**
+  `codecs.load_plugins()` discovers + registers codecs from the
+  `tablecodec.codecs` entry-point group (stdlib `importlib.metadata`,
+  idempotent); the CLI calls it after the built-ins. No external package
+  ships one yet, so the live group is empty (tested via monkeypatch).
 - **§8 — STRICT profile == DEFAULT.** The bbox×image-dimension cross-check
   needs image metadata the IR does not carry (relates to OQ-3). Confirmed
   `profiles.STRICT` uses the DEFAULT check tuple.

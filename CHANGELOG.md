@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.13] - 2026-05-29
+
+### Added
+
+- `codecs.load_plugins()` — discovers and registers third-party codecs from
+  the `tablecodec.codecs` entry-point group (SPEC §6.2). Each entry point
+  references a `Codec` class (instantiated) or instance; already-registered
+  names are skipped (idempotent). The CLI now calls it after registering the
+  built-ins, so `pip install tablecodec-<x>` codecs appear in `codecs list`
+  and are usable by every command. Stdlib-only (`importlib.metadata`).
+
 ### Fixed
 
 - E2E harness (`scripts/e2e_hf_check.py`): the DocTags round-trip adapter
@@ -321,7 +332,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.12...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.13...HEAD
+[0.0.13]: https://github.com/hironow/tablecodec/releases/tag/v0.0.13
 [0.0.12]: https://github.com/hironow/tablecodec/releases/tag/v0.0.12
 [0.0.11]: https://github.com/hironow/tablecodec/releases/tag/v0.0.11
 [0.0.10]: https://github.com/hironow/tablecodec/releases/tag/v0.0.10
