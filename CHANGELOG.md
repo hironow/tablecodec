@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.14] - 2026-05-29
+
+### Removed
+
+- The `fast` (`orjson`) and `validate` (`pydantic`) optional extras
+  (`pyproject.toml` + SPEC §13 dependency table). Both were declared but
+  wired nowhere, and could not be: the work they would touch — JSONL
+  parsing, IR construction, validation — runs inside the zero-dependency
+  core, where `semgrep.yaml` forbids third-party imports. Installing them
+  pulled in a package nothing could import. `tablecodec[teds]` (a separate,
+  core-external feature) and `tablecodec[cli]`/`[hf]` are unaffected.
+  Stricter validation remains available via the layered validation
+  profiles (SPEC §8), which are stdlib-only. See
+  `docs/adr/0009-drop-fast-and-validate-extras.md`.
+
 ## [0.0.13] - 2026-05-29
 
 ### Added
@@ -332,7 +347,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.13...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.14...HEAD
+[0.0.14]: https://github.com/hironow/tablecodec/releases/tag/v0.0.14
 [0.0.13]: https://github.com/hironow/tablecodec/releases/tag/v0.0.13
 [0.0.12]: https://github.com/hironow/tablecodec/releases/tag/v0.0.12
 [0.0.11]: https://github.com/hironow/tablecodec/releases/tag/v0.0.11
