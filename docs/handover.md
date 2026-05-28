@@ -1,19 +1,21 @@
 # Handover
 
-**Last updated:** 2026-05-28 14:30 (JST)
+**Last updated:** 2026-05-28 13:40 (JST)
 **Updated by:** Claude (Opus 4.7, 1M context)
 
 ## Current State
 
-M0 → M6 implemented end-to-end on `main`. The library is feature-complete
-against `docs/spec.md` for the v0.1.0 surface: IR + invariants +
-profiles + codec registry + three codecs (pubtabnet-1.0.0,
-pubtabnet-2.0.0, otsl-1.0.0) + streaming I/O + static loss analysis +
-click-based CLI. Every milestone is its own logical commit chain
-following Kent Beck TDD (Red → Green → Refactor) and Conventional
-Commits; one commit ≈ one TDD step.
+M0 → M8 implemented end-to-end on `main`, with M8 (release) prepared up
+to — but deliberately stopping short of — the actual PyPI publish. The
+library is feature-complete against `docs/spec.md` for the v0.1.0
+surface: IR + invariants + profiles + codec registry + three codecs
+(pubtabnet-1.0.0, pubtabnet-2.0.0, otsl-1.0.0) + streaming I/O + static
+loss analysis + click-based CLI + an in-repo conformance suite. Every
+milestone is its own logical commit chain following Kent Beck TDD
+(Red → Green → Refactor) and Conventional Commits; one commit ≈ one TDD
+step.
 
-- 145 tests pass locally (`just ci` green).
+- 163 tests pass locally (`just ci` green); +2 benchmark tests deselected.
 - pyright strict, ruff, ruff-format, semgrep all clean.
 - coverage 100% on `ir.py`, `_invariants.py`, `validate.py`; codec /
   cli modules in the 80–100% range.
@@ -22,42 +24,42 @@ Commits; one commit ≈ one TDD step.
 - GitHub Actions CI matrix: Python 3.11/3.12/3.13 × Ubuntu/macOS,
   plus a separate semgrep job and a pip-install-check job that proves
   the core still installs with zero third-party dependencies.
+- Version is `0.1.0`; CHANGELOG has a `[0.1.0] - 2026-05-28` section.
+- `uv build` verified locally: sdist + wheel build, wheel installs into
+  a clean venv with an empty `Requires`, `[cli]` extra wires the
+  `tablecodec` console script.
 
 ## In Progress
 
-Nothing in active development. Last commit on `main`:
-
-- `0c93a46 ci: install [cli] extra so pyright can resolve click in cli.py`
-- CI for that commit was running at handover-time (see Next Actions).
+Nothing in active development. The PyPI publish is intentionally **on
+hold** (maintainer decision): the human-side Trusted Publishing setup is
+deferred. The release workflow is committed and will fire on a `v*` tag,
+but its publish job cannot authenticate until PyPI is configured.
 
 ## Next Actions
 
-The remaining milestones each require a decision or out-of-band setup
-from the human; nothing further can be done autonomously without it.
+The only remaining work is the deferred PyPI publish, which needs
+out-of-band setup. The full procedure is written up in
+**`private/PYPI_RELEASE_STEPS.md`** (gitignored, local-only).
 
-1. **Verify the M6 CI fix is green** on GitHub Actions
-   (`gh run list --workflow=ci.yaml --limit 1`).
-2. **Decide M7 scope (Conformance Suite, SPEC §11)**:
-   - Where to host: personal `github.com/hironow/tablecodec-conformance`
-     (intent.md default) vs. a future `tablecodec` org.
-   - Whether to seed fixtures from PMC samples (license-clean per
-     PubTabNet README) or only hand-crafted synthetic.
-3. **Prep M8 (v0.1.0 PyPI release)**:
-   - Register `tablecodec` on PyPI (or claim the existing name) and
-     set up Trusted Publishing for the GitHub repo so CI can publish
-     on tag push without a stored API token.
-   - Bump version to `0.1.0` in `pyproject.toml` and
-     `src/tablecodec/__init__.py`, promote the Unreleased CHANGELOG
-     section to `[0.1.0]`, tag `v0.1.0`, push.
-4. (Optional) Set up GitHub Discussions / issue templates per intent.md
+1. When ready, follow `private/PYPI_RELEASE_STEPS.md`:
+   register Trusted Publishing on PyPI (owner `hironow`, repo
+   `tablecodec`, workflow `release.yaml`, environment `pypi`),
+   optionally test on TestPyPI, then `git tag v0.1.0 && git push origin
+   v0.1.0` to trigger `.github/workflows/release.yaml`.
+2. Post-release: verify `pip install tablecodec` / `[cli]`, confirm the
+   PyPI page renders the README, set the GitHub "About" blurb + SPEC
+   link.
+3. (Optional) Set up GitHub Discussions / issue templates per intent.md
    M8 acceptance criteria.
 
 ## Known Risks / Blockers
 
-- **Pyright + click**: until M6 CI fix lands green, the CLI module
-  effectively blocks the matrix. The fix in `0c93a46` adds `[cli]` to
-  the CI install; if it still fails, the next thing to check is whether
-  pyright on Python 3.13 needs a click stub.
+- **Conformance is in-repo, not vendor-neutral yet**: M7 was bootstrapped
+  inside `conformance/` under ADR 0001 as a temporary deviation from
+  SPEC §11. Before v1.0 it must be extracted to a separate MIT repo;
+  a superseding ADR should record that move and flip ADR 0001 to
+  "Superseded".
 - **OTSL canonical jsonl shape is bespoke**: M4 defined
   `{filename, otsl: [...], cells: [...]}` because the SPEC does not
   pin a canonical envelope. If a published OTSL corpus (e.g.
@@ -102,6 +104,13 @@ from the human; nothing further can be done autonomously without it.
   layer; protocol + registry + concrete codecs.
 - `src/tablecodec/cli.py` — click app, only loaded when `[cli]` extra
   is installed.
+- `conformance/` — in-repo conformance corpus (INDEX.json + schema +
+  samples + hand-authored expectations); see `docs/adr/0001-*.md`.
+- `tests/test_conformance.py` — runs the conformance suite.
+- `.github/workflows/release.yaml` — tag-triggered build + PyPI publish
+  (OIDC) + GitHub Release. Inert until PyPI Trusted Publishing is set up.
+- `private/PYPI_RELEASE_STEPS.md` — gitignored, local-only; the deferred
+  human-side PyPI release procedure.
 - `tests/strategies.py` — hypothesis strategies (intent.md M1 names).
 - `scripts/gen_format_support.py`, `scripts/gen_loss_matrix.py` — doc
   regenerators wired into `just docs` / `just docs-check`.
