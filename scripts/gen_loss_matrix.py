@@ -15,6 +15,7 @@ from textwrap import dedent
 from tablecodec import analyze_loss, codecs
 from tablecodec.codecs.fintabnet import FinTabNetCodec
 from tablecodec.codecs.otsl import OTSL10Codec
+from tablecodec.codecs.pubtables1m import PubTables1MCodec
 from tablecodec.codecs.pubtabnet import PubTabNet10Codec, PubTabNet20Codec
 from tablecodec.codecs.tablebank import TableBankCodec
 from tablecodec.codecs.tableformer import TableFormerCodec
@@ -25,6 +26,7 @@ _BUILTINS = [
     FinTabNetCodec(),
     TableFormerCodec(),
     TableBankCodec(),
+    PubTables1MCodec(),
     OTSL10Codec(),
 ]
 
@@ -34,6 +36,7 @@ _CLASS_GLYPH = {
     "lossless": "🟢 lossless",
     "structure-preserving": "🟡 structure",
     "lossy": "🔴 lossy",
+    "unwritable": "⚫ unwritable",
 }
 
 
@@ -69,6 +72,8 @@ def _render() -> str:
           (`bbox`, `role`, `extras`). Grid topology and cell tokens
           survive the round trip.
         - 🔴 **lossy** — at least one structural / content field lost.
+        - ⚫ **unwritable** — the target is a read-only codec (ADR 0002);
+          the conversion cannot be written at all.
 
         """
     )

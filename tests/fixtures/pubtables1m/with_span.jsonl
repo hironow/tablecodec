@@ -1,0 +1,1 @@
+{"filename": "pt1m_span.png", "imgid": 62, "cells": [{"row": 0, "col": 0, "rowspan": 2, "colspan": 1, "bbox": [0, 0, 10, 10], "tokens": ["Big"]}, {"row": 0, "col": 1, "bbox": [10, 0, 20, 5], "tokens": ["a"]}, {"row": 1, "col": 1, "bbox": [10, 5, 20, 10], "tokens": ["b"]}]}
