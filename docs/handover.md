@@ -89,14 +89,21 @@ fintabnet/tablebank natives are deferred (see Next Actions).
 
 ## Next Actions
 
-Nothing pressing — the e2e findings are all triaged and the actionable
-ones are done. Remaining are deferred-by-decision:
-
-1. **fintabnet / tablebank native: deferred** (maintainer decision, ADR
+1. **Refine the I-05 "empty cell" definition (needs spec/ADR — recorded,
+   not yet started).** 0.0.12 scoped I-05 to `tokens != ()`, but a seed-7
+   verification (8k rows) showed SynthTabNet still flags 85 cells that are
+   *effectively* empty: 70 are `tokens == ['']` (single empty-string token)
+   and 15 are markup-only (`<sup> </sup>`); 0 had real text. The literal
+   `tokens == ()` is too narrow. Proposed IR-neutral fix:
+   `"".join(tokens).strip() != ""` (clears the 70; leaves the 15 markup-only
+   since the core IR can't know `<sup>` is markup). Address via a spec edit
+   / superseding ADR (do NOT change behaviour silently). Detail in
+   `output/e2e_findings/TRIAGE.md`.
+2. **fintabnet / tablebank native: deferred** (maintainer decision, ADR
    0006). FinTabNet.c is VOC (redundant with pubtables-1m, wrong codec);
    the real fintabnet native is IBM-only (developer.ibm.com, not HF).
    TableBank is a 24 GB split zip. Both stay Docling-covered.
-2. **Deferred PyPI publish** (unchanged): `private/PYPI_RELEASE_STEPS.md`.
+3. **Deferred PyPI publish** (unchanged): `private/PYPI_RELEASE_STEPS.md`.
 
 ## Known Risks / Blockers
 
