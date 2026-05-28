@@ -32,11 +32,12 @@ A Python library giving a neutral, lossless **Internal Representation
   This is enforced by `semgrep.yaml`
   (`tablecodec-no-third-party-imports-in-core`). When you add a core
   module, add it to that rule's `paths.include` list.
-- **Optional features are extras.** `cli.py` (click) and `loss.py` are
-  the only modules permitted third-party imports, and they are excluded
-  from the semgrep core list. CLI is gated behind the `[cli]` extra;
-  `import tablecodec` must work on a bare interpreter (the
-  `pip install -e .` CI job guards this).
+- **Optional features are extras.** `cli.py` (click) is the only module
+  permitted third-party imports, and it is excluded from the semgrep core
+  list. (`loss.py` is stdlib-only — static, data-free analysis over codec
+  `lossy_*` declarations — so it stays IN the core list and is enforced.)
+  CLI is gated behind the `[cli]` extra; `import tablecodec` must work on
+  a bare interpreter (the `pip install -e .` CI job guards this).
 - **Streaming, not slurping.** `read` yields lazily; never `f.read()` /
   `f.readlines()` a whole dataset. `semgrep.yaml`
   (`tablecodec-no-full-file-read`) enforces this in `io.py` and
