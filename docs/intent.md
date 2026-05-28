@@ -331,23 +331,28 @@ tablecodec/
 
 ---
 
-### M8 — v0.1.0 Public Release（半日〜1日）
+### M8 — Public Release（PyPI、**保留中**）
 
-**Goal**: PyPI 公開、GitHub Release、世界に存在を告知。
+**方針変更（実行時の決定）**: 当初は M1-M8 を経て v0.1.0 で公開する計画だったが、
+codec を 1 つずつ **0.0.x の patch bump** として出荷する方針に切り替えた（現在
+0.0.10、9 codec すべて出荷済み）。PyPI 公開は人間側の Trusted Publishing 設定が
+済むまで **保留**。手順は gitignore 下の `private/PYPI_RELEASE_STEPS.md`。
+
+**Goal**: PyPI 公開、GitHub Release、告知（設定完了後）。
 
 **Deliverables**:
-- `pyproject.toml` の version を 0.1.0 に
-- `CHANGELOG.md` の Unreleased を 0.1.0 セクションに昇格
-- GitHub Release ノート（CHANGELOG から自動生成）
-- PyPI publish（trusted publishing 経由、CI から）
-- README に installation セクション、basic usage、SPEC リンク
-- GitHub Discussions / Issues テンプレート整備
-- Hugging Face と Docling コミュニティに告知（軽量に、宣伝色を出さず）
+- version は 0.0.x のまま（codec 追加 = patch bump、`pyproject.toml` +
+  `src/tablecodec/__init__.py` を同期）
+- リリース時に `CHANGELOG.md` の `[Unreleased]` を `[0.0.N]` へ昇格
+- `.github/workflows/release.yaml`（`v*` タグで発火、Trusted Publishing / OIDC）
+  — PyPI 側設定が済むまで inert
+- README に installation / basic usage / SPEC リンク（済）
+- （任意）GitHub Discussions / Issues テンプレート
 
-**Acceptance Criteria**:
-- [ ] `pip install tablecodec` が動作
+**Acceptance Criteria（公開を実施する場合）**:
+- [ ] `pip install tablecodec` が動作（core は zero-dep）
 - [ ] `pip install "tablecodec[cli]"` が動作
-- [ ] `import tablecodec; tablecodec.__version__ == "0.1.0"`
+- [ ] `import tablecodec; tablecodec.__version__` が現行 0.0.x と一致
 - [ ] PyPI ページに README が正しく表示される
 - [ ] GitHub の "About" 欄に SPEC リンクと一文の説明
 
@@ -390,17 +395,19 @@ tablecodec/
 
 ---
 
-## 8. v1.0 へのロードマップ（M8 後）
+## 8. v1.0 へのロードマップ
 
-v0.1.0 公開後、v1.0 までは以下のフェーズで進める：
+**実績（0.0.x で達成済み）**: 当初は codec を 0.2.0〜0.4.0 の minor で追加する計画
+だったが、実際には全 9 codec（pubtabnet 1.0/2.0、otsl、fintabnet、fintabnet-otsl、
+tableformer、tablebank、pubtables-1m、doctags-tables）を **0.0.x の patch bump** で
+出荷した（現在 0.0.10）。docling bridge は未着手、TEDS extra も未実装。
+
+v1.0 までの残作業：
 
 | バージョン | 内容 |
 |---|---|
-| 0.2.0 | FinTabNet, TableFormer codec |
-| 0.3.0 | PubTables-1M (read-only), TableBank |
-| 0.4.0 | DocTags-tables, docling bridge (`tablecodec-docling`) |
-| 0.5.0 | TEDS extra 実装 (`tablecodec[teds]`) |
-| 0.6.0 | Open Questions §17 を解消 |
+| 0.0.x（継続） | TEDS extra 実装 (`tablecodec[teds]`)、docling bridge (`tablecodec-docling`)、Open Questions §17 の解消、Conformance Suite を別 repo へ抽出（ADR 0001） |
+| 0.0.x | PyPI 公開（M8、Trusted Publishing 設定後） |
 | 0.9.0 | Public API freeze、RC1 |
 | **1.0.0** | API frozen、3 年 LTS スタート |
 
