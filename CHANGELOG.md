@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-05-28
+
+### Added
+
+- FinTabNet (original) codec (`fintabnet`): same HTML-token structure as
+  PubTabNet 2.0, with `table_id` as the record identifier instead of
+  `imgid`. Reads/writes via the shared `_htmltable` machinery with
+  `id_field="table_id"`; `sniff()` requires the `table_id` key so a
+  PubTabNet (imgid) record is not mis-detected as FinTabNet.
+  `lossy_read = {}`, `lossy_write = {"extras"}`.
+
+### Changed
+
+- Extracted the HTML-token parser / grid-placement / serializer out of
+  `codecs/pubtabnet.py` into `codecs/_htmltable.py` (Tidy First, no
+  behaviour change) so PubTabNet and FinTabNet share one implementation.
+- `docs/format_support.md` now also lists `otsl-1.0.0` (previously the
+  generator only seeded the two PubTabNet codecs).
+
 ## [0.0.2] - 2026-05-28
 
 Development preview (0.0.x makes no stability promises). Stdlib-only
@@ -91,5 +110,6 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.2...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/hironow/tablecodec/releases/tag/v0.0.3
 [0.0.2]: https://github.com/hironow/tablecodec/releases/tag/v0.0.2
