@@ -182,7 +182,12 @@ def docling_to_doctags_payload(row: dict[str, Any]) -> dict[str, Any]:
     )
     sink = io.StringIO()
     DocTagsTablesCodec().write([sample], sink)
-    payload: dict[str, Any] = json.loads(sink.getvalue().splitlines()[0])
+    # write() emits exactly one JSON record (+ trailing newline). Parse the
+    # whole buffer, NOT splitlines()[0]: str.splitlines() also breaks on
+    # Unicode line separators (U+2028/U+2029/U+0085) that a cell token may
+    # contain and that json.dumps(ensure_ascii=False) leaves raw — which
+    # would slice the record mid-string. json.loads ignores trailing space.
+    payload: dict[str, Any] = json.loads(sink.getvalue())
     return payload
 
 
@@ -813,6 +818,29 @@ def self_test() -> int:
         _check_row(check, _synthetic_row_for(check), 0, profile, report, recorder)
         if report.ok != 1:
             failures.append(f"{check.label}: {report.examples}")
+
+    # Regression guard: a cell token may carry a Unicode line separator
+    # (U+2028/U+2029/U+0085). The doctags round-trip adapter must parse the
+    # whole serialized record, not splitlines()[0] (str.splitlines breaks on
+    # those, slicing the JSON mid-string).
+    line_sep = chr(0x2028)  # Unicode LINE SEPARATOR; str.splitlines() breaks on it
+    tricky = _synthetic_docling_row()
+    tricky["cells"] = [
+        [
+            {"tokens": ["a", line_sep, "b"], "bbox": [0, 0, 10, 5]},
+            {"tokens": ["c"], "bbox": [10, 0, 20, 5]},
+        ],
+        [
+            {"tokens": ["d"], "bbox": [0, 5, 10, 10]},
+            {"tokens": ["e"], "bbox": [10, 5, 20, 10]},
+        ],
+    ]
+    try:
+        if "doctags" not in docling_to_doctags_payload(tricky):
+            failures.append("doctags U+2028 guard: missing 'doctags' key")
+    except (ValueError, TypeError, KeyError) as exc:
+        failures.append(f"doctags U+2028 guard raised {type(exc).__name__}: {exc}")
+
     if failures:
         sys.stdout.write("SELF-TEST FAILED:\n" + "\n".join(failures) + "\n")
         return 1

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- E2E harness (`scripts/e2e_hf_check.py`): the DocTags round-trip adapter
+  parsed `sink.getvalue().splitlines()[0]`, which breaks when a cell token
+  contains a Unicode line separator (U+2028/U+2029/U+0085) that
+  `json.dumps(ensure_ascii=False)` leaves raw — slicing the record
+  mid-string (1/16k rows). It now parses the whole single-record buffer.
+  The DocTags codec was already correct (it emits valid JSON);
+  `--self-test` gains a U+2028 regression guard. Harness-only; no library
+  or codec change.
+
 ## [0.0.12] - 2026-05-29
 
 ### Changed
