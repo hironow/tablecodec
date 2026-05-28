@@ -1,0 +1,106 @@
+# Release workflow.
+#
+# Security review (per GitHub Actions injection guide):
+#   - Triggered only by maintainer-pushed version tags (refs/tags/v*).
+#   - The only GitHub context referenced in any run: step is github.ref,
+#     passed through an env var (GIT_REF) and shell-quoted before use.
+#   - No attacker-controlled github.event.{issue,pull_request,comment,
+#     review,commits,head_commit}.* fields are interpolated anywhere.
+#   - Publishing uses PyPI Trusted Publishing (OIDC); no long-lived API
+#     token is stored as a secret.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build sdist + wheel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Verify built version matches the tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GIT_REF: ${{ github.ref }}
+        run: |
+          tag_version="${GIT_REF#refs/tags/v}"
+          built=$(ls dist/*.whl | sed -E 's/.*tablecodec-([0-9.]+)-.*/\1/')
+          echo "tag=$tag_version built=$built"
+          test "$tag_version" = "$built"
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: publish to PyPI (trusted publishing)
+    needs: build
+    runs-on: ubuntu-latest
+    # Only publish on a real tag push, never on a workflow_dispatch dry run.
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tablecodec
+    permissions:
+      id-token: write  # required for OIDC trusted publishing
+    steps:
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: create GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write  # required to create a release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GIT_REF: ${{ github.ref }}
+        run: |
+          tag="${GIT_REF#refs/tags/}"
+          gh release create "$tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$tag" \
+            --notes "See CHANGELOG.md for details." \
+            dist/*
