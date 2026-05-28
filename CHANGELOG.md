@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.12] - 2026-05-29
+
+### Changed
+
+- I-05 (bbox well-formed) is now scoped to **content-bearing cells**: a
+  bbox on an empty cell (`tokens == ()`) is a placeholder region and is no
+  longer geometry-checked. A live sweep showed the dominant validation
+  finding was empty cells carrying zero-area placeholder boxes (≈45% of
+  sampled SynthTabNet tables); these are degenerate in the SOURCE data
+  (not introduced by our float→int cast), and an empty cell localizes no
+  content. The fix lives entirely in the validation layer
+  (`_invariants.py`); codecs are unchanged and still read/keep the bbox
+  faithfully (no `lossy_*` / round-trip impact). Degenerate bboxes on
+  content-bearing cells are still flagged. Profiles that require bbox
+  *presence* (`tableformer`, `pubtabnet-2.0`) are unaffected. See
+  `docs/spec.md` §5.2 and `docs/adr/0007-i05-empty-cell-bbox-scope.md`.
+
 ## [0.0.11] - 2026-05-29
 
 ### Fixed
@@ -293,7 +310,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.11...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.12...HEAD
+[0.0.12]: https://github.com/hironow/tablecodec/releases/tag/v0.0.12
 [0.0.11]: https://github.com/hironow/tablecodec/releases/tag/v0.0.11
 [0.0.10]: https://github.com/hironow/tablecodec/releases/tag/v0.0.10
 [0.0.9]: https://github.com/hironow/tablecodec/releases/tag/v0.0.9
