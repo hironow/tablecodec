@@ -13,12 +13,13 @@ Each cell shows the static `round_trip_classification` returned by
 - ⚫ **unwritable** — the target is a read-only codec (ADR 0002);
   the conversion cannot be written at all.
 
-| source \ target | fintabnet | otsl-1.0.0 | pubtables-1m | pubtabnet-1.0.0 | pubtabnet-2.0.0 | tablebank | tableformer |
-|---|---|---|---|---|---|---|---|
-| `fintabnet` | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
-| `otsl-1.0.0` | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
-| `pubtables-1m` | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
-| `pubtabnet-1.0.0` | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
-| `pubtabnet-2.0.0` | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
-| `tablebank` | 🔴 lossy | 🔴 lossy | ⚫ unwritable | 🔴 lossy | 🔴 lossy | 🔴 lossy | 🔴 lossy |
-| `tableformer` | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
+| source \ target | doctags-tables | fintabnet | otsl-1.0.0 | pubtables-1m | pubtabnet-1.0.0 | pubtabnet-2.0.0 | tablebank | tableformer |
+|---|---|---|---|---|---|---|---|---|
+| `doctags-tables` | 🟡 structure | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
+| `fintabnet` | 🟡 structure | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
+| `otsl-1.0.0` | 🟡 structure | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
+| `pubtables-1m` | 🟡 structure | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
+| `pubtabnet-1.0.0` | 🟡 structure | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
+| `pubtabnet-2.0.0` | 🟡 structure | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
+| `tablebank` | 🔴 lossy | 🔴 lossy | 🔴 lossy | ⚫ unwritable | 🔴 lossy | 🔴 lossy | 🔴 lossy | 🔴 lossy |
+| `tableformer` | 🟡 structure | 🟡 structure | 🟡 structure | ⚫ unwritable | 🟡 structure | 🟡 structure | 🔴 lossy | 🟡 structure |
