@@ -13,25 +13,10 @@ from pathlib import Path
 from textwrap import dedent
 
 from tablecodec import codecs
-from tablecodec.codecs.doctags import DocTagsTablesCodec
-from tablecodec.codecs.fintabnet import FinTabNetCodec
-from tablecodec.codecs.otsl import OTSL10Codec
-from tablecodec.codecs.pubtables1m import PubTables1MCodec
-from tablecodec.codecs.pubtabnet import PubTabNet10Codec, PubTabNet20Codec
-from tablecodec.codecs.tablebank import TableBankCodec
-from tablecodec.codecs.tableformer import TableFormerCodec
+from tablecodec.codecs.builtins import BUILTIN_CODECS
 
-# Seed built-in codecs deterministically — order shapes the rendered table.
-_BUILTINS = [
-    PubTabNet10Codec(),
-    PubTabNet20Codec(),
-    FinTabNetCodec(),
-    TableFormerCodec(),
-    TableBankCodec(),
-    PubTables1MCodec(),
-    OTSL10Codec(),
-    DocTagsTablesCodec(),
-]
+# Single source of truth for the shipped codecs (order shapes the table).
+_BUILTINS = BUILTIN_CODECS
 
 _OUT = Path(__file__).parent.parent / "docs" / "format_support.md"
 
