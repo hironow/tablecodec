@@ -79,6 +79,22 @@ tablecodec diff a.jsonl b.jsonl --codec pubtabnet-2.0.0
 All commands stream their input; exit codes are non-zero on validation
 failures or diffs (suitable for CI / data pipelines).
 
+## End-to-end check against real datasets
+
+`scripts/e2e_hf_check.py` streams the Docling OTSL dataset family
+(`docling-project/{PubTabNet,FinTabNet,PubTables-1M,SynthTabNet}_OTSL`)
+through the codecs and validates the resulting IR. It is **occasional /
+local-only** (network + multi-GB datasets), not part of CI.
+
+```bash
+just e2e-selftest              # network-free adapter smoke test
+just e2e 200                   # sample 200 rows per check (needs [hf] extra)
+uv run --extra hf python scripts/e2e_hf_check.py --dataset FinTabNet_OTSL --limit 50
+```
+
+See [`docs/adr/0003-e2e-against-docling-otsl-family.md`](docs/adr/0003-e2e-against-docling-otsl-family.md)
+for the data-source decision and the canonical-vs-real-shape caveats.
+
 ## Documents
 
 - [`docs/spec.md`](docs/spec.md) — Specification (the single source of truth).

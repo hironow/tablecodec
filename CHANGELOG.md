@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- E2E harness (`scripts/e2e_hf_check.py`, `[hf]` extra): streams the
+  Docling OTSL dataset family through the codecs and validates the
+  resulting IR. Exercises the real `codec.read()` path (square-table
+  assumption, anchor/cell alignment, HTML structure parsing) against
+  real tables. Occasional / local-only (not CI-gated); a network-free
+  `--self-test` / `just e2e-selftest` verifies the adapters through the
+  real codecs. See `docs/adr/0003-e2e-against-docling-otsl-family.md`.
+
 ## [0.0.9] - 2026-05-28
 
 ### Added

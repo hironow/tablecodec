@@ -37,6 +37,15 @@ cov:
 bench:
     uv run pytest tests/benchmarks/ -m benchmark --benchmark-only
 
+# Network-free smoke test of the e2e HF adapters (no [hf] extra needed)
+e2e-selftest:
+    uv run python scripts/e2e_hf_check.py --self-test
+
+# Stream Docling OTSL datasets through the codecs (needs [hf] extra + network).
+# Occasional / local-only. Override LIMIT to sample more/fewer rows per check.
+e2e limit="200":
+    uv run --extra hf python scripts/e2e_hf_check.py --limit {{limit}}
+
 # Semgrep meta-rules (SPEC §13, intent.md §6)
 semgrep:
     semgrep --config semgrep.yaml --error src/
