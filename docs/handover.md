@@ -177,6 +177,9 @@ for the IR.
 - `scripts/e2e_hf_check.py` — harness (docling + native adapters, VOC grid
   inference, local-tar source, FindingsRecorder, self_test).
 - `src/tablecodec/codecs/_otslgrid.py` — OTSL grid (attributed port).
+- `tests/test_spec_surface.py` — black-box conformance to the spec's
+  public surface (API names, codec contract, profiles, analyze_loss,
+  round-trip, CLI options). Run it after any public-API/CLI/profile change.
 - `just ci` — full gate. `just e2e-selftest` — offline. `just e2e 200`
   — live sampled. `just e2e-fetch-pubtables1m` — fetch native VOC.
 - `output/e2e_findings/TRIAGE.md` — finding triage (needs human confirm).
