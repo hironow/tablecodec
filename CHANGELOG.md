@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5] - 2026-05-28
+
+### Added
+
+- TableBank codec (`tablebank`): a structure-only format — the source
+  ships `html.structure` with no `html.cells`, so on read every cell is
+  empty (`tokens=()`, `bbox=None`) and the grid shape is reconstructed
+  from the structure tokens. Write emits structure only. `lossy_read =
+  {"tokens", "bbox"}`, `lossy_write = {"tokens", "bbox", "extras"}` —
+  so TableBank is the first codec to surface `lossy` (🔴) classifications
+  in the loss matrix (token loss is not structure-preserving). `sniff()`
+  requires `html.structure` present and `html.cells` absent.
+- `_htmltable` gains `parse_html_structure_only` /
+  `serialize_html_structure_only` and a `require_no_cells` sniff knob.
+
 ## [0.0.4] - 2026-05-28
 
 ### Added
@@ -122,7 +137,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.4...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/hironow/tablecodec/releases/tag/v0.0.5
 [0.0.4]: https://github.com/hironow/tablecodec/releases/tag/v0.0.4
 [0.0.3]: https://github.com/hironow/tablecodec/releases/tag/v0.0.3
 [0.0.2]: https://github.com/hironow/tablecodec/releases/tag/v0.0.2
