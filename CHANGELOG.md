@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.7] - 2026-05-28
+
+### Added
+
+- DocTags table subset codec (`doctags-tables`): reads the IBM
+  Granite-Docling table markup — OTSL cell tokens wrapped in
+  `<otsl>`...`</otsl>`, each anchor annotated with four `<loc_n>` tokens
+  (a 0–500 grid bbox) plus content tokens. Read is full (structure +
+  bbox + content); write emits the OTSL-equivalent subset, so `role` is
+  lost (`lossy_read = {"role"}`, `lossy_write = {"role", "extras"}`,
+  SPEC §7 △). `sniff()` matches the `doctags` key.
+- `_otslgrid` shared module: the OTSL structure↔grid machinery
+  (`split_rows`, `ensure_square`, `build_anchors`, `build_token_grid`)
+  extracted from `otsl.py` so OTSL and DocTags share one implementation.
+
+### Changed
+
+- `otsl.py` now delegates its grid parsing/serialization to `_otslgrid`
+  (Tidy First, no behaviour change).
+
 ## [0.0.6] - 2026-05-28
 
 ### Added
@@ -158,7 +178,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.6...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.7...HEAD
+[0.0.7]: https://github.com/hironow/tablecodec/releases/tag/v0.0.7
 [0.0.6]: https://github.com/hironow/tablecodec/releases/tag/v0.0.6
 [0.0.5]: https://github.com/hironow/tablecodec/releases/tag/v0.0.5
 [0.0.4]: https://github.com/hironow/tablecodec/releases/tag/v0.0.4

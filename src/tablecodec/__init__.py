@@ -26,4 +26,4 @@ __all__ = [
     "validate",
 ]
 
-__version__: str = "0.0.6"
+__version__: str = "0.0.7"
