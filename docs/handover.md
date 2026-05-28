@@ -6,7 +6,7 @@
 ## Current State
 
 Library is feature-complete against `docs/spec.md`, staying in **0.0.x**
-(no public PyPI release yet). `main` is at **0.0.13**.
+(no public PyPI release yet). `main` is at **0.0.14**.
 Shipped:
 
 - IR + invariants (I-01..I-07) + validation profiles + codec registry +
@@ -136,9 +136,12 @@ rest are genuine feature/roadmap work.
 - **§8 — STRICT profile == DEFAULT.** The bbox×image-dimension cross-check
   needs image metadata the IR does not carry (relates to OQ-3). Confirmed
   `profiles.STRICT` uses the DEFAULT check tuple.
-- **§7/§13 — `[teds]` / `[validate]` / `[fast]` extras declared but
-  unused** in `src/` (apted/lxml, pydantic, orjson). Roadmap (intent.md
-  §8 lists TEDS). Either implement or drop the extras before 1.0.
+- **§7/§13 — extras reconciled (0.0.14).** `[fast]` (orjson) and
+  `[validate]` (pydantic) **removed** (ADR 0009): both would run in the
+  zero-dep core (parsing / IR construction / validation), which semgrep
+  forbids, so they could never be wired in; stricter validation is the
+  stdlib-only profiles (§8). `[teds]` (apted/lxml) **kept** — a separate,
+  core-external feature, still unimplemented → roadmap (intent.md §8).
 - **§11 — conformance suite is in-repo**, not the separate vendor-neutral
   `tablecodec/conformance` repo (ADR 0001 temporary deviation).
 
@@ -171,8 +174,9 @@ for the IR.
 
 ## Relevant Files and Commands
 
-- `docs/adr/000{1..6}-*.md` — decisions (0003/0004/0006 = e2e data sources;
-  0005 = OTSL port).
+- `docs/adr/000{1..9}-*.md` — decisions (0003/0004/0006 = e2e data sources;
+  0005 = OTSL port; 0007 = I-05 empty-cell scope; 0008 = read-parses;
+  0009 = drop fast/validate extras).
 - `docs/glossary.md` — vocabulary (tablecodec vs borrowed terms + origins).
 - `scripts/e2e_hf_check.py` — harness (docling + native adapters, VOC grid
   inference, local-tar source, FindingsRecorder, self_test).

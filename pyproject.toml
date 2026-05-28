@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tablecodec"
-version = "0.0.13"
+version = "0.0.14"
 description = "Neutral Internal Representation and Codec registry for image-based table-recognition datasets"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -45,12 +45,11 @@ teds = [
 cli = [
     "click>=8.1",
 ]
-fast = [
-    "orjson>=3.10",
-]
-validate = [
-    "pydantic>=2.7",
-]
+# NOTE: the `fast` (orjson) and `validate` (pydantic) extras were dropped
+# (see ADR 0009): both would have to run inside the zero-dependency core
+# (JSON parsing + IR construction happen in the codecs), which the
+# dependency policy (SPEC §13) and `semgrep.yaml` forbid. `teds` stays —
+# it is a separate, core-external optional feature.
 # Optional: streaming real datasets from the Hugging Face Hub for the
 # occasional, local-only e2e check (scripts/e2e_hf_check.py). Not part
 # of the library runtime; never imported by the stdlib-only core.
@@ -59,7 +58,7 @@ hf = [
     "defusedxml>=0.7",
 ]
 all = [
-    "tablecodec[teds,cli,fast,validate,hf]",
+    "tablecodec[teds,cli,hf]",
 ]
 dev = [
     "pytest>=8.0",

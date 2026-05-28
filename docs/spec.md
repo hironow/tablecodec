@@ -307,11 +307,16 @@ All commands stream input and exit non-zero on validation failures, suitable for
 | `tablecodec`              | **Python stdlib only.** Hard requirement.      |
 | `tablecodec[teds]`        | `apted`, `lxml` (TEDS evaluation wrappers)     |
 | `tablecodec[cli]`         | `click` (CLI)                                  |
-| `tablecodec[fast]`        | `orjson` (faster JSONL parsing)                |
-| `tablecodec[validate]`    | `pydantic` (optional stricter type validation) |
+| `tablecodec[hf]`          | `datasets`, `defusedxml` (occasional, local-only e2e harness; not a library runtime dependency) |
 | `tablecodec[all]`         | All of the above                               |
 
-A pull request that introduces a new third-party dependency to the core package MUST be rejected. CI enforces this via an import-graph linter.
+A pull request that introduces a new third-party dependency to the core package MUST be rejected. CI enforces this via an import-graph linter (`semgrep.yaml`).
+
+> The earlier `fast` (orjson) and `validate` (pydantic) extras were removed
+> (ADR 0009): the work they would touch — JSONL parsing, IR construction,
+> validation — happens in the zero-dependency core, where third-party
+> imports are forbidden, so the extras could never be wired in. Stricter
+> validation is provided by the layered profiles (§8), which are stdlib-only.
 
 ---
 

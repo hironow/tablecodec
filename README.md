@@ -8,8 +8,7 @@ between this IR and the fragmented landscape of public table-recognition
 datasets — PubTabNet, FinTabNet, OTSL, TableFormer, DocTags-tables,
 PubTables-1M, TableBank.
 
-- Stdlib-only core. Heavier features (TEDS, CLI, `orjson`, `pydantic`) are
-  opt-in extras.
+- Stdlib-only core. Heavier features (TEDS, CLI) are opt-in extras.
 - Streams large JSONL datasets at constant memory.
 - Self-declared loss analysis between any two codecs.
 
