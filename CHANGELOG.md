@@ -74,5 +74,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the static `analyze_loss` report without touching the input file.
   CLI is wholly optional — the core continues to install and run
   without click (verified by the existing pip-install-check job).
+- Conformance suite skeleton (M7): the SPEC §11 corpus is bootstrapped
+  in-repo under `conformance/` (manifest `INDEX.json` + draft-2020-12
+  JSON Schema + samples + hand-authored expected-IR JSON), pending
+  extraction to a separate vendor-neutral repository before v1.0 (see
+  `docs/adr/0001-conformance-suite-in-repo-temporarily.md`).
+  `tests/test_conformance.py` validates `INDEX.json` against its schema
+  and runs every case (3 × pubtabnet-2.0.0, 3 × otsl-1.0.0) by reading
+  the sample and comparing the IR to the independent expectation.
+  `jsonschema` added to the `[dev]` extra (test-only).
 
 [Unreleased]: https://github.com/hironow/tablecodec/compare/HEAD...HEAD
