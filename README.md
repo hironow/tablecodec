@@ -15,10 +15,46 @@ PubTables-1M, TableBank.
 
 ## Status
 
-**Pre-alpha (M6 in progress).** The specification is the source of truth;
-see [docs/spec.md](docs/spec.md). Auto-generated codec / loss tables live
-at [docs/format_support.md](docs/format_support.md) and
+**v0.1.0 (alpha).** The 0.x series makes no API-stability promises; the
+public surface freezes at 1.0 (see [docs/spec.md](docs/spec.md) §14). The
+specification is the source of truth. Auto-generated codec / loss tables
+live at [docs/format_support.md](docs/format_support.md) and
 [docs/loss_matrix.md](docs/loss_matrix.md).
+
+## Installation
+
+```bash
+pip install tablecodec            # stdlib-only core
+pip install "tablecodec[cli]"     # + command-line interface (click)
+```
+
+Requires Python 3.11+.
+
+## Basic usage
+
+```python
+import tablecodec
+from tablecodec import codecs, validate, profiles, analyze_loss
+from tablecodec.codecs.pubtabnet import PubTabNet20Codec
+
+# Register a codec (built-ins self-register through the CLI; in library
+# use you register the ones you need).
+codecs.register(PubTabNet20Codec())
+
+# Stream-read a dataset into the neutral IR.
+with open("pubtabnet_val.jsonl", encoding="utf-8") as f:
+    for sample in codecs.get("pubtabnet-2.0.0").read(f):
+        errors = validate(sample, profile=profiles.DEFAULT)
+        if errors:
+            print(sample.filename, errors)
+
+# Static, data-free loss analysis between two formats.
+report = analyze_loss(source="pubtabnet-2.0.0", target="otsl-1.0.0")
+print(report.round_trip_classification)  # "structure-preserving"
+```
+
+The core has **zero third-party runtime dependencies** (SPEC §13);
+`import tablecodec` works on a bare Python 3.11+.
 
 ## CLI
 
