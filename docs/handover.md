@@ -36,19 +36,34 @@ JSONL under `output/e2e_findings/` (gitignored) with replayable payload;
 `verdict` always `needs-review`. `output/e2e_findings/TRIAGE.md` holds the
 (AI-authored, needs-confirmation) triage.
 
-### Findings triaged this session
+### Final verification (1000 samples/check, seed 2026, 16k rows)
 
-- **I-05 degenerate bbox** (PubTabNet/FinTabNet): DATA quirk. The docling
-  bbox is `[x0,y0,x1,y1,cell_class]` (5 elems); first-4 truncation is
-  correct; the inverted boxes are on empty placeholder cells. Both the OTSL
-  and HTML paths agree → not a library bug. No code change.
-- **OTSL SynthTabNet catastrophe (was 48/300)**: was a real LIBRARY BUG in
-  `build_anchors` (diagonal xcel + max-bbox + col-0 reject). FIXED by
-  porting docling's anchor-centric `otsl_to_html` algorithm (ADR 0005,
-  attributed MIT). After: ok 48→168/300, parse errors →0.
-- **I-04 ragged tables** (native PubTabNet ~0.7%): DATA property surfaced
-  by strict exact-cover; passes LENIENT. Profile-policy question (should
-  PUBTABNET_2_0 tolerate raggedness?) left for human / SPEC.
+`parse_errors = 1 / 16,000` — the library READS essentially all real data.
+PubTables-1M (OTSL + native VOC) = 1000/1000 clean. Every other failure is
+a validation finding on genuine upstream DATA quirks (recorded in
+`output/e2e_findings/`). See `output/e2e_findings/TRIAGE.md`.
+
+### Findings triaged this session (all DATA quirks unless noted)
+
+- **OTSL SynthTabNet bug** (was 48/300): real LIBRARY BUG in `build_anchors`
+  (diagonal xcel + max-bbox + col-0 reject). FIXED — ported docling's
+  anchor-centric `otsl_to_html` (ADR 0005, attributed MIT), then a
+  registry-stop follow-up so span scans halt at cells already claimed by a
+  2D span. SynthTabNet I-04 overlaps dropped to ~0.2% (2/1000); the rest is
+  genuine OTSL span ambiguity (L-shaped regions; matches the HTML path).
+- **I-05 degenerate bbox**: DATA quirk. Verified across 16k rows — every
+  degenerate box was already degenerate in the SOURCE floats (empty cells
+  with zero-area point bboxes; `[x0,y0,x1,y1,cell_class]`); our float→int
+  cast introduced ZERO. SynthTabNet has many (synthetic empty cells, 45%);
+  FinTabNet/PubTabNet rare. Not a library bug.
+- **I-04 ragged / I-03 over-span** (native PubTabNet ~1%): DATA property
+  surfaced by strict exact-cover; passes LENIENT.
+- **doctags parse_error (1/16k)**: HARNESS bug — the e2e doctags round-trip
+  adapter's `json.loads(...splitlines()[0])` mis-cuts a record. Fix in
+  `scripts/e2e_hf_check.py`, not the codec.
+- **Open policy question** (TRIAGE.md): whether to drop empty-cell bboxes on
+  read (would clear ~all SynthTabNet I-05). Touches codec read + SPEC §5/§8
+  — propose a spec change first, do NOT silently change.
 
 ## In Progress
 
@@ -58,18 +73,17 @@ fintabnet/tablebank natives are deferred (see Next Actions).
 
 ## Next Actions
 
-1. **OTSL `build_anchors` follow-up (optional, ~5 lines)**: after the
-   docling port, ~25/300 SynthTabNet rows still show I-04 where HTML is ok.
-   Diagnosis: `check_right`/`check_down` count `xcel`, so a long `lcel` run
-   in one row can swallow `xcel` cells belonging to a 2D span from above
-   (imgid 6075). Fix: make `check_right`/`check_down` STOP at cells already
-   in the 2D-span `registry`. The rest (e.g. imgid 2693, L-shaped spans)
-   are genuine OTSL ambiguity under strict I-04 — leave them.
-2. **fintabnet / tablebank native: deferred** (maintainer decision, ADR
+1. **Empty-cell bbox policy** (the one open library decision): decide
+   whether an empty cell's bbox should be dropped on read (→ I-05 skips it),
+   which would clear ~all SynthTabNet I-05 legitimately. It is a SPEC §5/§8
+   change — propose a spec PR first; do NOT change behaviour silently.
+2. **doctags round-trip adapter** in `scripts/e2e_hf_check.py`: replace
+   `splitlines()[0]` with a whole-record parse (the 1/16k parse_error).
+3. **fintabnet / tablebank native: deferred** (maintainer decision, ADR
    0006). FinTabNet.c is VOC (redundant with pubtables-1m, wrong codec);
    the real fintabnet native is IBM-only (developer.ibm.com, not HF).
    TableBank is a 24 GB split zip. Both stay Docling-covered.
-3. **Deferred PyPI publish** (unchanged): `private/PYPI_RELEASE_STEPS.md`.
+4. **Deferred PyPI publish** (unchanged): `private/PYPI_RELEASE_STEPS.md`.
 
 ## Known Risks / Blockers
 
