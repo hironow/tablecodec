@@ -9,13 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `packages/tablecodec-docling/` — a read-first bridge codec
-  (`docling-tables`, own version 0.0.1) mapping `DoclingDocument.tables` to
-  `TableSample`, developed in-repo as a temporary monorepo member (ADR 0013,
-  SPEC §15). It depends on docling-core and lives in its own uv project, so
-  the stdlib-only core package and its environment are unaffected. Discover it
-  via `tablecodec.codecs.load_plugins()`. Run its checks with
-  `just docling-ci` (or `just ci-all` for the whole monorepo).
+- `packages/tablecodec-docling/` — a bridge codec (`docling-tables`, own
+  version 0.0.2) mapping between `DoclingDocument.tables` and `TableSample`,
+  developed in-repo as a temporary monorepo member (ADR 0013, SPEC §15). It
+  depends on docling-core and lives in its own uv project, so the stdlib-only
+  core package and its environment are unaffected. Discover it via
+  `tablecodec.codecs.load_plugins()`. Run its checks with `just docling-ci`
+  (or `just ci-all` for the whole monorepo).
+  - **read** (0.0.1): JSONL of `DoclingDocument`s -> one `TableSample` per
+    table; populates `image_width`/`image_height` from page size so
+    docling-read samples can be validated under the STRICT profile.
+  - **write** (0.0.2): each `TableSample` -> one `DoclingDocument` (the inverse
+    of read), so `read(write([s]))` round-trips modulo
+    `lossy_write = {"tokens", "extras"}` (docling stores one string per cell;
+    no home for IR extras). `writable = True`, so docling-tables is now a real
+    `analyze_loss` conversion target.
 
 ## [0.0.17] - 2026-05-29
 

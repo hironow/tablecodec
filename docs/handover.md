@@ -2,9 +2,10 @@
 
 **Last updated:** 2026-05-29 (JST)
 **Updated by:** Claude (Opus 4.8, 1M context)
-**Next work item:** docling bridge WRITE direction + extraction / §11
-conformance / codec image-dims population (all v1.0 planning). `[teds]`
-shipped 0.0.16; §8 STRICT 0.0.17; docling bridge (read) in-repo monorepo.
+**Next work item:** docling bridge extraction to its own repo / §11
+conformance extraction / codec image-dims population (all v1.0 planning).
+`[teds]` 0.0.16; §8 STRICT 0.0.17; docling bridge read+write (own 0.0.2),
+in-repo monorepo.
 
 ## Current State
 
@@ -22,8 +23,8 @@ Shipped:
 
 ### docling bridge (this session, ADR 0013)
 
-`packages/tablecodec-docling/` — read-first bridge codec `docling-tables`
-(own version 0.0.1) mapping `DoclingDocument.tables` → `TableSample`.
+`packages/tablecodec-docling/` — bridge codec `docling-tables` (own version
+0.0.2) mapping between `DoclingDocument.tables` and `TableSample` (read+write).
 In-repo **monorepo** member (temporary; extract before publish, ADR 0013).
 
 - Lives in its OWN uv project: `[tool.uv.sources] tablecodec = {path=../../,
@@ -39,10 +40,17 @@ In-repo **monorepo** member (temporary; extract before publish, ADR 0013).
   height` populated from `pages[page_no].size` → **docling-read samples can
   pass STRICT** (synergy with 0.0.17). Input = JSONL of DoclingDocuments
   (one doc/line, yields one TableSample/table). `writable=False`.
-- 16 tests green; registers via `load_plugins()` (entry-point group).
-- **Follow-ups**: WRITE direction (TableSample→DoclingDocument); extract to its
-  own repo before PyPI; the e2e harness could read docling-core directly (today
-  it only streams docling *datasets*, not the library).
+- **write** (0.0.2): each `TableSample` → one `DoclingDocument` (inverse of
+  read). `read(write([s]))` round-trips modulo `lossy_write={"tokens",
+  "extras"}` (docling = one text string/cell → multi-token segmentation
+  collapses; no home for IR extras). `role` DOES round-trip (header↔
+  column_header); bbox/spans/image-dims preserved. `writable=True` → a real
+  `analyze_loss` target. 22 tests green. (Watch-out fixed in dev: the
+  TableCell builder must pass `bbox=` — easy to construct it and forget.)
+- registers via `load_plugins()` (entry-point group).
+- **Follow-ups**: extract to its own repo before PyPI; the e2e harness could
+  read docling-core directly (today it only streams docling *datasets*, not
+  the library).
 
 ### Terminology + consistency audit (this session)
 

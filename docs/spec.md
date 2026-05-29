@@ -371,7 +371,7 @@ constant: in the 0.x line it evolves with the library, and this document
 | Use case            | Document conversion pipelines                   | Dataset I/O, validation, format migration     |
 | Format opinion      | DocTags / OTSL native, others as importers      | All formats first-class                       |
 
-A bridge codec (`tablecodec-docling`) allows `DoclingDocument.tables` to be exported as `TableSample` instances. It is read-first (`DoclingDocument` → `TableSample`) and registers through the `tablecodec.codecs` entry-point group (§6.2). It is being developed in-repo under `packages/tablecodec-docling/` as a temporary monorepo member, to be extracted to its own package before publishing (ADR 0013); the dependency on docling-core stays out of the stdlib-only core.
+A bridge codec (`tablecodec-docling`) maps between `DoclingDocument.tables` and `TableSample` instances (read and write), registering through the `tablecodec.codecs` entry-point group (§6.2). `read` yields one `TableSample` per table; `write` emits one `DoclingDocument` per sample (round-trip-capable, modulo a declared write-loss: docling stores one text string per cell, so multi-token segmentation and IR `extras` are lossy on write). It is being developed in-repo under `packages/tablecodec-docling/` as a temporary monorepo member, to be extracted to its own package before publishing (ADR 0013); the dependency on docling-core stays out of the stdlib-only core.
 
 ---
 
