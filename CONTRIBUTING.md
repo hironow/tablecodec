@@ -15,13 +15,15 @@ git clone https://github.com/hironow/tablecodec
 cd tablecodec
 uv venv --python 3.11
 source .venv/bin/activate
-uv pip install -e ".[dev,cli,teds,validate,fast]"
+uv pip install -e ".[dev,cli,teds]"
 
 # Verify environment
 just ci
 ```
 
-`just ci` must be green locally before you push.
+`just ci` must be green locally before you push. It covers the core package;
+if you touch the in-repo `packages/tablecodec-docling` bridge, also run
+`just docling-ci` (or `just ci-all` for both).
 
 ## Workflow
 

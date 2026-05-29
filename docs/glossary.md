@@ -69,6 +69,7 @@ it next to the IR.
 | **table row / table column / table spanning cell / table projected row header / table column header** | Dataset — PubTables-1M (Smock et al., Microsoft) object labels | The VOC `<object><name>` values the native PubTables-1M adapter reads. They are dataset annotation labels, **not** IR fields. |
 | **DocTags** | Tooling — IBM Granite-Docling (model output) | A document-token output format; its table subset reuses the OTSL grid. The `doctags-tables` codec; an OUTPUT format with no ground-truth dataset. |
 | **PubTabNet / FinTabNet / PubTables-1M / TableBank / SynthTabNet** | Datasets — IBM (PubTabNet, FinTabNet, SynthTabNet), Microsoft (PubTables-1M, TableBank) | Public table-recognition datasets, each with its own annotation format. Each codec targets one; the e2e harness reads them. |
+| **TEDS / TEDS-Struct** | Paper — Zhong et al. (PubTabNet, "Image-based table recognition") | Tree-Edit-Distance based Similarity: scores two tables in `[0, 1]` by the normalized tree-edit distance of their HTML-DOM trees; `structure_only=True` (TEDS-Struct) ignores cell text. `tablecodec.teds` (`[teds]`); a faithful, bit-verified port of IBM's metric (ADR 0011). A **similarity score**, NOT a loss classification — unrelated to `lossy_*` / `analyze_loss`. |
 | **streaming** | General (CS) | Iterating records lazily at constant memory (never `f.read()` the whole file). Required of every `read` (spec §10). |
 
 ---

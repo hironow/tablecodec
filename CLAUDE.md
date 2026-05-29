@@ -32,12 +32,16 @@ A Python library giving a neutral, lossless **Internal Representation
   This is enforced by `semgrep.yaml`
   (`tablecodec-no-third-party-imports-in-core`). When you add a core
   module, add it to that rule's `paths.include` list.
-- **Optional features are extras.** `cli.py` (click) is the only module
-  permitted third-party imports, and it is excluded from the semgrep core
-  list. (`loss.py` is stdlib-only — static, data-free analysis over codec
-  `lossy_*` declarations — so it stays IN the core list and is enforced.)
-  CLI is gated behind the `[cli]` extra; `import tablecodec` must work on
-  a bare interpreter (the `pip install -e .` CI job guards this).
+- **Optional features are extras.** Two modules are permitted third-party
+  imports and are excluded from the semgrep core list: `cli.py` (click,
+  `[cli]` extra) and `teds.py` (apted/lxml, `[teds]` extra — the TEDS metric,
+  ADR 0011). Neither is imported by `tablecodec/__init__`, so
+  `import tablecodec` must work on a bare interpreter (the `pip install -e .`
+  CI job guards this). (`loss.py` is stdlib-only — static, data-free analysis
+  over codec `lossy_*` declarations — so it stays IN the core list and is
+  enforced.) The `tablecodec-docling` bridge (apted/lxml + docling-core) is a
+  **separate package** under `packages/`, not part of this core package at all
+  (ADR 0013).
 - **Streaming, not slurping.** `read` yields lazily; never `f.read()` /
   `f.readlines()` a whole dataset. `semgrep.yaml`
   (`tablecodec-no-full-file-read`) enforces this in `io.py` and
@@ -60,6 +64,12 @@ green before commit. Specifically:
   `docs/loss_matrix.md` and fails if they differ from what's committed.
 
 Run `just fmt` to auto-fix, `just docs` to regenerate the tables.
+
+`just ci` covers the **core package only** (and runs `test`/`type` with
+`--extra teds` so the optional TEDS tests run rather than skip). The in-repo
+`tablecodec-docling` bridge (`packages/`, ADR 0013) has its own gate
+`just docling-ci`; `just ci-all` runs both. Touching `packages/` → run
+`just docling-ci` (or `just ci-all`).
 
 ## Adding a codec (the common task)
 
@@ -147,6 +157,11 @@ the codecs so the suite catches read-path regressions.
 - `docs/handover.md` — current session state / next actions (read for
   "where are we"). `docs/adr/` — decision history.
 - `src/tablecodec/` — the library (see "Non-negotiable invariants").
+  `teds.py` is the core-external TEDS metric (`[teds]`, ADR 0011).
+- `packages/tablecodec-docling/` — the docling bridge codec, an in-repo
+  monorepo member with its own `pyproject`/`src`/`tests` and its own version
+  (temporary; extract before publish, ADR 0013). Run it via
+  `just docling-ci`.
 - `tests/` — `test_*.py` at root, codec tests in `tests/codecs/`,
   fixtures in `tests/fixtures/<codec>/`, hypothesis strategies in
   `tests/strategies.py`, benchmarks in `tests/benchmarks/`.

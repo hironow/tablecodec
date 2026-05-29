@@ -14,8 +14,10 @@ PubTables-1M, TableBank.
 
 ## Status
 
-**0.0.10 (pre-alpha).** Not yet published to PyPI; the nine codecs were
-added incrementally within the 0.0.x series. The 0.x line makes no
+**0.0.17 (pre-alpha).** Not yet published to PyPI. The nine codecs, the TEDS
+metric (`[teds]`), and the STRICT validation profile were all added
+incrementally within the 0.0.x series; a separate `tablecodec-docling` bridge
+codec lives in `packages/` (its own version). The 0.x line makes no
 API-stability promises; the public surface freezes at 1.0 (see
 [docs/spec.md](docs/spec.md) §14). The specification is the source of
 truth. Auto-generated codec / loss tables live at
