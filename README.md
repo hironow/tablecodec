@@ -27,6 +27,7 @@ truth. Auto-generated codec / loss tables live at
 ```bash
 pip install tablecodec            # stdlib-only core
 pip install "tablecodec[cli]"     # + command-line interface (click)
+pip install "tablecodec[teds]"    # + TEDS similarity metric (apted, lxml)
 ```
 
 Requires Python 3.11+.
@@ -56,6 +57,19 @@ print(report.round_trip_classification)  # "structure-preserving"
 
 The core has **zero third-party runtime dependencies** (SPEC §13);
 `import tablecodec` works on a bare Python 3.11+.
+
+## TEDS similarity (optional)
+
+The `[teds]` extra adds a Tree-Edit-Distance based Similarity score between
+two samples. It lives outside the core (it imports `apted`/`lxml`), so import
+it from its submodule:
+
+```python
+from tablecodec.teds import teds
+
+score = teds(pred_sample, true_sample)              # 0.0 .. 1.0
+struct = teds(pred_sample, true_sample, structure_only=True)  # ignore cell text
+```
 
 ## CLI
 

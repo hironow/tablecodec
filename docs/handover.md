@@ -2,7 +2,8 @@
 
 **Last updated:** 2026-05-29 (JST)
 **Updated by:** Claude (Opus 4.7, 1M context)
-**Next work item:** `[teds]` TEDS implementation (plan + codex review pending).
+**Next work item:** docling bridge / §8 STRICT / §11 conformance (all v1.0
+planning — see Roadmap decision). `[teds]` shipped in 0.0.16.
 
 ## Current State
 
@@ -83,8 +84,12 @@ a validation finding on genuine upstream DATA quirks (recorded in
 
 ## In Progress
 
-**Starting `[teds]` TEDS implementation** (roadmap decision below). No code
-yet — plan + codex review next, then TDD.
+**`[teds]` TEDS shipped (0.0.16).** `tablecodec.teds.teds` /
+`teds_html` (apted/lxml, Apache-2.0 port from IBM PubTabNet metric.py, ADR
+0011). Core-external (not in semgrep core list, not imported by `__init__`);
+`import tablecodec` stays zero-dep (verified). `just test`/`type`/`cov` run
+with `--extra teds`; tests `importorskip`. codex plan review was skipped
+(rate-limited until 2026-05-31) per CLAUDE.md.
 
 Native-dataset coverage is as complete as practical: pubtabnet +
 pubtables-1m have native checks; otsl's native IS docling;
@@ -169,10 +174,10 @@ rest are genuine feature/roadmap work.
   Roadmap decision above). Confirmed `profiles.STRICT` uses the DEFAULT
   check tuple; the cross-check needs IR image metadata (not present) and is
   entangled with OQ-3.
-- **§7/§13 — extras reconciled (0.0.14).** `[fast]` (orjson) and
-  `[validate]` (pydantic) **removed** (ADR 0009). `[teds]` (apted/lxml)
-  **kept** and is the **next work item** (Roadmap decision above) — a
-  separate, core-external feature.
+- **§7/§13 — extras reconciled + `[teds]` implemented (0.0.14, 0.0.16).**
+  `[fast]`/`[validate]` **removed** (ADR 0009). `[teds]` (apted/lxml)
+  **implemented** in 0.0.16 (`tablecodec.teds`, ADR 0011) — core-external,
+  zero-dep core preserved. No declared-but-unwired extras remain.
 - **§11 — conformance suite is in-repo**, not the separate vendor-neutral
   `tablecodec/conformance` repo (ADR 0001). **Deferred to v1.0** (Roadmap
   decision above: premature while the corpus is still growing).

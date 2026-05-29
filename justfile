@@ -11,9 +11,9 @@ help:
 install:
     uv pip install -e ".[dev,cli,teds]"
 
-# Run unit tests
+# Run unit tests (--extra teds so the optional TEDS tests run, not skip)
 test:
-    uv run pytest tests/ -v
+    uv run --extra teds pytest tests/ -v
 
 # Lint (ruff check + format check)
 lint:
@@ -25,13 +25,13 @@ fmt:
     uv run ruff format src/ tests/
     uv run ruff check --fix src/ tests/
 
-# Strict type check
+# Strict type check (--extra teds so apted/lxml resolve when checking teds.py)
 type:
-    uv run pyright src/ tests/
+    uv run --extra teds pyright src/ tests/
 
 # Coverage report
 cov:
-    uv run pytest tests/ --cov=tablecodec --cov-report=term-missing --cov-report=html
+    uv run --extra teds pytest tests/ --cov=tablecodec --cov-report=term-missing --cov-report=html
 
 # Run pytest-benchmark micro-benchmarks (excluded from default test run)
 bench:

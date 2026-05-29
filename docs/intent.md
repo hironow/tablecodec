@@ -400,13 +400,14 @@ codec を 1 つずつ **0.0.x の patch bump** として出荷する方針に切
 **実績（0.0.x で達成済み）**: 当初は codec を 0.2.0〜0.4.0 の minor で追加する計画
 だったが、実際には全 9 codec（pubtabnet 1.0/2.0、otsl、fintabnet、fintabnet-otsl、
 tableformer、tablebank、pubtables-1m、doctags-tables）を **0.0.x の patch bump** で
-出荷した（現在 0.0.10）。docling bridge は未着手、TEDS extra も未実装。
+出荷した（現在 0.0.16）。TEDS extra は 0.0.16 で実装済み（`tablecodec.teds`、
+ADR 0011）。docling bridge は未着手。
 
 v1.0 までの残作業：
 
 | バージョン | 内容 |
 |---|---|
-| 0.0.x（継続） | TEDS extra 実装 (`tablecodec[teds]`)、docling bridge (`tablecodec-docling`)、Open Questions §17 の解消、Conformance Suite を別 repo へ抽出（ADR 0001） |
+| 0.0.x（継続） | docling bridge (`tablecodec-docling`)、Open Questions §17 の解消、Conformance Suite を別 repo へ抽出（ADR 0001） |
 | 0.0.x | PyPI 公開（M8、Trusted Publishing 設定後） |
 | 0.9.0 | Public API freeze、RC1 |
 | **1.0.0** | API frozen、3 年 LTS スタート |
