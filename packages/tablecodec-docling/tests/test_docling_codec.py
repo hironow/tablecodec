@@ -279,6 +279,58 @@ class TestSniffAndErrors:
         with pytest.raises(ValueError, match="line 1"):
             _read_all(source)
 
+    def test_read_skips_blank_lines(self) -> None:
+        # given — blank lines around a single document.
+        data = TableData(num_rows=1, num_cols=1, table_cells=[_cell("x", 0, 1, 0, 1)])
+        doc_line = _doc("d", [data]).model_dump_json()
+        source = io.StringIO(f"\n  \n{doc_line}\n\n")
+
+        # when / then — blanks ignored, the one table is yielded.
+        assert len(_read_all(source)) == 1
+
+    def test_sniff_skips_leading_blank_lines(self) -> None:
+        # given — a leading blank line before the document.
+        data = TableData(num_rows=1, num_cols=1, table_cells=[_cell("x", 0, 1, 0, 1)])
+        source = io.StringIO("\n" + _doc("d", [data]).model_dump_json() + "\n")
+
+        # when / then — sniff skips the blank and still detects the document.
+        assert DoclingTablesCodec().sniff(source) is True
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            pytest.param("", id="empty-stream"),
+            pytest.param("not json at all\n", id="non-json"),
+            pytest.param("[1, 2, 3]\n", id="json-non-object"),
+        ],
+    )
+    def test_sniff_returns_false_on_unparseable_or_non_object(self, raw: str) -> None:
+        # given / when / then
+        assert DoclingTablesCodec().sniff(io.StringIO(raw)) is False
+
+    def test_bottom_left_bbox_without_page_is_dropped(self) -> None:
+        # given — a BOTTOMLEFT bbox but no page (so no height to flip with):
+        # the box cannot be placed in the IR's top-left space and is dropped.
+        data = TableData(
+            num_rows=1,
+            num_cols=1,
+            table_cells=[
+                _cell(
+                    "x",
+                    0,
+                    1,
+                    0,
+                    1,
+                    bbox=BoundingBox(l=0, t=80, r=50, b=60, coord_origin=CoordOrigin.BOTTOMLEFT),
+                )
+            ],
+        )
+        # _doc without page_size => the table has no provenance page.
+        samples = _read_all(_jsonl(_doc("d", [data])))
+
+        # then
+        assert samples[0].cells[0].bbox is None
+
 
 def _round_trip(sample: TableSample) -> TableSample:
     """Write one sample to docling JSONL and read it back as one sample."""
@@ -427,5 +479,43 @@ class TestRegistration:
 
             # then
             assert codecs.get("docling-tables").name == "docling-tables"
+        finally:
+            codecs._restore(saved)  # pyright: ignore[reportPrivateUsage]
+
+    def test_discovered_via_real_entry_point(self) -> None:
+        # given — a clean registry; this package is installed with the
+        # `tablecodec.codecs` entry point declared in pyproject.toml.
+        saved = codecs._snapshot()  # pyright: ignore[reportPrivateUsage]
+        codecs._restore({})  # pyright: ignore[reportPrivateUsage]
+        try:
+            # when — load_plugins discovers entry points (SPEC §6.2, no monkeypatch).
+            loaded = codecs.load_plugins()
+
+            # then — docling-tables is found and is the real codec class.
+            assert "docling-tables" in loaded
+            assert isinstance(codecs.get("docling-tables"), DoclingTablesCodec)
+        finally:
+            codecs._restore(saved)  # pyright: ignore[reportPrivateUsage]
+
+
+class TestAnalyzeLoss:
+    def test_docling_is_a_lossy_conversion_target(self) -> None:
+        # given — docling-tables (writable) + a content-bearing source codec.
+        from tablecodec import analyze_loss
+        from tablecodec.codecs.pubtabnet import PubTabNet20Codec
+
+        saved = codecs._snapshot()  # pyright: ignore[reportPrivateUsage]
+        codecs._restore({})  # pyright: ignore[reportPrivateUsage]
+        try:
+            codecs.register(PubTabNet20Codec())
+            codecs.register(DoclingTablesCodec())
+
+            # when — docling is now writable, so analyze_loss does NOT short to
+            # "unwritable"; it classifies by the declared lossy sets.
+            report = analyze_loss(source="pubtabnet-2.0.0", target="docling-tables")
+
+            # then — tokens collapse to one string per cell => lossy.
+            assert "tokens" in report.ir_fields_unrepresentable_in_target
+            assert report.round_trip_classification == "lossy"
         finally:
             codecs._restore(saved)  # pyright: ignore[reportPrivateUsage]
