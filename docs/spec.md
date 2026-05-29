@@ -98,8 +98,20 @@ class TableSample:
     cells: tuple[GridCell, ...]    # ordered top-to-bottom, left-to-right
     split: Literal["train", "val", "test"] | None = None
     imgid: int | None = None
+    image_width: int | None = None   # source image width in px; None if absent
+    image_height: int | None = None  # source image height in px; None if absent
     extras: Mapping[str, object] = field(default_factory=dict)
 ```
+
+`image_width` / `image_height` are **sample-level metadata** (peers of
+`filename` / `imgid`), not table content: they describe the source image, not
+the grid. They are optional — most token formats omit them — and back the
+`strict` profile's bbox-in-image cross-check (§8). Because no codec carries
+them today, they are absent from every codec's loss declaration (§9): a field
+no codec reads cannot be dropped, so `None` round-trips losslessly. A future
+codec that populates them from source (e.g. PubTables-1M's PASCAL VOC `<size>`)
+and writes to a format that cannot store them would declare them in
+`lossy_write`.
 
 ### 5.2 Invariants
 

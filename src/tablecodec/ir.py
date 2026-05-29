@@ -59,6 +59,12 @@ class TableSample:
         cells: Ordered top-to-bottom, left-to-right (SPEC §5.1).
         split: Optional dataset split assignment.
         imgid: Optional dataset-defined integer id.
+        image_width: Source image width in pixels, or ``None`` when the
+            format does not carry it. Sample-level metadata (a peer of
+            ``filename`` / ``imgid``), not table content. Backs the STRICT
+            profile's bbox-in-image cross-check (SPEC §8).
+        image_height: Source image height in pixels, or ``None``. See
+            ``image_width``.
         extras: Codec-defined opaque metadata. Opaque to validation but
             must be JSON-serializable for codecs that round-trip via it
             (SPEC §5.2 closing paragraph). Excluded from :meth:`__hash__`
@@ -72,6 +78,8 @@ class TableSample:
     cells: tuple[GridCell, ...]
     split: Literal["train", "val", "test"] | None = None
     imgid: int | None = None
+    image_width: int | None = None
+    image_height: int | None = None
     extras: Mapping[str, object] = field(default_factory=_empty_extras)
 
     def __hash__(self) -> int:
@@ -79,4 +87,15 @@ class TableSample:
         # excluding it preserves the hash/eq contract: equal samples that
         # also have equal extras hash identically, while two samples that
         # differ only in extras may collide (acceptable for a hash).
-        return hash((self.filename, self.nrows, self.ncols, self.cells, self.split, self.imgid))
+        return hash(
+            (
+                self.filename,
+                self.nrows,
+                self.ncols,
+                self.cells,
+                self.split,
+                self.imgid,
+                self.image_width,
+                self.image_height,
+            )
+        )

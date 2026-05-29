@@ -161,6 +161,65 @@ class TestTableSample:
         assert restored is not sample
 
 
+class TestTableSampleImageDims:
+    """SPEC §5.1 / §8: optional image_width/image_height back the STRICT
+    bbox-in-image cross-check."""
+
+    def test_image_dims_default_to_none(self) -> None:
+        # given / when
+        sample = TableSample(filename="x.png", nrows=1, ncols=1, cells=(GridCell(0, 0),))
+
+        # then
+        assert sample.image_width is None
+        assert sample.image_height is None
+
+    def test_image_dims_are_stored(self) -> None:
+        # given / when
+        sample = TableSample(
+            filename="x.png",
+            nrows=1,
+            ncols=1,
+            cells=(GridCell(0, 0),),
+            image_width=640,
+            image_height=480,
+        )
+
+        # then
+        assert sample.image_width == 640
+        assert sample.image_height == 480
+
+    def test_image_dims_participate_in_equality_and_hash(self) -> None:
+        # given — two samples differing only in image dimensions.
+        cells = (GridCell(0, 0),)
+        a = TableSample(filename="x.png", nrows=1, ncols=1, cells=cells, image_width=10)
+        b = TableSample(filename="x.png", nrows=1, ncols=1, cells=cells, image_width=20)
+        same_as_a = TableSample(filename="x.png", nrows=1, ncols=1, cells=cells, image_width=10)
+
+        # then — differing dims => unequal; matching dims => equal and same hash.
+        assert a != b
+        assert a == same_as_a
+        assert hash(a) == hash(same_as_a)
+
+    def test_image_dims_survive_deepcopy(self) -> None:
+        # given
+        sample = TableSample(
+            filename="x.png",
+            nrows=1,
+            ncols=1,
+            cells=(GridCell(0, 0),),
+            image_width=100,
+            image_height=200,
+        )
+
+        # when
+        restored = copy.deepcopy(sample)
+
+        # then
+        assert restored == sample
+        assert restored.image_width == 100
+        assert restored.image_height == 200
+
+
 class TestBBoxAlias:
     def test_bbox_is_tuple_alias(self) -> None:
         # given
