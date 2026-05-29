@@ -50,6 +50,28 @@ def test_valid_sample_passes_lenient_profile(sample: TableSample) -> None:
     assert validate(sample, profile=profiles.LENIENT) == []
 
 
+@given(valid_tablesample_st())
+@settings(
+    max_examples=2_000,
+    deadline=None,
+    suppress_health_check=[HealthCheck.too_slow, HealthCheck.data_too_large],
+)
+def test_valid_sample_with_covering_image_dims_passes_strict(sample: TableSample) -> None:
+    # given — image dimensions chosen to contain every cell bbox (STRICT, ADR
+    # 0012: a bbox-bearing sample needs dims and every bbox must lie within).
+    boxes = [c.bbox for c in sample.cells if c.bbox is not None]
+    if boxes:
+        sample = dataclasses.replace(
+            sample,
+            image_width=max(x1 for _, _, x1, _ in boxes),
+            image_height=max(y1 for _, _, _, y1 in boxes),
+        )
+
+    # then — no STRICT-specific finding (bboxes fit; or no bbox so none needed).
+    errors = validate(sample, profile=profiles.STRICT)
+    assert not any(e.invariant.startswith("STRICT-") for e in errors)
+
+
 @given(valid_tablesample_st(), st.integers(min_value=-3, max_value=0))
 @settings(
     max_examples=1_000,

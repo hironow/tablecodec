@@ -91,6 +91,23 @@ class TestValidate:
         assert result.exit_code == 0
         assert "0 finding(s)" in result.output
 
+    def test_strict_profile_reports_missing_image_metadata(self, runner: CliRunner) -> None:
+        # The fixture cells carry bboxes but the codec populates no image dims,
+        # so STRICT (ADR 0012) reports STRICT-IMAGE-METADATA and exits nonzero.
+        result = runner.invoke(
+            main,
+            [
+                "validate",
+                str(FIXTURES / "pubtabnet" / "simple_2x2.jsonl"),
+                "--codec",
+                "pubtabnet-2.0.0",
+                "--profile",
+                "STRICT",
+            ],
+        )
+        assert result.exit_code == 1
+        assert "STRICT-IMAGE-METADATA" in result.output
+
     def test_json_output(self, runner: CliRunner) -> None:
         result = runner.invoke(
             main,
