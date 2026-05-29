@@ -11,4 +11,4 @@ from tablecodec_docling.codec import DoclingTablesCodec
 
 __all__ = ["DoclingTablesCodec", "__version__"]
 
-__version__: str = "0.0.1"
+__version__: str = "0.0.2"

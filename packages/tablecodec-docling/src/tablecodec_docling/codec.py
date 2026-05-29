@@ -13,8 +13,14 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from typing import IO, Any, cast
 
-from docling_core.types.doc.base import BoundingBox, CoordOrigin
-from docling_core.types.doc.document import DoclingDocument, TableCell, TableItem
+from docling_core.types.doc.base import BoundingBox, CoordOrigin, Size
+from docling_core.types.doc.document import (
+    DoclingDocument,
+    ProvenanceItem,
+    TableCell,
+    TableData,
+    TableItem,
+)
 from pydantic import ValidationError
 
 from tablecodec.ir import BBox, GridCell, TableSample
@@ -30,7 +36,7 @@ class DoclingTablesCodec:
     # docling-core v2 family (the DoclingDocument schema this targets).
     spec_version: str = "2.x"
     media_type: str = "application/vnd.docling.document+json"
-    writable: bool = False
+    writable: bool = True
 
     def read(self, source: IO[str]) -> Iterator[TableSample]:
         for line_no, raw in enumerate(source, start=1):
@@ -46,8 +52,9 @@ class DoclingTablesCodec:
                 yield _table_to_sample(doc, table, index)
 
     def write(self, samples: Iterable[TableSample], sink: IO[str]) -> None:
-        msg = "docling-tables is a read-only bridge codec; write is unsupported"
-        raise NotImplementedError(msg)
+        for sample in samples:
+            sink.write(_sample_to_doc(sample).model_dump_json())
+            sink.write("\n")
 
     def lossy_read(self) -> frozenset[str]:
         # row_header / row_section collapse into the IR's two-valued role
@@ -57,8 +64,12 @@ class DoclingTablesCodec:
         return frozenset({"role"})
 
     def lossy_write(self) -> frozenset[str]:
-        # Never consulted: analyze_loss short-circuits on writable=False.
-        return frozenset()
+        # tokens: docling TableCell.text is a single string, so a multi-token
+        #   cell's segmentation collapses (content survives, boundaries do not).
+        # extras: DoclingDocument has no canonical home for arbitrary IR extras.
+        # (role does NOT lose on an IR->docling->IR round-trip: header maps to
+        #  column_header and back; row_header loss is a read-only concern.)
+        return frozenset({"tokens", "extras"})
 
     def sniff(self, source: IO[str]) -> bool:
         pos = source.tell()
@@ -150,3 +161,58 @@ def _table_to_sample(doc: DoclingDocument, table: TableItem, index: int) -> Tabl
         image_height=image_height,
         extras={"docling_self_ref": table.self_ref},
     )
+
+
+# ---------- write: TableSample -> DoclingDocument ----------
+
+
+def _gridcell_to_tablecell(cell: GridCell) -> TableCell:
+    bbox = None
+    if cell.bbox is not None:
+        x0, y0, x1, y1 = cell.bbox
+        bbox = BoundingBox(l=x0, t=y0, r=x1, b=y1, coord_origin=CoordOrigin.TOPLEFT)
+    return TableCell(
+        text="".join(cell.tokens),
+        start_row_offset_idx=cell.row,
+        end_row_offset_idx=cell.row + cell.rowspan,
+        start_col_offset_idx=cell.col,
+        end_col_offset_idx=cell.col + cell.colspan,
+        row_span=cell.rowspan,
+        col_span=cell.colspan,
+        bbox=bbox,
+        # The IR has a single "header" role; it maps to a column header. A
+        # docling row_header cannot be reconstructed (it was read as body).
+        column_header=cell.role == "header",
+        row_header=False,
+    )
+
+
+def _sample_to_doc(sample: TableSample) -> DoclingDocument:
+    data = TableData(
+        num_rows=sample.nrows,
+        num_cols=sample.ncols,
+        table_cells=[_gridcell_to_tablecell(c) for c in sample.cells],
+    )
+    doc = DoclingDocument(name=sample.filename)
+
+    prov = None
+    if sample.image_width is not None and sample.image_height is not None:
+        page_no = sample.imgid if sample.imgid is not None else 1
+        doc.add_page(
+            page_no=page_no,
+            size=Size(width=sample.image_width, height=sample.image_height),
+        )
+        prov = ProvenanceItem(
+            page_no=page_no,
+            bbox=BoundingBox(
+                l=0,
+                t=0,
+                r=sample.image_width,
+                b=sample.image_height,
+                coord_origin=CoordOrigin.TOPLEFT,
+            ),
+            charspan=(0, 0),
+        )
+
+    doc.add_table(data=data, prov=prov)
+    return doc

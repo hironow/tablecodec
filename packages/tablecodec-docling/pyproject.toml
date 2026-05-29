@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tablecodec-docling"
-version = "0.0.1"
+version = "0.0.2"
 description = "Docling bridge codec for tablecodec: export DoclingDocument.tables as TableSample"
 readme = "README.md"
 requires-python = ">=3.11"

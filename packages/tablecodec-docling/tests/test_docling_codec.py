@@ -7,7 +7,9 @@ hand-authored JSON to drift).
 
 from __future__ import annotations
 
+import dataclasses
 import io
+import json
 
 import pytest
 from docling_core.types.doc.base import BoundingBox, CoordOrigin, Size
@@ -19,7 +21,7 @@ from docling_core.types.doc.document import (
 )
 
 from tablecodec import codecs, profiles, validate
-from tablecodec.ir import TableSample
+from tablecodec.ir import GridCell, TableSample
 from tablecodec_docling.codec import DoclingTablesCodec
 
 
@@ -278,20 +280,140 @@ class TestSniffAndErrors:
             _read_all(source)
 
 
+def _round_trip(sample: TableSample) -> TableSample:
+    """Write one sample to docling JSONL and read it back as one sample."""
+    sink = io.StringIO()
+    DoclingTablesCodec().write([sample], sink)
+    sink.seek(0)
+    out = _read_all(sink)
+    assert len(out) == 1
+    return out[0]
+
+
+_LOSSY_WRITE = frozenset({"tokens", "extras"})
+
+
+def _strip_lossy(sample: TableSample) -> TableSample:
+    """Neutralize fields docling cannot round-trip, for modulo-loss compare."""
+    cells = tuple(
+        dataclasses.replace(c, tokens=())
+        for c in sample.cells  # tokens: write-lossy
+    )
+    return dataclasses.replace(sample, cells=cells, extras={})
+
+
 class TestContract:
-    def test_is_read_only(self) -> None:
-        codec = DoclingTablesCodec()
-        assert codec.writable is False
-        with pytest.raises(NotImplementedError):
-            codec.write([], io.StringIO())
+    def test_is_writable(self) -> None:
+        assert DoclingTablesCodec().writable is True
 
     def test_lossy_read_declares_role(self) -> None:
         assert "role" in DoclingTablesCodec().lossy_read()
+
+    def test_lossy_write_declares_tokens_and_extras(self) -> None:
+        assert DoclingTablesCodec().lossy_write() == _LOSSY_WRITE
 
     def test_satisfies_codec_protocol(self) -> None:
         from tablecodec.codecs import Codec
 
         assert isinstance(DoclingTablesCodec(), Codec)
+
+
+class TestWrite:
+    def test_write_emits_one_docling_document_per_sample(self) -> None:
+        # given — two simple samples.
+        s1 = TableSample(filename="a", nrows=1, ncols=1, cells=(GridCell(0, 0, tokens=("x",)),))
+        s2 = TableSample(filename="b", nrows=1, ncols=1, cells=(GridCell(0, 0, tokens=("y",)),))
+        sink = io.StringIO()
+
+        # when
+        DoclingTablesCodec().write([s1, s2], sink)
+
+        # then — one JSONL line per sample, each a DoclingDocument.
+        lines = [ln for ln in sink.getvalue().splitlines() if ln.strip()]
+        assert len(lines) == 2
+        assert all(json.loads(ln)["schema_name"] == "DoclingDocument" for ln in lines)
+
+    def test_round_trip_preserves_structure_roles_and_bbox(self) -> None:
+        # given — a 2x2 single-token table with header row and bboxes.
+        sample = TableSample(
+            filename="rt",
+            nrows=2,
+            ncols=2,
+            cells=(
+                GridCell(0, 0, tokens=("H1",), bbox=(0, 0, 10, 5), role="header"),
+                GridCell(0, 1, tokens=("H2",), bbox=(10, 0, 20, 5), role="header"),
+                GridCell(1, 0, tokens=("a",), bbox=(0, 5, 10, 10)),
+                GridCell(1, 1, tokens=("b",), bbox=(10, 5, 20, 10)),
+            ),
+            image_width=20,
+            image_height=10,
+            imgid=1,
+        )
+
+        # when
+        restored = _round_trip(sample)
+
+        # then — single-token cells survive fully; only extras differs (read
+        # always repopulates docling_self_ref), so compare modulo extras.
+        assert dataclasses.replace(restored, extras={}) == sample
+
+    def test_round_trip_preserves_spans(self) -> None:
+        # given — a colspan=2 header over two body cells.
+        sample = TableSample(
+            filename="span",
+            nrows=2,
+            ncols=2,
+            cells=(
+                GridCell(0, 0, tokens=("wide",), colspan=2, role="header"),
+                GridCell(1, 0, tokens=("a",)),
+                GridCell(1, 1, tokens=("b",)),
+            ),
+        )
+
+        # when
+        restored = _round_trip(sample)
+
+        # then
+        wide = next(c for c in restored.cells if c.tokens == ("wide",))
+        assert (wide.rowspan, wide.colspan) == (1, 2)
+        assert dataclasses.replace(restored, extras={}) == sample
+
+    def test_round_trip_preserves_image_dims_and_passes_strict(self) -> None:
+        # given
+        sample = TableSample(
+            filename="dim",
+            nrows=1,
+            ncols=1,
+            cells=(GridCell(0, 0, tokens=("x",), bbox=(0, 0, 5, 5)),),
+            image_width=100,
+            image_height=50,
+            imgid=1,
+        )
+
+        # when
+        restored = _round_trip(sample)
+
+        # then
+        assert restored.image_width == 100
+        assert restored.image_height == 50
+        assert validate(restored, profile=profiles.STRICT) == []
+
+    def test_multi_token_cell_collapses_but_rest_survives(self) -> None:
+        # given — a cell with a multi-element token sequence (docling stores one
+        # string per cell, so the segmentation is the declared write loss).
+        sample = TableSample(
+            filename="multi",
+            nrows=1,
+            ncols=1,
+            cells=(GridCell(0, 0, tokens=("a", "b", "c")),),
+        )
+
+        # when
+        restored = _round_trip(sample)
+
+        # then — content concatenated to a single token; structure otherwise equal.
+        assert restored.cells[0].tokens == ("abc",)
+        assert _strip_lossy(restored) == _strip_lossy(sample)
 
 
 class TestRegistration:

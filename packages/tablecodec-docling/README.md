@@ -23,9 +23,16 @@ with open("docs.jsonl", encoding="utf-8") as f:   # one DoclingDocument per line
 
 ## Status
 
-Read-first: `DoclingDocument.tables` -> `TableSample`. `write` is not
-supported (`writable = False`). Input is JSONL — one `DoclingDocument` JSON
-per line — yielding one `TableSample` per table, in document order.
+Read and write. `read`: JSONL of `DoclingDocument`s (one per line) ->
+one `TableSample` per table, in document order. `write` (`writable = True`):
+each `TableSample` -> one `DoclingDocument` (one table) on its own JSONL line —
+the exact inverse of `read`, so `read(write([s]))` recovers `s` modulo the
+declared write-losses.
+
+Write losses (`lossy_write = {"tokens", "extras"}`): docling stores one text
+string per cell, so a multi-token cell's segmentation collapses
+(`("a","b")` -> `"ab"`); and `DoclingDocument` has no home for arbitrary IR
+`extras`. Structure, spans, role, bbox, and image dimensions round-trip.
 
 ## Mapping notes
 

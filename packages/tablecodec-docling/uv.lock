@@ -871,7 +871,7 @@ provides-extras = ["teds", "cli", "hf", "all", "dev"]
 
 [[package]]
 name = "tablecodec-docling"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "." }
 dependencies = [
     { name = "docling-core" },
