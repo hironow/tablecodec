@@ -115,3 +115,58 @@ exclude_lines = [
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
 ]
+
+# Ruff configuration (aligned with the global ruff rules). Kept in pyproject
+# rather than a separate ruff.toml so the project has a single config file.
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = [
+    ".venv",
+    "build",
+    "dist",
+    "htmlcov",
+]
+
+[tool.ruff.lint]
+select = [
+    "FAST", # FastAPI (no-op here, but kept aligned with the global rules)
+    "C90",  # mccabe complexity
+    "NPY",  # numpy (no-op here)
+    "PD",   # pandas (no-op here)
+    "B",    # flake8-bugbear
+    "A",    # flake8-builtins
+    "DTZ",  # flake8-datetimez
+    "T20",  # flake8-print
+    "N",    # pep8-naming
+    "I",    # isort
+    "E",    # pycodestyle errors
+    "F",    # Pyflakes
+    "PLE",  # Pylint errors
+    "PLR",  # Pylint refactor
+    "UP",   # pyupgrade
+    "FURB", # refurb
+    "RUF",  # Ruff-specific
+]
+extend-ignore = [
+    "E501",   # line too long: handled by formatter
+    "RUF002", # ambiguous unicode (false positive on Japanese docstrings)
+    "RUF003", # ambiguous comments
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "PLR2004", # magic-value-comparison: tests routinely use literal values
+    "S101",    # assert is required in pytest
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.isort]
+known-first-party = ["tablecodec"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true

@@ -11,6 +11,10 @@ help:
 install:
     uv pip install -e ".[dev,cli,teds]"
 
+# Install git hooks via prek (reads .pre-commit-config.yaml)
+hooks:
+    prek install
+
 # Run unit tests (--extra teds so the optional TEDS tests run, not skip)
 test:
     uv run --extra teds pytest tests/ -v
