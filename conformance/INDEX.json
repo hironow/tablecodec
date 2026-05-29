@@ -43,6 +43,55 @@
       "sample": "samples/otsl-1.0.0/003_empty.jsonl",
       "expectation": "expectations/otsl-1.0.0/003_empty.ir.json",
       "description": "ecel empty anchor next to a filled cell"
+    },
+    {
+      "id": "pubtabnet-1.0.0/001_no_bbox",
+      "codec": "pubtabnet-1.0.0",
+      "sample": "samples/pubtabnet-1.0.0/001_no_bbox.jsonl",
+      "expectation": "expectations/pubtabnet-1.0.0/001_no_bbox.ir.json",
+      "description": "2x2 header+body; v1.0 drops bbox on read (source bbox ignored)"
+    },
+    {
+      "id": "fintabnet/001_simple",
+      "codec": "fintabnet",
+      "sample": "samples/fintabnet/001_simple.jsonl",
+      "expectation": "expectations/fintabnet/001_simple.ir.json",
+      "description": "HTML 2x2; table_id maps onto imgid; bbox preserved"
+    },
+    {
+      "id": "fintabnet-otsl/001_simple",
+      "codec": "fintabnet-otsl",
+      "sample": "samples/fintabnet-otsl/001_simple.jsonl",
+      "expectation": "expectations/fintabnet-otsl/001_simple.ir.json",
+      "description": "OTSL fcel 2x2; table_id maps onto imgid; all role=body"
+    },
+    {
+      "id": "tableformer/001_empty_cell_bbox",
+      "codec": "tableformer",
+      "sample": "samples/tableformer/001_empty_cell_bbox.jsonl",
+      "expectation": "expectations/tableformer/001_empty_cell_bbox.ir.json",
+      "description": "1x2; an empty cell still carries a bbox (TableFormer trait)"
+    },
+    {
+      "id": "tablebank/001_structure_only",
+      "codec": "tablebank",
+      "sample": "samples/tablebank/001_structure_only.jsonl",
+      "expectation": "expectations/tablebank/001_structure_only.ir.json",
+      "description": "structure-only (no cells): every cell empty, no bbox, header/body from thead/tbody"
+    },
+    {
+      "id": "pubtables-1m/001_unordered",
+      "codec": "pubtables-1m",
+      "sample": "samples/pubtables-1m/001_unordered.jsonl",
+      "expectation": "expectations/pubtables-1m/001_unordered.ir.json",
+      "description": "object-detection cells in arbitrary order are normalized to row-major"
+    },
+    {
+      "id": "doctags-tables/001_simple",
+      "codec": "doctags-tables",
+      "sample": "samples/doctags-tables/001_simple.jsonl",
+      "expectation": "expectations/doctags-tables/001_simple.ir.json",
+      "description": "DocTags OTSL with <loc_n> tokens parsed into bbox (0-500 grid)"
     }
   ]
 }

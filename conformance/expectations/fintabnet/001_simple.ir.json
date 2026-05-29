@@ -1,0 +1,13 @@
+{
+  "filename": "conf_fin_001.png",
+  "nrows": 2,
+  "ncols": 2,
+  "split": "test",
+  "imgid": 7,
+  "cells": [
+    {"row": 0, "col": 0, "rowspan": 1, "colspan": 1, "tokens": ["Q1"], "bbox": [0, 0, 40, 10], "role": "header"},
+    {"row": 0, "col": 1, "rowspan": 1, "colspan": 1, "tokens": ["Q2"], "bbox": [40, 0, 80, 10], "role": "header"},
+    {"row": 1, "col": 0, "rowspan": 1, "colspan": 1, "tokens": ["10"], "bbox": [0, 10, 40, 20], "role": "body"},
+    {"row": 1, "col": 1, "rowspan": 1, "colspan": 1, "tokens": ["20"], "bbox": [40, 10, 80, 20], "role": "body"}
+  ]
+}

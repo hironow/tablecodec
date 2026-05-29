@@ -1,0 +1,13 @@
+{
+  "filename": "conf_fto_001.png",
+  "nrows": 2,
+  "ncols": 2,
+  "split": "test",
+  "imgid": 91,
+  "cells": [
+    {"row": 0, "col": 0, "rowspan": 1, "colspan": 1, "tokens": ["a"], "bbox": [0, 0, 10, 5], "role": "body"},
+    {"row": 0, "col": 1, "rowspan": 1, "colspan": 1, "tokens": ["b"], "bbox": [10, 0, 20, 5], "role": "body"},
+    {"row": 1, "col": 0, "rowspan": 1, "colspan": 1, "tokens": ["c"], "bbox": [0, 5, 10, 10], "role": "body"},
+    {"row": 1, "col": 1, "rowspan": 1, "colspan": 1, "tokens": ["d"], "bbox": [10, 5, 20, 10], "role": "body"}
+  ]
+}

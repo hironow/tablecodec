@@ -19,8 +19,7 @@ import jsonschema
 import pytest
 
 from tablecodec import codecs
-from tablecodec.codecs.otsl import OTSL10Codec
-from tablecodec.codecs.pubtabnet import PubTabNet10Codec, PubTabNet20Codec
+from tablecodec.codecs.builtins import BUILTIN_CODECS
 from tablecodec.ir import TableSample
 
 CONFORMANCE_DIR = Path(__file__).parent.parent / "conformance"
@@ -58,9 +57,8 @@ def _ir_to_dict(sample: TableSample) -> dict[str, Any]:
 def _seed_registry() -> Any:  # pyright: ignore[reportUnusedFunction]
     saved = codecs._snapshot()  # type: ignore[attr-defined]
     codecs._restore({})  # type: ignore[attr-defined]
-    codecs.register(PubTabNet10Codec())
-    codecs.register(PubTabNet20Codec())
-    codecs.register(OTSL10Codec())
+    for codec in BUILTIN_CODECS:
+        codecs.register(codec)
     yield
     codecs._restore(saved)  # type: ignore[attr-defined]
 

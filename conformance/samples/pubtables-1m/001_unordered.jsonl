@@ -1,0 +1,1 @@
+{"filename": "conf_pt1m_001.png", "split": "val", "imgid": 61, "nrows": 2, "ncols": 2, "cells": [{"row": 1, "col": 1, "bbox": [10, 5, 20, 10], "tokens": ["d"]}, {"row": 0, "col": 0, "bbox": [0, 0, 10, 5], "tokens": ["a"]}, {"row": 1, "col": 0, "bbox": [0, 5, 10, 10], "tokens": ["c"]}, {"row": 0, "col": 1, "bbox": [10, 0, 20, 5], "tokens": ["b"]}]}

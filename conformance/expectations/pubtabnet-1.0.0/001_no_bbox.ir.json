@@ -1,0 +1,13 @@
+{
+  "filename": "conf_p10_001.png",
+  "nrows": 2,
+  "ncols": 2,
+  "split": "test",
+  "imgid": 1101,
+  "cells": [
+    {"row": 0, "col": 0, "rowspan": 1, "colspan": 1, "tokens": ["A"], "bbox": null, "role": "header"},
+    {"row": 0, "col": 1, "rowspan": 1, "colspan": 1, "tokens": ["B"], "bbox": null, "role": "header"},
+    {"row": 1, "col": 0, "rowspan": 1, "colspan": 1, "tokens": ["c"], "bbox": null, "role": "body"},
+    {"row": 1, "col": 1, "rowspan": 1, "colspan": 1, "tokens": ["d"], "bbox": null, "role": "body"}
+  ]
+}

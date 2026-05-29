@@ -1,0 +1,11 @@
+{
+  "filename": "conf_tf_001.png",
+  "nrows": 1,
+  "ncols": 2,
+  "split": null,
+  "imgid": 32,
+  "cells": [
+    {"row": 0, "col": 0, "rowspan": 1, "colspan": 1, "tokens": ["x"], "bbox": [0, 0, 10, 5], "role": "body"},
+    {"row": 0, "col": 1, "rowspan": 1, "colspan": 1, "tokens": [], "bbox": [10, 0, 20, 5], "role": "body"}
+  ]
+}
