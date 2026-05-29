@@ -56,7 +56,7 @@ A Python library giving a neutral, lossless **Internal Representation
 be green before commit. Specifically:
 
 - `just lint` — ruff check + ruff format --check (config in `pyproject.toml`).
-- `just type` — pyright **strict** (`pyrightconfig.json`). Zero errors.
+- `just type` — pyright **strict** (`pyproject.toml [tool.pyright]`). Zero errors.
 - `just test` — pytest. Benchmarks are marked `benchmark` and excluded
   by default; run with `just bench`.
 - `just semgrep` — scan `src/` with the core meta-rules (`.semgrep/rules/`).

@@ -135,10 +135,8 @@ tablecodec/
 │       ├── pubtabnet/
 │       ├── otsl/
 │       └── ...
-├── pyproject.toml
+├── pyproject.toml             # ruff [tool.ruff] / pyright [tool.pyright] もここに統一
 ├── justfile
-├── ruff.toml                   # またはpyproject.toml内
-├── pyrightconfig.json
 ├── .gitignore
 ├── .pre-commit-config.yaml
 ├── .semgrep/rules/             # 「コアに3rd party import 禁止」等を強制（+ co-located test）
@@ -162,8 +160,8 @@ tablecodec/
 
 **Deliverables**:
 - `pyproject.toml` (hatchling, Python 3.11+, extras: `teds`, `cli`, `hf`, `all`, `dev`)
-- `justfile` (targets: `install`, `test`, `lint`, `type`, `fmt`, `cov`, `ci`, `clean`)
-- `ruff.toml`, `pyrightconfig.json`
+- `justfile` (targets: `install`, `hooks`, `test`, `lint`, `type`, `fmt`, `cov`, `semgrep`, `semgrep-test`, `ci`, `clean`)
+- ruff (`[tool.ruff]`) と pyright (`[tool.pyright]`) は `pyproject.toml` に統一
 - `.github/workflows/ci.yaml` (matrix: Python 3.11, 3.12, 3.13 / Ubuntu, macOS)
 - `.gitignore`, `.pre-commit-config.yaml`
 - `.semgrep/rules/`: ルール「`src/tablecodec/` 配下で許可された stdlib モジュール以外の import を禁止」等を含む（各ルールは co-located な `semgrep test` fixture 付き）
