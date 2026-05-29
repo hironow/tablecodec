@@ -6,6 +6,8 @@ Every invariant has at least one positive (passes) and one negative
 
 from __future__ import annotations
 
+import pytest
+
 from tablecodec._invariants import (
     ValidationError,
     check_i01_nrows_ncols_positive,
@@ -407,6 +409,48 @@ class TestI05:
 
         # then
         assert errors == []
+
+    @pytest.mark.parametrize(
+        "tokens",
+        [
+            pytest.param(("",), id="empty-string-token"),
+            pytest.param((" ",), id="whitespace-token"),
+            pytest.param(("", " ", ""), id="multiple-whitespace-tokens"),
+        ],
+    )
+    def test_skips_degenerate_bbox_on_whitespace_only_cell(self, tokens: tuple[str, ...]) -> None:
+        # given — a cell whose tokens concatenate to only whitespace localizes
+        # no content, so its placeholder bbox is out of scope for I-05 even
+        # though tokens != () (spec §5.2, ADR 0010 refines ADR 0007).
+        sample = TableSample(
+            filename="x.png",
+            nrows=1,
+            ncols=1,
+            cells=(GridCell(row=0, col=0, tokens=tokens, bbox=(5, 5, 5, 5)),),
+        )
+
+        # when
+        errors = check_i05_bbox_well_formed(sample)
+
+        # then
+        assert errors == []
+
+    def test_flags_degenerate_bbox_on_markup_only_cell(self) -> None:
+        # given — tokens carry non-whitespace characters (markup). The core IR
+        # does not model HTML, so a markup-only cell is content-bearing and its
+        # bbox IS geometry-checked (spec §5.2, ADR 0010 — the IR-neutral line).
+        sample = TableSample(
+            filename="x.png",
+            nrows=1,
+            ncols=1,
+            cells=(GridCell(row=0, col=0, tokens=("<sup>", " ", "</sup>"), bbox=(5, 5, 5, 5)),),
+        )
+
+        # when
+        errors = check_i05_bbox_well_formed(sample)
+
+        # then
+        assert any(e.invariant == "I-05" for e in errors)
 
 
 # ---------- I-06: header cells form a contiguous top region ----------

@@ -1,7 +1,7 @@
 # 0007. I-05 geometry check is scoped to content-bearing cells
 
 **Date:** 2026-05-29
-**Status:** Accepted
+**Status:** Superseded by [0010](0010-i05-empty-cell-is-whitespace-content.md)
 
 ## Context
 

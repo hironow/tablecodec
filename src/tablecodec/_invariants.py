@@ -204,17 +204,30 @@ def check_i04_grid_exact_cover(sample: TableSample) -> list[ValidationError]:
 # ---------- I-05: bbox well-formed when set ----------
 
 
+def _is_content_empty(tokens: tuple[str, ...]) -> bool:
+    """Whether a cell's tokens localize no content.
+
+    A cell is content-empty when its tokens, concatenated, contain no
+    non-whitespace character (`tokens == ()`, `("",)`, `(" ",)`, ...).
+    Markup-bearing tokens (e.g. `("<sup>",)`) are NOT empty: the core IR
+    does not model HTML, so it treats any non-whitespace token as content
+    (spec §5.2, ADR 0010).
+    """
+    return "".join(tokens).strip() == ""
+
+
 def check_i05_bbox_well_formed(sample: TableSample) -> list[ValidationError]:
     errors: list[ValidationError] = []
     for idx, cell in enumerate(sample.cells):
         bbox = cell.bbox
         if bbox is None:
             continue
-        if not cell.tokens:
+        if _is_content_empty(cell.tokens):
             # I-05 guards a box that *localizes content*. An empty cell
             # localizes nothing and datasets routinely give it a zero-area
             # placeholder box, so its geometry is out of scope (spec §5.2,
-            # ADR 0007). The bbox itself is still kept on the IR.
+            # ADR 0010, refining ADR 0007). The bbox itself is still kept
+            # on the IR.
             continue
         x0, y0, x1, y1 = bbox
         if x0 >= x1:

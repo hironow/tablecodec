@@ -111,7 +111,7 @@ A `TableSample` is **valid** when **all** of the following hold:
 | I-02  | For every cell, `0 <= row < nrows` and `0 <= col < ncols`. |
 | I-03  | For every cell, `row + rowspan <= nrows` and `col + colspan <= ncols`. |
 | I-04  | The union of cell footprints (using rowspan / colspan) **exactly covers** the `nrows × ncols` grid. No overlaps, no gaps. |
-| I-05  | When `bbox` is set **on a content-bearing cell** (`tokens` non-empty): `bbox[0] < bbox[2]` and `bbox[1] < bbox[3]`. A bbox on an **empty cell** (`tokens == ()`) is a placeholder region and is **not** geometry-checked. |
+| I-05  | When `bbox` is set **on a content-bearing cell**: `bbox[0] < bbox[2]` and `bbox[1] < bbox[3]`. A bbox on an **empty cell** is a placeholder region and is **not** geometry-checked. A cell is *empty* when its `tokens`, concatenated, contain no non-whitespace character — i.e. `"".join(tokens).strip() == ""`. This covers `tokens == ()`, a lone empty-string token `("",)`, and whitespace-only tokens `(" ",)`. |
 | I-06  | Header cells form a contiguous top-region of the grid (no header rows below body rows). |
 | I-07  | `tokens` may be empty (empty cell), but the tuple itself is never `None`. |
 
@@ -124,6 +124,14 @@ remains on the IR and is preserved on round-trip; only the geometry check
 is skipped for empty cells. (Profiles that require bbox *presence* —
 `tableformer`, `pubtabnet-2.0` — are unaffected: a placeholder box is
 still present.)
+
+"Empty" is decided by content, not by token count: a cell whose tokens
+concatenate to only whitespace (`"".join(tokens).strip() == ""`) localizes
+nothing and is treated as empty. A cell whose tokens contain non-whitespace
+characters is content-bearing **even if those characters are markup** (e.g.
+`("<sup>", " ", "</sup>")`): the core IR does not model HTML semantics, so it
+cannot know `<sup>` carries no glyph, and treating such tokens as content is
+the IR-neutral choice. See ADR 0010 (which refines ADR 0007).
 
 The `extras` field is **opaque to validation** but must be JSON-serializable for codecs that round-trip through it.
 
