@@ -82,8 +82,11 @@ duplicate it. Pick the next item from there when resuming.
 - **Attributed ports** (keep headers + `THIRD_PARTY_NOTICES.md`):
   `_otslgrid.py` (docling-ibm-models, MIT, ADR 0005) and `teds.py`
   (IBM PubTabNet metric, Apache-2.0, ADR 0011).
-- **scripts/ is NOT in CI scope** (`just lint`/`type` = `src/`+`tests/`).
-  Editor pyright flags unresolved imports there — expected/ungated.
+- **scripts/ is ruff-linted but NOT type-checked.** `just lint`/`fmt` now
+  cover `src/ tests/ scripts/` (scripts uses a `PLR0913` per-file-ignore for
+  its many-arg adapters). `just type` (pyright) stays `src/`+`tests/` only —
+  the e2e script imports `datasets` (the `[hf]` extra) which pyright can't
+  resolve, so type-checking it would be noise.
 - **`input/`, `output/`, `private/`** are gitignored local-only trees.
 - **TDD discipline**: 1 commit = 1 Conventional-Commit type; structural vs
   behavioural never mixed. The `just ci` gate forbids committing a failing
