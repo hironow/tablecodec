@@ -79,16 +79,6 @@ class _TableTree:
         self.content = content
         self.children: list[_TableTree] = list(children)
 
-    def bracket(self) -> str:
-        """Bracket notation used by apted for the tree's string form."""
-        if self.tag == "td":
-            result = f'"tag": {self.tag}, "colspan": {self.colspan}, "rowspan": {self.rowspan}, "text": {self.content}'
-        else:
-            result = f'"tag": {self.tag}'
-        for child in self.children:
-            result += child.bracket()
-        return f"{{{result}}}"
-
 
 class _CustomConfig(Config):
     def children(self, node: _TableTree) -> list[_TableTree]:
