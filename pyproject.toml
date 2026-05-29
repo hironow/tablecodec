@@ -160,6 +160,9 @@ extend-ignore = [
     "PLR2004", # magic-value-comparison: tests routinely use literal values
     "S101",    # assert is required in pytest
 ]
+"scripts/**/*.py" = [
+    "PLR0913", # many-args: the occasional e2e harness adapters/runners take many params
+]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10

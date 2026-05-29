@@ -21,13 +21,13 @@ test:
 
 # Lint (ruff check + format check)
 lint:
-    uv run ruff check src/ tests/
-    uv run ruff format --check src/ tests/
+    uv run ruff check src/ tests/ scripts/
+    uv run ruff format --check src/ tests/ scripts/
 
 # Format and auto-fix (does not fail the build)
 fmt:
-    uv run ruff format src/ tests/
-    uv run ruff check --fix src/ tests/
+    uv run ruff format src/ tests/ scripts/
+    uv run ruff check --fix src/ tests/ scripts/
 
 # Strict type check (--extra teds so apted/lxml resolve when checking teds.py)
 type:
