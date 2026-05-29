@@ -41,8 +41,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import IO as IOType
-from typing import Any
+from typing import IO, Any
 
 # Quiet the Hugging Face stack BEFORE `datasets` is imported (env vars are
 # read at import time). Keeps the e2e output to our own summary lines.
@@ -129,8 +128,11 @@ def docling_to_tablebank_payload(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+_BBOX_COORDS = 4  # a bbox is (x0, y0, x1, y1)
+
+
 def _bbox4(bbox: Any) -> list[int] | None:
-    if isinstance(bbox, list) and len(bbox) >= 4:
+    if isinstance(bbox, list) and len(bbox) >= _BBOX_COORDS:
         return [int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])]
     return None
 
@@ -434,6 +436,8 @@ CHECKS: tuple[Check, ...] = (
 
 # ---------- running a check ----------
 
+_MAX_EXAMPLES = 5  # keep at most this many example messages per report
+
 
 @dataclass(slots=True)
 class Report:
@@ -445,7 +449,7 @@ class Report:
     examples: list[str] = field(default_factory=list)
 
     def note(self, msg: str) -> None:
-        if len(self.examples) < 5:
+        if len(self.examples) < _MAX_EXAMPLES:
             self.examples.append(msg)
 
 
@@ -497,10 +501,10 @@ class FindingsRecorder:
     shuffle_buffer: int
     profile_name: str
     enabled: bool = True
-    _fh: IOType[str] | None = field(default=None, init=False)
+    _fh: IO[str] | None = field(default=None, init=False)
     written: int = field(default=0, init=False)
 
-    def _ensure_open(self) -> IOType[str]:
+    def _ensure_open(self) -> IO[str]:
         if self._fh is None:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             readme = self.path.parent / "README.md"
