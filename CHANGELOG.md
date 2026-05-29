@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.15] - 2026-05-29
+
+### Changed
+
+- I-05 (bbox well-formed) now decides "empty cell" by **content**, not by
+  token count: a cell whose tokens concatenate to only whitespace
+  (`"".join(tokens).strip() == ""`) localizes nothing, so its placeholder
+  bbox is out of scope for the geometry check. This widens the 0.0.12
+  scoping (which only skipped `tokens == ()`) to also skip a lone
+  empty-string token `("",)` and whitespace-only tokens `(" ",)` — the
+  dominant residual finding in an e2e verification sweep (70/85 SynthTabNet
+  cells were `("",)`). Markup-only cells (e.g. `("<sup>", " ", "</sup>")`)
+  stay content-bearing and ARE geometry-checked: the core IR does not model
+  HTML, so any non-whitespace token counts as content (the IR-neutral
+  line). Validation-layer only (`_invariants.py`); codecs unchanged, no
+  `lossy_*` / round-trip impact. See `docs/spec.md` §5.2 and
+  `docs/adr/0010-i05-empty-cell-is-whitespace-content.md` (refines ADR
+  0007).
+
 ## [0.0.14] - 2026-05-29
 
 ### Removed
@@ -347,7 +366,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.14...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.15...HEAD
+[0.0.15]: https://github.com/hironow/tablecodec/releases/tag/v0.0.15
 [0.0.14]: https://github.com/hironow/tablecodec/releases/tag/v0.0.14
 [0.0.13]: https://github.com/hironow/tablecodec/releases/tag/v0.0.13
 [0.0.12]: https://github.com/hironow/tablecodec/releases/tag/v0.0.12
