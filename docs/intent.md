@@ -406,16 +406,46 @@ ADR 0011）。§8 STRICT は 0.0.17（ADR 0012）。docling bridge は read+writ
 `packages/tablecodec-docling/`（own 0.0.2）に in-repo monorepo で実装済み
 （ADR 0013、別 repo 抽出は publish 前）。
 
-v1.0 までの残作業：
+**未来事項はすべてこの §8 に集約**します。`docs/spec.md` は現状の契約のみ、
+`docs/handover.md` はアクティブなセッション状態のみを書き、未来の roadmap/TODO は
+重複させずにここを参照します。
+
+### マイルストーン
 
 | バージョン | 内容 |
 |---|---|
-| 0.0.x（継続） | docling bridge の別 repo 抽出（ADR 0013）、Open Questions §17 の解消、Conformance Suite を別 repo へ抽出（ADR 0001） |
-| 0.0.x | PyPI 公開（M8、Trusted Publishing 設定後） |
+| 0.0.x（継続） | 下記「抽出・公開」「機能フォローアップ」「Open Questions」を順次 |
 | 0.9.0 | Public API freeze、RC1 |
 | **1.0.0** | API frozen、3 年 LTS スタート |
 
-各バージョンで Conformance Suite を拡充する。
+### 抽出・公開（主にロジ作業 / 人間側の操作）
+
+- **docling bridge を別 repo へ抽出**（publish 前、ADR 0013）。現状は
+  `packages/tablecodec-docling/` の in-repo monorepo。
+- **Conformance Suite を別 vendor-neutral repo へ抽出**（v1.0 前、ADR 0001）。
+  併せて各バージョンで corpus を拡充（現状 9 codec 中 2 codec のみ expected-IR）。
+- **PyPI 公開**（M8、Trusted Publishing 設定後）。手順は gitignore 下の
+  `private/PYPI_RELEASE_STEPS.md`。
+
+### 機能フォローアップ（コード）
+
+- **codec への image-dims populate**: pubtables-1m が PASCAL VOC の `<size>` から
+  width/height を読めば、§8 STRICT が実データで発火する（docling bridge が page
+  size → `image_width/height` で先行実証済み、ADR 0012 follow-up）。当該 codec の
+  payload・round-trip・`lossy_write` に波及。
+- **docling の e2e（docling-core 直読み）**: 現状は意図的な non-gap（bridge の
+  round-trip + 30 テストがカバレッジ）。別 repo 抽出のタイミングで再検討。
+
+### Open Questions（v0.1 で未決、v1.0 前に解決 — spec §17 から集約）
+
+- **OQ-1**: `TableSample.cells` を ordered（現行 spec）/ unordered（set）どちらに
+  するか。ordering は直列化を単純化するが正規化要件を生む。
+- **OQ-2**: セル内多行テキストの tokenization。per-character（PubTabNet）か
+  per-word（PubTables-1M）か。
+- **OQ-3**: `bbox` の float 対応。現状 integer-only だが PubTables-1M は float。
+  なお §8 STRICT の bbox-in-image は *containment* 判定で int/float に非依存ゆえ、
+  OQ-3 の解決に依存しない（ADR 0012）。
+- **OQ-4**: IR の JSON Schema を dataclass 定義と別に公開するか（cross-language 用途）。
 
 ---
 

@@ -387,12 +387,11 @@ The Conformance Suite repository is a separate, MIT-licensed artifact intended f
 
 ## 17. Open Questions
 
-The following are intentionally left undecided in v0.1 and will be resolved before v1.0:
-
-- **OQ-1**: Should `TableSample.cells` be ordered (current spec) or unordered (a set)? Ordering simplifies serialization but introduces a canonicalization requirement.
-- **OQ-2**: How should multi-line text within a single cell be tokenized? Per-character (PubTabNet) or per-word (PubTables-1M)?
-- **OQ-3**: Should `bbox` support floating-point coordinates? Currently integer-only, but PubTables-1M uses floats. (Note: the `strict` profile's bbox-in-image cross-check, added in §8, is a *containment* test that works identically for int or float coordinates, so it ships with int `image_width`/`image_height` and does **not** depend on resolving OQ-3.)
-- **OQ-4**: Whether to publish a JSON Schema for the IR alongside the dataclass definitions, for cross-language use.
+The IR/contract points intentionally left undecided for v1.0 (cell ordering,
+in-cell tokenization, float `bbox`, IR JSON Schema), together with all other
+forward-looking work, are tracked in **`docs/intent.md` (Future work)** — the
+single home for roadmap/未来 items. This spec documents the current contract
+only.
 
 ---
 

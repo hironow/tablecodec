@@ -34,8 +34,9 @@ bridge). `just ci-all` runs both. Coverage: core ~91% (recent-work modules
 `_invariants`/`ir`/`loss`/`validate` 100%, `teds` 99%); docling codec 100%.
 
 The spec/intent are reconciled to the code; the §-by-§ conformance audit is
-complete (see git history + the ADRs below). Open spec items are the §17 Open
-Questions only (OQ-1/2/4; OQ-3 confirmed orthogonal to STRICT).
+complete (see git history + the ADRs below). The remaining open contract
+questions (cell ordering, tokenization, float bbox, IR JSON Schema) and all
+roadmap work are consolidated in `docs/intent.md` §8.
 
 ## In Progress
 
@@ -45,24 +46,10 @@ removed. Detail in git log + CHANGELOG.
 
 ## Next Actions
 
-All remaining work is **v1.0-planning** and optional for now:
-
-1. **Extract `tablecodec-docling` to its own repo** before publishing it
-   (ADR 0013). Needs a real GitHub repo (maintainer's manual step) +
-   `git filter-repo`. Until then it lives in `packages/`.
-2. **Extract the conformance suite** to a vendor-neutral repo (ADR 0001,
-   §11) — do it just before v1.0, once the corpus stops growing (today 2 of
-   9 codecs have expected-IR).
-3. **Populate codec image dims** so STRICT fires on real core-codec data:
-   e.g. `pubtables-1m` reading width/height from VOC `<size>`. The docling
-   bridge already proves the pattern (page size → `image_width/height`).
-   Touches that codec's payload + round-trip + `lossy_write`.
-4. **§17 Open Questions**: OQ-1 (cell ordering), OQ-2 (tokenization), OQ-4
-   (publish a JSON Schema for the IR). OQ-3 (float bbox) is decoupled from
-   STRICT but still open.
-5. **PyPI publish** (M8): runbook in the gitignored
-   `private/PYPI_RELEASE_STEPS.md`; the release workflow is inert until the
-   PyPI-side OIDC setup is done.
+Nothing active. **All future/roadmap work lives in `docs/intent.md` §8**
+(the single home: extraction & publish, codec image-dims population, the
+docling-core e2e, and the OQ-1..4 open questions) — handover does not
+duplicate it. Pick the next item from there when resuming.
 
 ## Known Risks / Blockers
 
