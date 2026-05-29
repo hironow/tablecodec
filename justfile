@@ -9,7 +9,7 @@ help:
 
 # Install package + dev dependencies into the current env (editable)
 install:
-    uv pip install -e ".[dev,cli,teds,validate,fast]"
+    uv pip install -e ".[dev,cli,teds]"
 
 # Run unit tests
 test:

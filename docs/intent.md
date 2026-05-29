@@ -161,7 +161,7 @@ tablecodec/
 **Goal**: リポジトリの土台を整え、`just ci` が空のテスト一式に対してグリーンになる状態を作る。
 
 **Deliverables**:
-- `pyproject.toml` (hatchling, Python 3.11+, extras: `teds`, `cli`, `fast`, `validate`, `all`, `dev`)
+- `pyproject.toml` (hatchling, Python 3.11+, extras: `teds`, `cli`, `hf`, `all`, `dev`)
 - `justfile` (targets: `install`, `test`, `lint`, `type`, `fmt`, `cov`, `ci`, `clean`)
 - `ruff.toml`, `pyrightconfig.json`
 - `.github/workflows/ci.yaml` (matrix: Python 3.11, 3.12, 3.13 / Ubuntu, macOS)
@@ -438,7 +438,7 @@ git clone https://github.com/hironow/tablecodec
 cd tablecodec
 uv venv --python 3.11
 source .venv/bin/activate
-uv pip install -e ".[dev,cli,teds,validate]"
+uv pip install -e ".[dev,cli,teds]"
 
 # Pre-commit
 uv pip install pre-commit
@@ -471,7 +471,7 @@ default:
     @just --list
 
 install:
-    uv pip install -e ".[dev,cli,teds,validate]"
+    uv pip install -e ".[dev,cli,teds]"
 
 test:
     pytest tests/ -v
