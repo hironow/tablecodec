@@ -153,9 +153,12 @@ the codecs so the suite catches read-path regressions.
 
 ## Where things live
 
-- `docs/spec.md` — spec (source of truth). `docs/intent.md` — brief.
-- `docs/handover.md` — current session state / next actions (read for
-  "where are we"). `docs/adr/` — decision history.
+- `docs/spec.md` — spec (source of truth; current contract only).
+  `docs/intent.md` — brief **and the single home for all future/roadmap work
+  (§8 "Future work")**; spec §17 and handover point here, not the reverse.
+- `docs/handover.md` — current session state (read for "where are we"); it
+  references intent §8 for the roadmap rather than duplicating it.
+  `docs/adr/` — decision history.
 - `src/tablecodec/` — the library (see "Non-negotiable invariants").
   `teds.py` is the core-external TEDS metric (`[teds]`, ADR 0011).
 - `packages/tablecodec-docling/` — the docling bridge codec, an in-repo

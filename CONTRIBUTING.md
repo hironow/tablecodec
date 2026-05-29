@@ -8,7 +8,7 @@ Kent Beck's TDD discipline and the workflow described in
 
 ```bash
 # Prerequisites
-brew install just uv  # or use mise
+brew install just uv prek  # or use mise
 
 # Setup
 git clone https://github.com/hironow/tablecodec
@@ -16,6 +16,7 @@ cd tablecodec
 uv venv --python 3.11
 source .venv/bin/activate
 uv pip install -e ".[dev,cli,teds]"
+just hooks   # install git hooks via prek (.pre-commit-config.yaml)
 
 # Verify environment
 just ci

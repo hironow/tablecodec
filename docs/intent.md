@@ -475,9 +475,8 @@ uv venv --python 3.11
 source .venv/bin/activate
 uv pip install -e ".[dev,cli,teds]"
 
-# Pre-commit
-uv pip install pre-commit
-pre-commit install --install-hooks
+# git hooks（prek、.pre-commit-config.yaml を使用）
+just hooks   # = prek install（prek は brew install prek 等で導入）
 
 # 動作確認
 just ci
