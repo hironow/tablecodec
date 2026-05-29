@@ -171,3 +171,25 @@ known-first-party = ["tablecodec"]
 quote-style = "double"
 indent-style = "space"
 docstring-code-format = true
+
+# Pyright configuration (strict). Kept in pyproject rather than a separate
+# pyrightconfig.json so the project has a single config file. pyright reads
+# [tool.pyright] only when pyrightconfig.json is absent.
+[tool.pyright]
+include = ["src", "tests"]
+exclude = ["**/__pycache__", "**/.venv", "build", "dist", "htmlcov"]
+pythonVersion = "3.11"
+pythonPlatform = "All"
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = true
+reportMissingImports = "error"
+reportMissingTypeStubs = "warning"
+reportUnusedImport = "error"
+reportUnusedVariable = "warning"
+reportDuplicateImport = "error"
+reportImplicitStringConcatenation = "warning"
+reportUntypedFunctionDecorator = "error"
+reportUnnecessaryTypeIgnoreComment = "warning"
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true

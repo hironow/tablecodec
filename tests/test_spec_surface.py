@@ -286,7 +286,7 @@ class TestCliSurface:
                 },
             }
         )
-        path = tmp_path / "sample.jsonl"  # type: ignore[attr-defined]
+        path = tmp_path / "sample.jsonl"
         path.write_text(sample_line + "\n", encoding="utf-8")
         result = runner.invoke(main, ["validate", str(path)])
         assert result.exit_code == 0, result.output
