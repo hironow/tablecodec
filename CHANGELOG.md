@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `packages/tablecodec-docling/` — a read-first bridge codec
+  (`docling-tables`, own version 0.0.1) mapping `DoclingDocument.tables` to
+  `TableSample`, developed in-repo as a temporary monorepo member (ADR 0013,
+  SPEC §15). It depends on docling-core and lives in its own uv project, so
+  the stdlib-only core package and its environment are unaffected. Discover it
+  via `tablecodec.codecs.load_plugins()`. Run its checks with
+  `just docling-ci` (or `just ci-all` for the whole monorepo).
+
 ## [0.0.17] - 2026-05-29
 
 ### Added

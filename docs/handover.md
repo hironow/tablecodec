@@ -2,9 +2,9 @@
 
 **Last updated:** 2026-05-29 (JST)
 **Updated by:** Claude (Opus 4.8, 1M context)
-**Next work item:** docling bridge / §11 conformance / codec image-dims
-population (all v1.0 planning). `[teds]` shipped in 0.0.16; §8 STRICT shipped
-in 0.0.17.
+**Next work item:** docling bridge WRITE direction + extraction / §11
+conformance / codec image-dims population (all v1.0 planning). `[teds]`
+shipped 0.0.16; §8 STRICT 0.0.17; docling bridge (read) in-repo monorepo.
 
 ## Current State
 
@@ -19,6 +19,30 @@ Shipped:
   `pubtables-1m`, `doctags-tables`.
 - `just ci` green (ruff + pyright strict + pytest + semgrep + docs-check).
   Zero third-party deps in core (semgrep-enforced — `loss.py` now included).
+
+### docling bridge (this session, ADR 0013)
+
+`packages/tablecodec-docling/` — read-first bridge codec `docling-tables`
+(own version 0.0.1) mapping `DoclingDocument.tables` → `TableSample`.
+In-repo **monorepo** member (temporary; extract before publish, ADR 0013).
+
+- Lives in its OWN uv project: `[tool.uv.sources] tablecodec = {path=../../,
+  editable}`, run via `uv run --project packages/tablecodec-docling`. docling-
+  core (+ numpy/pandas) install into the SUB-package `.venv` only — core env
+  and the zero-dep guard are untouched. No nested justfile (root orchestrates).
+- Checks: **`just docling-ci`** (lint+type+test) and **`just ci-all`** (core +
+  docling). Core `just ci` stays core-only and does NOT run the bridge.
+- Mapping calls (grounded on installed docling-core, not docs): grid footprint
+  from `start/end_*_offset_idx` (not row/col_span); `column_header`→`"header"`,
+  `row_header`→`"body"` (lost, declared in `lossy_read={"role"}`, preserves
+  I-06); bbox normalized to TOPLEFT via page height then int; `image_width/
+  height` populated from `pages[page_no].size` → **docling-read samples can
+  pass STRICT** (synergy with 0.0.17). Input = JSONL of DoclingDocuments
+  (one doc/line, yields one TableSample/table). `writable=False`.
+- 16 tests green; registers via `load_plugins()` (entry-point group).
+- **Follow-ups**: WRITE direction (TableSample→DoclingDocument); extract to its
+  own repo before PyPI; the e2e harness could read docling-core directly (today
+  it only streams docling *datasets*, not the library).
 
 ### Terminology + consistency audit (this session)
 
