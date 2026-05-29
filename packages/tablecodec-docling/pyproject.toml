@@ -1,0 +1,74 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tablecodec-docling"
+version = "0.0.1"
+description = "Docling bridge codec for tablecodec: export DoclingDocument.tables as TableSample"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [
+    { name = "hironow", email = "hironow365@gmail.com" },
+]
+keywords = ["table", "docling", "tablecodec", "ocr", "dataset"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+dependencies = [
+    "tablecodec",
+    "docling-core>=2.0",
+]
+
+[project.entry-points."tablecodec.codecs"]
+# Discovered by tablecodec.codecs.load_plugins() (SPEC §6.2).
+docling-tables = "tablecodec_docling.codec:DoclingTablesCodec"
+
+[project.urls]
+Homepage = "https://github.com/hironow/tablecodec"
+Repository = "https://github.com/hironow/tablecodec"
+
+# Develop against the in-repo tablecodec (monorepo, ADR 0013). This keeps the
+# bridge's docling-core dependency out of the core repo's environment.
+[tool.uv.sources]
+tablecodec = { path = "../../", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pyright>=1.1.380",
+    "ruff>=0.6",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tablecodec_docling"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "B", "A", "DTZ", "T20", "N", "I", "E", "F", "PLE", "PLR", "UP", "FURB", "RUF",
+]
+extend-ignore = ["E501", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "PLR2004", # magic-value-comparison: tests routinely use literal values
+    "PLR0913", # many-args: the _cell fixture helper mirrors docling's cell fields
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["tablecodec", "tablecodec_docling"]
