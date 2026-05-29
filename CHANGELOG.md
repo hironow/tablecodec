@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.16] - 2026-05-29
+
+### Added
+
+- TEDS (Tree-Edit-Distance based Similarity) metric, the `[teds]` optional
+  feature (`apted`, `lxml`). `from tablecodec.teds import teds, teds_html`:
+  `teds(pred, true, *, structure_only=False)` scores two `TableSample`s in
+  `[0, 1]` (`structure_only` gives TEDS-Struct); `teds_html` does the same for
+  HTML strings. The tree construction, rename-cost rule, and
+  `1 - dist / max_nodes` formula are adapted from IBM's PubTabNet reference
+  metric (Apache-2.0; see `THIRD_PARTY_NOTICES.md` and
+  `docs/adr/0011-teds-metric-port.md`), with a pure-Python normalized
+  Levenshtein and no batching. `teds.py` is core-external (not in the semgrep
+  core list, never imported by `tablecodec/__init__`), so `import tablecodec`
+  stays zero-dependency. `just test`/`type`/`cov` now run with `--extra teds`;
+  the tests `importorskip` when it is absent.
+
 ## [0.0.15] - 2026-05-29
 
 ### Changed
@@ -366,7 +383,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.15...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.16...HEAD
+[0.0.16]: https://github.com/hironow/tablecodec/releases/tag/v0.0.16
 [0.0.15]: https://github.com/hironow/tablecodec/releases/tag/v0.0.15
 [0.0.14]: https://github.com/hironow/tablecodec/releases/tag/v0.0.14
 [0.0.13]: https://github.com/hironow/tablecodec/releases/tag/v0.0.13
