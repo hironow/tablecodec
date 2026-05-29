@@ -227,7 +227,7 @@ Validation is layered. A user explicitly opts into the strictness they need.
 | `default`        | All of §5.2 (I-01 through I-07). |
 | `pubtabnet-2.0`  | `default` plus: every non-empty cell has `bbox`. |
 | `tableformer`    | `default` plus: every cell, empty or not, has `bbox`. |
-| `strict`         | `default` plus: cross-check bbox against image dimensions (requires image metadata). |
+| `strict`         | `default` plus: cross-check every bbox against the image rectangle. A bbox-free sample needs no image metadata; once any cell carries a bbox, the sample MUST declare `image_width`/`image_height` and every bbox must satisfy `0 <= x0 < x1 <= width` and `0 <= y0 < y1 <= height` (upper bound inclusive). See ADR 0012. |
 
 Profile selection:
 
@@ -391,7 +391,7 @@ The following are intentionally left undecided in v0.1 and will be resolved befo
 
 - **OQ-1**: Should `TableSample.cells` be ordered (current spec) or unordered (a set)? Ordering simplifies serialization but introduces a canonicalization requirement.
 - **OQ-2**: How should multi-line text within a single cell be tokenized? Per-character (PubTabNet) or per-word (PubTables-1M)?
-- **OQ-3**: Should `bbox` support floating-point coordinates? Currently integer-only, but PubTables-1M uses floats.
+- **OQ-3**: Should `bbox` support floating-point coordinates? Currently integer-only, but PubTables-1M uses floats. (Note: the `strict` profile's bbox-in-image cross-check, added in §8, is a *containment* test that works identically for int or float coordinates, so it ships with int `image_width`/`image_height` and does **not** depend on resolving OQ-3.)
 - **OQ-4**: Whether to publish a JSON Schema for the IR alongside the dataclass definitions, for cross-language use.
 
 ---

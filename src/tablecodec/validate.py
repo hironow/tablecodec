@@ -77,6 +77,57 @@ def _check_tableformer_bbox(sample: TableSample) -> list[ValidationError]:
     return errors
 
 
+def _check_strict_bbox_in_image(sample: TableSample) -> list[ValidationError]:
+    """SPEC §8 strict profile / ADR 0012: cross-check bbox vs image dimensions.
+
+    Semantics (option C): a bbox-free sample needs no image metadata. If any
+    cell carries a bbox, the sample MUST declare ``image_width`` and
+    ``image_height`` (else the coordinates cannot be bound-checked), and every
+    bbox must lie within the image rectangle ``0 <= x0 < x1 <= width`` and
+    ``0 <= y0 < y1 <= height`` (upper bound inclusive — a bbox may touch the
+    image edge).
+    """
+    cells_with_bbox = [(idx, c.bbox) for idx, c in enumerate(sample.cells) if c.bbox is not None]
+    if not cells_with_bbox:
+        return []
+
+    width, height = sample.image_width, sample.image_height
+    if width is None or height is None:
+        return [
+            ValidationError(
+                invariant="STRICT-IMAGE-METADATA",
+                message=(
+                    "sample carries cell bboxes but no image_width/image_height "
+                    "to cross-check them against"
+                ),
+                cell_index=None,
+            )
+        ]
+
+    errors: list[ValidationError] = []
+    for idx, bbox in cells_with_bbox:
+        x0, y0, x1, y1 = bbox
+        if not (0 <= x0 and x1 <= width):
+            errors.append(
+                ValidationError(
+                    invariant="STRICT-BBOX-OUT-OF-BOUNDS",
+                    message=(f"bbox x-range [{x0}, {x1}] outside [0, {width}] at cell index {idx}"),
+                    cell_index=idx,
+                )
+            )
+        if not (0 <= y0 and y1 <= height):
+            errors.append(
+                ValidationError(
+                    invariant="STRICT-BBOX-OUT-OF-BOUNDS",
+                    message=(
+                        f"bbox y-range [{y0}, {y1}] outside [0, {height}] at cell index {idx}"
+                    ),
+                    cell_index=idx,
+                )
+            )
+    return errors
+
+
 # ---------- profile registry ----------
 
 _DEFAULT_CHECKS: tuple[Check, ...] = (
@@ -100,8 +151,8 @@ _LENIENT_CHECKS: tuple[Check, ...] = (
 
 # SimpleNamespace exposes the five built-in profiles as ``profiles.NAME``
 # without pyright flagging uppercase attributes as ``reportConstantRedefinition``.
-# SPEC §8: STRICT cross-checks bbox against image dimensions; without that
-# metadata (arriving with io.py in a later milestone) it degrades to DEFAULT.
+# SPEC §8 / ADR 0012: STRICT = DEFAULT + a bbox-in-image cross-check that
+# requires image metadata whenever a sample carries bboxes.
 profiles = SimpleNamespace(
     LENIENT=Profile(name="LENIENT", checks=_LENIENT_CHECKS),
     DEFAULT=Profile(name="DEFAULT", checks=_DEFAULT_CHECKS),
@@ -113,7 +164,7 @@ profiles = SimpleNamespace(
         name="TABLEFORMER",
         checks=(*_DEFAULT_CHECKS, _check_tableformer_bbox),
     ),
-    STRICT=Profile(name="STRICT", checks=_DEFAULT_CHECKS),
+    STRICT=Profile(name="STRICT", checks=(*_DEFAULT_CHECKS, _check_strict_bbox_in_image)),
 )
 
 

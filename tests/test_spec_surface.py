@@ -61,6 +61,16 @@ def _universal_sample() -> TableSample:
     )
 
 
+def _strict_sample() -> TableSample:
+    """`_universal_sample()` plus image dims so it is valid under STRICT.
+
+    STRICT (ADR 0012) requires image metadata once any cell carries a bbox.
+    The universal sample's bboxes all fit within 20x10. Kept separate so the
+    round-trip fixture (`_universal_sample`) stays dims-free — no codec carries
+    image dims, so adding them there would force a strip-on-compare hack."""
+    return dataclasses.replace(_universal_sample(), image_width=20, image_height=10)
+
+
 def _strip(sample: TableSample, lossy: frozenset[str]) -> TableSample:
     """Neutralize the IR fields a codec declares lossy, for modulo-loss compare."""
     cells = tuple(
@@ -158,9 +168,12 @@ class TestProfiles:
 
     @pytest.mark.parametrize("name", _PROFILE_NAMES)
     def test_validate_runs_under_every_profile(self, name: str) -> None:
-        errors = validate(_universal_sample(), profile=getattr(profiles, name))
+        # STRICT (ADR 0012) needs image dims once bboxes are present; the
+        # universal sample has bboxes, so use the dims-bearing variant for it.
+        sample = _strict_sample() if name == "STRICT" else _universal_sample()
+        errors = validate(sample, profile=getattr(profiles, name))
         assert isinstance(errors, list)
-        assert errors == []  # the universal sample is valid under all profiles
+        assert errors == []  # the sample is valid under the named profile
 
     def test_validate_rejects_a_non_profile(self) -> None:
         bad: object = "DEFAULT"  # a name string, not a Profile instance

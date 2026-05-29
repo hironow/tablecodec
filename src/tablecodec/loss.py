@@ -14,6 +14,18 @@ and ``lossy_write`` declarations — no data is touched. The result is a
       survive.
     * ``"lossy"`` — at least one structural / content field lost
       (``tokens`` or anything not in the auxiliary set).
+
+**Scope of the loss model.** Loss tracking covers the fields a codec
+actually reads into / writes from the IR — i.e. table content
+(``tokens``, ``bbox``, ``role``, ``extras``). Sample-level identity /
+acquisition metadata (``filename``, ``nrows``, ``ncols``, ``split``,
+``imgid``, ``image_width``, ``image_height``) is intentionally outside the
+model: a field that no codec populates cannot be dropped on a round-trip
+(``None`` in, ``None`` out), so it would be dishonest to list it in any
+``lossy_*`` declaration. A field enters the model only once a codec carries
+it (e.g. a future PubTables-1M codec reading image dims from VOC ``<size>``);
+that codec, if it then writes to a format that cannot store the field, would
+declare it in ``lossy_write`` at that point. See ADR 0012.
 """
 
 from __future__ import annotations
