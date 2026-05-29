@@ -7,18 +7,18 @@ from collections.abc import Iterator
 import pytest
 
 from tablecodec import analyze_loss, codecs
-from tablecodec.codecs.otsl import OTSL10Codec
-from tablecodec.codecs.pubtabnet import PubTabNet10Codec, PubTabNet20Codec
-from tablecodec.loss import LossReport
+from tablecodec.codecs.builtins import BUILTIN_CODECS
+from tablecodec.loss import LossReport, _classify  # pyright: ignore[reportPrivateUsage]
 
 
 @pytest.fixture(autouse=True)
 def _seed_builtin_codecs() -> Iterator[None]:  # pyright: ignore[reportUnusedFunction]
+    # Register the FULL builtin set so the exhaustive matrix exercises every
+    # classification (SPEC §9: CI runs analyze_loss across the whole product).
     saved = codecs._snapshot()  # type: ignore[attr-defined]
     codecs._restore({})  # type: ignore[attr-defined]
-    codecs.register(PubTabNet10Codec())
-    codecs.register(PubTabNet20Codec())
-    codecs.register(OTSL10Codec())
+    for codec in BUILTIN_CODECS:
+        codecs.register(codec)
     try:
         yield
     finally:
@@ -74,6 +74,34 @@ class TestRoundTripClassification:
         assert report.round_trip_classification == "structure-preserving"
 
 
+class TestClassify:
+    """Direct coverage of the three-way classifier (SPEC §9)."""
+
+    def test_no_loss_is_lossless(self) -> None:
+        assert _classify(frozenset()) == "lossless"
+
+    def test_only_auxiliary_loss_is_structure_preserving(self) -> None:
+        # bbox / role / extras are the auxiliary set.
+        assert _classify(frozenset({"bbox"})) == "structure-preserving"
+        assert _classify(frozenset({"role", "extras"})) == "structure-preserving"
+
+    def test_non_auxiliary_loss_is_lossy(self) -> None:
+        # tokens (content) is not auxiliary -> lossy.
+        assert _classify(frozenset({"tokens"})) == "lossy"
+        assert _classify(frozenset({"bbox", "tokens"})) == "lossy"
+
+
+class TestLossyClassification:
+    def test_writing_to_tablebank_loses_tokens_and_is_lossy(self) -> None:
+        # given — TableBank carries no cell content; writing IR to it drops
+        # tokens (a non-auxiliary field).
+        report = analyze_loss(source="pubtabnet-2.0.0", target="tablebank")
+
+        # then
+        assert "tokens" in report.ir_fields_unrepresentable_in_target
+        assert report.round_trip_classification == "lossy"
+
+
 class TestUnknownCodecs:
     def test_unknown_source_raises_keyerror(self) -> None:
         with pytest.raises(KeyError):
@@ -86,9 +114,11 @@ class TestUnknownCodecs:
 
 class TestExhaustiveMatrix:
     def test_all_registered_pairs_classify_without_error(self) -> None:
-        # SPEC §9: CI runs analyze_loss across the full cartesian product.
+        # SPEC §9: CI runs analyze_loss across the full cartesian product of
+        # all builtin codecs. A read-only target yields "unwritable" (ADR 0002).
         names = codecs.list_codecs()
         assert len(names) >= 2
+        seen: set[str] = set()
         for source in names:
             for target in names:
                 report = analyze_loss(source=source, target=target)
@@ -96,4 +126,10 @@ class TestExhaustiveMatrix:
                     "lossless",
                     "structure-preserving",
                     "lossy",
+                    "unwritable",
                 )
+                seen.add(report.round_trip_classification)
+        # The real builtin matrix must exercise the lossy and unwritable arms
+        # (TableBank drops tokens; PubTables-1M is read-only), not just the
+        # benign ones.
+        assert {"lossy", "unwritable"} <= seen
