@@ -66,9 +66,34 @@ docs-check:
     @uv run python scripts/gen_loss_matrix.py
     @git diff --quiet docs/format_support.md docs/loss_matrix.md || (echo "docs/{format_support,loss_matrix}.md is stale; run 'just docs'"; exit 1)
 
-# Full local pre-merge gate
+# Full local pre-merge gate (core package only; stays zero-dep-focused)
 ci: lint type test semgrep docs-check
     @echo "OK: all checks passed"
+
+# ---- docling bridge sub-package (packages/tablecodec-docling, ADR 0013) ----
+# Run in its OWN uv project so docling-core stays out of the core env.
+_DOCLING := "packages/tablecodec-docling"
+
+# Lint the docling bridge package
+docling-lint:
+    uv run --project {{_DOCLING}} ruff check {{_DOCLING}}
+    uv run --project {{_DOCLING}} ruff format --check {{_DOCLING}}
+
+# Type-check the docling bridge package (pyright strict)
+docling-type:
+    uv run --project {{_DOCLING}} pyright {{_DOCLING}}/src {{_DOCLING}}/tests
+
+# Test the docling bridge package
+docling-test:
+    uv run --project {{_DOCLING}} pytest {{_DOCLING}}/tests
+
+# Full gate for the docling bridge sub-package
+docling-ci: docling-lint docling-type docling-test
+    @echo "OK: docling bridge checks passed"
+
+# Whole-monorepo gate: core + docling bridge
+ci-all: ci docling-ci
+    @echo "OK: all packages passed"
 
 # Wipe local caches and build artifacts
 clean:
