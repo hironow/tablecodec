@@ -21,6 +21,28 @@ Shipped:
 - `just ci` green (ruff + pyright strict + pytest + semgrep + docs-check).
   Zero third-party deps in core (semgrep-enforced — `loss.py` now included).
 
+### Test audit (this session)
+
+Audited the recent work (extras removal / I-05 / TEDS / STRICT / docling) for
+spec-conformance + test sufficiency, and filled the gaps:
+
+- `teds.py` 85% → 99% (one vestigial `!= "unk"` defensive branch left): direct
+  `_levenshtein`/`_normalized_distance` tests, renderer/tokenizer/empty-table
+  edges, and an **exact-value** test pinning `1 - dist/max_nodes`. Removed dead
+  `_TableTree.bracket()`.
+- `loss.py` 88% → 100%: the lossy + unwritable classification arms were never
+  exercised (only structure-preserving pairs were registered). The matrix now
+  registers ALL `BUILTIN_CODECS` (SPEC §9 intent) and asserts lossy + unwritable
+  are hit; plus a direct `_classify` test.
+- STRICT: a CLI test (`validate --profile strict` → STRICT-IMAGE-METADATA, exit
+  1) and a hypothesis property (dims covering all bboxes → no STRICT finding).
+- docling bridge: codec.py → 100%; real `load_plugins()` entry-point discovery
+  (no monkeypatch), `analyze_loss` lossy-target, read/sniff edge branches.
+- Core 338 tests (was 318), docling 30 (was 24). `_invariants`/`ir`/`loss`/
+  `validate` at 100%. NOT done (deliberate): an HF-data e2e for docling would
+  need a real DoclingDocument corpus + cross-package wiring — the bridge's
+  round-trip + 30 tests are the coverage; deferred with extraction.
+
 ### docling bridge (this session, ADR 0013)
 
 `packages/tablecodec-docling/` — bridge codec `docling-tables` (own version
