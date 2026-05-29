@@ -97,3 +97,24 @@ needed rather than rebuilding that count from the IR by hand.
 
 - No batching/parallel API in v1 (callers loop). Can be added later without
   changing the per-pair contract.
+
+## Verification (2026-05-29, post-acceptance addendum)
+
+The "faithful port" claim above was checked empirically, not just by code
+inspection. A verbatim copy of IBM's `metric.py` `TEDS.evaluate` path (using
+the upstream `distance` package, apted, lxml) was run alongside
+`tablecodec.teds.teds_html` on the same 9-case corpus spanning the metric's
+branches — identical, one-cell-text-diff, extra-row, colspan, rowspan,
+thead/tbody multi-char content, inline markup, no-table, and empty input —
+in both full and `structure_only` modes.
+
+Result: **bit-identical scores, max absolute difference 0.0** across all
+cases and both modes. So for the default configuration (`ignore_nodes=None`,
+which is the only mode `tablecodec` exposes), `teds_html(pred_html, true_html)`
+reproduces the canonical PubTabNet TEDS number exactly. The §Consequences note
+"scores are renderer-defined" applies only to the IR-native `teds(pred, true)`
+entry point (because it renders via `_sample_to_html` first); the HTML-in
+`teds_html` path matches IBM exactly.
+
+This addendum only records a verification of the original decision; the
+decision itself is unchanged.

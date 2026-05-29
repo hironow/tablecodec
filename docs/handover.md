@@ -17,6 +17,11 @@ Shipped:
   `fintabnet`, `fintabnet-otsl`, `tableformer`, `tablebank`, `pubtables-1m`,
   `doctags-tables`.
 - **`[teds]`** TEDS metric (`tablecodec.teds`, 0.0.16, ADR 0011).
+  Verified (2026-05-29) **bit-identical** to a verbatim run of IBM's PubTabNet
+  `metric.py` across a 9-case corpus (full + structure_only, max abs diff 0.0)
+  — see ADR 0011 §Verification. `teds_html(...)` reproduces the canonical
+  PubTabNet TEDS exactly; the IR-native `teds(...)` renders via
+  `_sample_to_html` first (renderer-defined, per ADR 0011 §2).
 - **§8 STRICT** profile + optional `TableSample.image_width/height`
   (0.0.17, ADR 0012).
 - **`tablecodec-docling`** read+write bridge codec (`packages/`, ADR 0013).
