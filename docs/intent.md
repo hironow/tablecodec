@@ -423,7 +423,8 @@ ADR 0011）。§8 STRICT は 0.0.17（ADR 0012）。docling bridge は read+writ
 - **docling bridge を別 repo へ抽出**（publish 前、ADR 0013）。現状は
   `packages/tablecodec-docling/` の in-repo monorepo。
 - **Conformance Suite を別 vendor-neutral repo へ抽出**（v1.0 前、ADR 0001）。
-  併せて各バージョンで corpus を拡充（現状 9 codec 中 2 codec のみ expected-IR）。
+  corpus は全 9 codec が expected-IR を持つ（pubtabnet-2.0 / otsl は各3ケース、
+  他7 codec は各1ケース）。各 codec のケース数をさらに増やす余地あり。
 - **PyPI 公開**（M8、Trusted Publishing 設定後）。手順は gitignore 下の
   `private/PYPI_RELEASE_STEPS.md`。
 

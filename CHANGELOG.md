@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Conformance corpus (`conformance/`, SPEC §11) now covers **all nine codecs**
+  (was 2): added an independently-authored sample + expected-IR per codec for
+  `pubtabnet-1.0.0`, `fintabnet`, `fintabnet-otsl`, `tableformer`, `tablebank`,
+  `pubtables-1m`, `doctags-tables`. `tests/test_conformance.py` registers the
+  full builtin set and runs every case, so read-path regressions are caught
+  for every codec.
+
 - `packages/tablecodec-docling/` — a bridge codec (`docling-tables`, own
   version 0.0.2) mapping between `DoclingDocument.tables` and `TableSample`,
   developed in-repo as a temporary monorepo member (ADR 0013, SPEC §15). It

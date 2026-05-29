@@ -3,6 +3,11 @@
 > **Status:** hosted in-repo pending extraction to a separate
 > vendor-neutral repository before v1.0. See
 > [`docs/adr/0001-conformance-suite-in-repo-temporarily.md`](../docs/adr/0001-conformance-suite-in-repo-temporarily.md).
+>
+> **This is a data corpus, NOT a pip package.** It deliberately sits at the
+> repository root (not under `packages/`, which is for installable Python
+> sub-packages): its extraction target is a vendor-neutral *repository*, not
+> a PyPI release. Roadmap tracking lives in `docs/intent.md` §8.
 
 This directory holds the conformance corpus described in SPEC §11. Any
 implementation claiming `tablecodec`-compatibility (in any language)
