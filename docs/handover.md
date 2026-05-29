@@ -2,6 +2,7 @@
 
 **Last updated:** 2026-05-29 (JST)
 **Updated by:** Claude (Opus 4.7, 1M context)
+**Next work item:** `[teds]` TEDS implementation (plan + codex review pending).
 
 ## Current State
 
@@ -82,9 +83,38 @@ a validation finding on genuine upstream DATA quirks (recorded in
 
 ## In Progress
 
-Nothing active. Native-dataset coverage is as complete as practical:
-pubtabnet + pubtables-1m have native checks; otsl's native IS docling;
+**Starting `[teds]` TEDS implementation** (roadmap decision below). No code
+yet — plan + codex review next, then TDD.
+
+Native-dataset coverage is as complete as practical: pubtabnet +
+pubtables-1m have native checks; otsl's native IS docling;
 fintabnet/tablebank natives are deferred (see Next Actions).
+
+### Roadmap decision (2026-05-29): tackle `[teds]` next
+
+Of the three remaining roadmap items the maintainer chose **`[teds]`**, on
+this grounded comparison (all confirmed against code this session):
+
+- **`[teds]` — chosen.** No scaffolding exists (clean slate). Additive,
+  core-external module (like `cli.py`); does NOT touch the frozen IR or the
+  zero-dep core. Explicitly on the intent.md roadmap. No open design
+  question blocks it. It also closes the one "declared but unimplemented"
+  extra left after the 0.0.14 reconciliation.
+- **§8 STRICT — deferred (v1.0 planning).** `validate.py` ships
+  `STRICT == _DEFAULT_CHECKS` (identical to DEFAULT). The spec'd bbox ×
+  image-dimension cross-check needs image dims the IR does NOT carry
+  (`TableSample` has no width/height) → a frozen-core dataclass change
+  rippling through every codec read/write + conformance fixtures + hash/eq.
+  AND it is entangled with **OQ-3** (float bbox), which spec §17 leaves
+  undecided until v1.0. Most token formats (PubTabNet/OTSL) carry no image
+  size anyway, so STRICT would be a no-op for them. Needs a maintainer
+  design decision (IR schema + OQ-3) — not a drop-in increment.
+- **§11 conformance extraction — deferred (premature, v1.0 gate).** The
+  `conformance/` tree is self-contained and `test_conformance.py` reads it
+  by relative path. Extraction = new vendor-neutral repo + distribution +
+  CI rewire (infra, not code). The corpus is still growing (2 of 9 codecs
+  covered); extracting mid-growth causes cross-repo churn. ADR 0001 says
+  temporary → do it just before v1.0.
 
 ## Next Actions
 
@@ -100,6 +130,11 @@ fintabnet/tablebank natives are deferred (see Next Actions).
    the real fintabnet native is IBM-only (developer.ibm.com, not HF).
    TableBank is a 24 GB split zip. Both stay Docling-covered.
 3. **Deferred PyPI publish** (unchanged): `private/PYPI_RELEASE_STEPS.md`.
+4. **intent.md stale extras refs (doc drift, quick fix).** After the 0.0.14
+   extras removal, `docs/intent.md` still lists `fast`/`validate` (line ~164
+   extras list; `uv pip install -e ".[dev,cli,teds,validate]"` at ~441/474).
+   Correct to `[dev,cli,teds]`. Independent of the teds work; fold into a
+   `docs` commit when convenient.
 
 ## Spec conformance gaps (docs/spec.md vs code, audited + fact-checked 2026-05-29)
 
@@ -130,17 +165,17 @@ rest are genuine feature/roadmap work.
   `tablecodec.codecs` entry-point group (stdlib `importlib.metadata`,
   idempotent); the CLI calls it after the built-ins. No external package
   ships one yet, so the live group is empty (tested via monkeypatch).
-- **§8 — STRICT profile == DEFAULT.** The bbox×image-dimension cross-check
-  needs image metadata the IR does not carry (relates to OQ-3). Confirmed
-  `profiles.STRICT` uses the DEFAULT check tuple.
+- **§8 — STRICT profile == DEFAULT. Deferred to v1.0 planning** (see the
+  Roadmap decision above). Confirmed `profiles.STRICT` uses the DEFAULT
+  check tuple; the cross-check needs IR image metadata (not present) and is
+  entangled with OQ-3.
 - **§7/§13 — extras reconciled (0.0.14).** `[fast]` (orjson) and
-  `[validate]` (pydantic) **removed** (ADR 0009): both would run in the
-  zero-dep core (parsing / IR construction / validation), which semgrep
-  forbids, so they could never be wired in; stricter validation is the
-  stdlib-only profiles (§8). `[teds]` (apted/lxml) **kept** — a separate,
-  core-external feature, still unimplemented → roadmap (intent.md §8).
+  `[validate]` (pydantic) **removed** (ADR 0009). `[teds]` (apted/lxml)
+  **kept** and is the **next work item** (Roadmap decision above) — a
+  separate, core-external feature.
 - **§11 — conformance suite is in-repo**, not the separate vendor-neutral
-  `tablecodec/conformance` repo (ADR 0001 temporary deviation).
+  `tablecodec/conformance` repo (ADR 0001). **Deferred to v1.0** (Roadmap
+  decision above: premature while the corpus is still growing).
 
 Spec-acknowledged open (§17, not gaps): OQ-1 cell ordering, OQ-2 cell
 tokenization, **OQ-3 float bbox** (PubTables-1M uses floats; we int-cast —
