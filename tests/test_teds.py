@@ -14,7 +14,12 @@ pytest.importorskip("apted")
 pytest.importorskip("lxml")
 
 from tablecodec.ir import GridCell, TableSample
-from tablecodec.teds import teds, teds_html
+from tablecodec.teds import (
+    _levenshtein,  # pyright: ignore[reportPrivateUsage]
+    _normalized_distance,  # pyright: ignore[reportPrivateUsage]
+    teds,
+    teds_html,
+)
 
 
 def _table(*, h1: str = "H1", h2: str = "H2", a: str = "a", b: str = "b") -> TableSample:
@@ -205,3 +210,101 @@ class TestTedsHtml:
 
         # then
         assert math.isclose(score, 1.0)
+
+    def test_empty_table_scores_one(self) -> None:
+        # given — a <table> with no descendant elements (n_nodes == 0).
+        empty = "<html><body><table></table></body></html>"
+
+        # when
+        score = teds_html(empty, empty)
+
+        # then — no nodes to differ over.
+        assert math.isclose(score, 1.0)
+
+    def test_inline_markup_in_cell_is_tokenized(self) -> None:
+        # given — a cell with nested inline markup and a tail ("y" after </b>),
+        # exercising the tail-token path of the tokenizer.
+        html = "<html><body><table><tr><td>a<b>x</b>y</td></tr></table></body></html>"
+
+        # when / then — identical inputs still score 1.0; the tokenizer ran.
+        assert math.isclose(teds_html(html, html), 1.0)
+        # and a content change in the inline markup lowers the score.
+        other = "<html><body><table><tr><td>a<b>Z</b>y</td></tr></table></body></html>"
+        assert teds_html(html, other) < 1.0
+
+    def test_exact_value_for_one_cell_text_difference(self) -> None:
+        # given — identical 1x2 structure; the second cell's text differs.
+        pred = "<html><body><table><tr><td>a</td><td>b</td></tr></table></body></html>"
+        true = "<html><body><table><tr><td>a</td><td>X</td></tr></table></body></html>"
+
+        # when
+        score = teds_html(pred, true)
+
+        # then — n_nodes = tr + td + td = 3; one td renamed at cost 1.0
+        # (normalized Levenshtein over single-char content). TEDS = 1 - 1/3.
+        assert math.isclose(score, 1.0 - 1.0 / 3.0, abs_tol=1e-9)
+
+
+class TestRendering:
+    def test_rowspan_cell_renders_and_round_scores_one(self) -> None:
+        # given — a cell spanning two rows (exercises the rowspan attribute in
+        # the IR->HTML renderer).
+        sample = TableSample(
+            filename="t.png",
+            nrows=2,
+            ncols=2,
+            cells=(
+                GridCell(row=0, col=0, tokens=("tall",), rowspan=2),
+                GridCell(row=0, col=1, tokens=("a",)),
+                GridCell(row=1, col=1, tokens=("b",)),
+            ),
+        )
+
+        # when / then
+        assert math.isclose(teds(sample, sample), 1.0)
+
+    def test_header_only_sample_renders_without_body(self) -> None:
+        # given — every cell is a header (the renderer emits <thead> only, no
+        # <tbody>: exercises the no-body branch).
+        sample = TableSample(
+            filename="t.png",
+            nrows=1,
+            ncols=2,
+            cells=(
+                GridCell(row=0, col=0, tokens=("H1",), role="header"),
+                GridCell(row=0, col=1, tokens=("H2",), role="header"),
+            ),
+        )
+
+        # when / then
+        assert math.isclose(teds(sample, sample), 1.0)
+
+
+class TestLevenshteinHelpers:
+    @pytest.mark.parametrize(
+        "a,b,expected",
+        [
+            pytest.param([], [], 0, id="both-empty"),
+            pytest.param(["x"], ["x"], 0, id="identical"),
+            pytest.param([], ["a", "b"], 2, id="empty-vs-two"),
+            pytest.param(["a", "b", "c"], [], 3, id="three-vs-empty"),
+            pytest.param(["a", "b"], ["a", "c"], 1, id="one-substitution"),
+        ],
+    )
+    def test_levenshtein(self, a: list[str], b: list[str], expected: int) -> None:
+        # when / then
+        assert _levenshtein(a, b) == expected
+        assert _levenshtein(b, a) == expected  # symmetric
+
+    @pytest.mark.parametrize(
+        "a,b,expected",
+        [
+            pytest.param([], [], 0.0, id="both-empty-is-zero"),
+            pytest.param(["a"], ["b"], 1.0, id="full-diff-single"),
+            pytest.param(["a", "b"], ["a", "b"], 0.0, id="identical-is-zero"),
+            pytest.param(["a", "b"], ["a", "c"], 0.5, id="half"),
+        ],
+    )
+    def test_normalized_distance(self, a: list[str], b: list[str], expected: float) -> None:
+        # when / then
+        assert math.isclose(_normalized_distance(a, b), expected, abs_tol=1e-9)
