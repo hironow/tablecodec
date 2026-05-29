@@ -55,9 +55,13 @@ e2e limit="200":
 e2e-fetch-pubtables1m:
     uv run --extra hf python -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='bsmock/pubtables-1m', repo_type='dataset', filename='PubTables-1M-Structure_Annotations_Val.tar.gz', local_dir='input/pubtables-1m')"
 
-# Semgrep meta-rules (SPEC §13, intent.md §6)
+# Semgrep meta-rules (SPEC §13, intent.md §6) — scan the source
 semgrep:
-    semgrep --config semgrep.yaml --error src/
+    semgrep --config .semgrep/rules/ --error src/
+
+# Test the semgrep rules against their co-located fixtures (rule correctness)
+semgrep-test:
+    semgrep test .semgrep/rules/
 
 # Regenerate auto-generated docs from the codec registry
 docs:
@@ -71,7 +75,7 @@ docs-check:
     @git diff --quiet docs/format_support.md docs/loss_matrix.md || (echo "docs/{format_support,loss_matrix}.md is stale; run 'just docs'"; exit 1)
 
 # Full local pre-merge gate (core package only; stays zero-dep-focused)
-ci: lint type test semgrep docs-check
+ci: lint type test semgrep semgrep-test docs-check
     @echo "OK: all checks passed"
 
 # ---- docling bridge sub-package (packages/tablecodec-docling, ADR 0013) ----

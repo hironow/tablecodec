@@ -1,0 +1,18 @@
+rules:
+  - id: tablecodec-no-full-file-read
+    message: |
+      Codecs and io must stream. Full-file reads violate SPEC.md §10 (Streaming Guarantees).
+      Use iteration over the file object instead of $F.read() / $F.readlines().
+    severity: ERROR
+    languages: [python]
+    pattern-either:
+      - pattern: $F.read()
+      - pattern: $F.readlines()
+    paths:
+      include:
+        - /src/tablecodec/io.py
+        - /src/tablecodec/codecs/
+      exclude:
+        - /src/tablecodec/codecs/__init__.py
+    metadata:
+      category: streaming

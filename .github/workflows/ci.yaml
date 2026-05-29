@@ -59,16 +59,20 @@ jobs:
         run: uv run pytest tests/ -v
 
   semgrep:
-    name: semgrep (core no-3rd-party)
+    name: semgrep (rules + core scan)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run semgrep meta-rules
-        uses: semgrep/semgrep-action@v1
-        with:
-          config: semgrep.yaml
+      - name: Install semgrep
+        run: pipx install semgrep
+
+      - name: Test semgrep rules (rule correctness, not real code)
+        run: semgrep test .semgrep/rules/
+
+      - name: Scan source with semgrep meta-rules
+        run: semgrep --config .semgrep/rules/ --error src/
 
   pip-install-check:
     name: pip install -e .

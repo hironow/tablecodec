@@ -1,0 +1,14 @@
+rules:
+  - id: tablecodec-no-untagged-type-ignore
+    message: |
+      `# type: ignore` without a justification comment is forbidden.
+      Use `# type: ignore[error-code]  # reason: ...` instead.
+      See intent.md §6 (Anti-patterns).
+    severity: WARNING
+    languages: [python]
+    pattern-regex: '#\s*type:\s*ignore\s*$'
+    paths:
+      include:
+        - /src/**/*.py
+    metadata:
+      category: typing

@@ -1,8 +1,3 @@
-# tablecodec semgrep meta-rules.
-# Enforces SPEC §13 (zero third-party deps in core) and intent.md §6 anti-patterns.
-#
-# Paths are anchored to repo root (leading "/") per Semgrepignore v2.
-
 rules:
   - id: tablecodec-no-third-party-imports-in-core
     message: |
@@ -33,31 +28,5 @@ rules:
         - /src/tablecodec/codecs/doctags.py
         - /src/tablecodec/codecs/pubtables1m.py
         - /src/tablecodec/codecs/tablebank.py
-
-  - id: tablecodec-no-full-file-read
-    message: |
-      Codecs and io must stream. Full-file reads violate SPEC.md §10 (Streaming Guarantees).
-      Use iteration over the file object instead of $F.read() / $F.readlines().
-    severity: ERROR
-    languages: [python]
-    pattern-either:
-      - pattern: $F.read()
-      - pattern: $F.readlines()
-    paths:
-      include:
-        - /src/tablecodec/io.py
-        - /src/tablecodec/codecs/
-      exclude:
-        - /src/tablecodec/codecs/__init__.py
-
-  - id: tablecodec-no-untagged-type-ignore
-    message: |
-      `# type: ignore` without a justification comment is forbidden.
-      Use `# type: ignore[error-code]  # reason: ...` instead.
-      See intent.md §6 (Anti-patterns).
-    severity: WARNING
-    languages: [python]
-    pattern-regex: '#\s*type:\s*ignore\s*$'
-    paths:
-      include:
-        - /src/**/*.py
+    metadata:
+      category: core-deps

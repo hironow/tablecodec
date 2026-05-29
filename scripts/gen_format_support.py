@@ -53,14 +53,7 @@ def _render() -> str:
         writable = "yes" if codec.writable else "no (read-only)"
         loss_on_write = _format_lossy(codec.lossy_write()) if codec.writable else "n/a"
         rows.append(
-            "| `{name}` | {spec} | `{media}` | {writable} | {lr} | {lw} |".format(
-                name=codec.name,
-                spec=codec.spec_version,
-                media=codec.media_type,
-                writable=writable,
-                lr=_format_lossy(codec.lossy_read()),
-                lw=loss_on_write,
-            )
+            f"| `{codec.name}` | {codec.spec_version} | `{codec.media_type}` | {writable} | {_format_lossy(codec.lossy_read())} | {loss_on_write} |"
         )
     return header + "\n".join(rows) + "\n"
 

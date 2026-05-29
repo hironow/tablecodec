@@ -12,25 +12,41 @@ repos:
       - id: check-merge-conflict
       - id: check-case-conflict
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
-    hooks:
-      - id: ruff
-        args: ["--fix"]
-      - id: ruff-format
-
   - repo: local
     hooks:
+      # ruff/ruff-format run via the project's own ruff (uv), so the hook
+      # version never drifts from `just lint`/`just fmt`. Scoped to src/+tests/
+      # to match `just lint` (scripts/ is ungated; packages/ has its own gate).
+      - id: ruff
+        name: ruff (check --fix)
+        entry: uv run ruff check --fix --force-exclude
+        language: system
+        types: [python]
+        files: ^(src|tests)/
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types: [python]
+        files: ^(src|tests)/
+
       - id: pyright
         name: pyright (strict)
-        entry: pyright
+        entry: uv run --extra teds pyright src/ tests/
         language: system
         types: [python]
         pass_filenames: false
 
       - id: semgrep
         name: semgrep (core no-3rd-party)
-        entry: semgrep --config semgrep.yaml --error src/
+        entry: semgrep --config .semgrep/rules/ --error src/
         language: system
         types: [python]
+        pass_filenames: false
+
+      - id: semgrep-test
+        name: semgrep test (rule correctness)
+        entry: semgrep test .semgrep/rules/
+        language: system
+        files: ^\.semgrep/
         pass_filenames: false

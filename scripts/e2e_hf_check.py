@@ -50,18 +50,18 @@ os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 os.environ.setdefault("DATASETS_VERBOSITY", "error")
 
-from tablecodec import __version__, profiles, validate  # noqa: E402
-from tablecodec.codecs._base import Codec  # noqa: E402
-from tablecodec.codecs._otslgrid import build_anchors, otsl_to_cells, split_rows  # noqa: E402
-from tablecodec.codecs.doctags import DocTagsTablesCodec  # noqa: E402
-from tablecodec.codecs.fintabnet import FinTabNetCodec  # noqa: E402
-from tablecodec.codecs.fintabnet_otsl import FinTabNetOTSLCodec  # noqa: E402
-from tablecodec.codecs.otsl import OTSL10Codec  # noqa: E402
-from tablecodec.codecs.pubtables1m import PubTables1MCodec  # noqa: E402
-from tablecodec.codecs.pubtabnet import PubTabNet10Codec, PubTabNet20Codec  # noqa: E402
-from tablecodec.codecs.tablebank import TableBankCodec  # noqa: E402
-from tablecodec.codecs.tableformer import TableFormerCodec  # noqa: E402
-from tablecodec.ir import TableSample  # noqa: E402
+from tablecodec import __version__, profiles, validate
+from tablecodec.codecs._base import Codec
+from tablecodec.codecs._otslgrid import build_anchors, otsl_to_cells, split_rows
+from tablecodec.codecs.doctags import DocTagsTablesCodec
+from tablecodec.codecs.fintabnet import FinTabNetCodec
+from tablecodec.codecs.fintabnet_otsl import FinTabNetOTSLCodec
+from tablecodec.codecs.otsl import OTSL10Codec
+from tablecodec.codecs.pubtables1m import PubTables1MCodec
+from tablecodec.codecs.pubtabnet import PubTabNet10Codec, PubTabNet20Codec
+from tablecodec.codecs.tablebank import TableBankCodec
+from tablecodec.codecs.tableformer import TableFormerCodec
+from tablecodec.ir import TableSample
 
 
 def _silence_hf_logging() -> None:
@@ -69,7 +69,7 @@ def _silence_hf_logging() -> None:
     for name in ("datasets", "huggingface_hub", "urllib3", "fsspec", "filelock"):
         logging.getLogger(name).setLevel(logging.ERROR)
     try:
-        import datasets  # noqa: PLC0415
+        import datasets
 
         datasets.disable_progress_bars()
         datasets.utils.logging.set_verbosity_error()
@@ -246,7 +246,7 @@ def _voc_objects(xml: str) -> list[tuple[str, _VocBox]]:
     # defusedxml is imported lazily so --self-test runs on a bare interpreter
     # (it lives in the [hf] extra alongside datasets); parsing is hardened
     # against entity/DTD/external-reference attacks by defusedxml's defaults.
-    from defusedxml.ElementTree import fromstring  # noqa: PLC0415
+    from defusedxml.ElementTree import fromstring
 
     root = fromstring(xml)
     out: list[tuple[str, _VocBox]] = []
