@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.17] - 2026-05-29
+
+### Added
+
+- `TableSample.image_width` / `image_height` (`int | None`, default `None`):
+  optional sample-level source-image dimensions, peers of `filename`/`imgid`.
+  They join `__hash__`/`__eq__`. No codec carries them yet, so `None`
+  round-trips losslessly and no loss declaration changes (loss_matrix
+  unaffected). See `docs/adr/0012-strict-profile-image-bounds.md`.
+
+### Changed
+
+- `profiles.STRICT` now implements SPEC §8's bbox-in-image cross-check instead
+  of aliasing `DEFAULT`. STRICT = DEFAULT plus: a bbox-free sample needs no
+  image metadata; once any cell carries a bbox the sample MUST declare
+  `image_width`/`image_height` (`STRICT-IMAGE-METADATA`) and every bbox must
+  lie within the image rectangle `0 <= x0 < x1 <= width`,
+  `0 <= y0 < y1 <= height`, upper bound inclusive (`STRICT-BBOX-OUT-OF-BOUNDS`)
+  (ADR 0012, option C). The check is a containment test independent of bbox
+  precision, so it ships with int image dims and does not depend on OQ-3.
+  Scope is IR field + check only: no codec populates dims yet, so a
+  bbox-bearing codec-read sample fails STRICT until a codec carries dims
+  (accepted for opt-in 0.x; codec population is a future patch).
+
 ## [0.0.16] - 2026-05-29
 
 ### Added
@@ -383,7 +407,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.16...HEAD
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.17...HEAD
+[0.0.17]: https://github.com/hironow/tablecodec/releases/tag/v0.0.17
 [0.0.16]: https://github.com/hironow/tablecodec/releases/tag/v0.0.16
 [0.0.15]: https://github.com/hironow/tablecodec/releases/tag/v0.0.15
 [0.0.14]: https://github.com/hironow/tablecodec/releases/tag/v0.0.14

@@ -1,14 +1,15 @@
 # Handover
 
 **Last updated:** 2026-05-29 (JST)
-**Updated by:** Claude (Opus 4.7, 1M context)
-**Next work item:** docling bridge / §8 STRICT / §11 conformance (all v1.0
-planning — see Roadmap decision). `[teds]` shipped in 0.0.16.
+**Updated by:** Claude (Opus 4.8, 1M context)
+**Next work item:** docling bridge / §11 conformance / codec image-dims
+population (all v1.0 planning). `[teds]` shipped in 0.0.16; §8 STRICT shipped
+in 0.0.17.
 
 ## Current State
 
 Library is feature-complete against `docs/spec.md`, staying in **0.0.x**
-(no public PyPI release yet). `main` is at **0.0.14**.
+(no public PyPI release yet). `main` is at **0.0.17**.
 Shipped:
 
 - IR + invariants (I-01..I-07) + validation profiles + codec registry +
@@ -105,15 +106,16 @@ this grounded comparison (all confirmed against code this session):
   zero-dep core. Explicitly on the intent.md roadmap. No open design
   question blocks it. It also closes the one "declared but unimplemented"
   extra left after the 0.0.14 reconciliation.
-- **§8 STRICT — deferred (v1.0 planning).** `validate.py` ships
-  `STRICT == _DEFAULT_CHECKS` (identical to DEFAULT). The spec'd bbox ×
-  image-dimension cross-check needs image dims the IR does NOT carry
-  (`TableSample` has no width/height) → a frozen-core dataclass change
-  rippling through every codec read/write + conformance fixtures + hash/eq.
-  AND it is entangled with **OQ-3** (float bbox), which spec §17 leaves
-  undecided until v1.0. Most token formats (PubTabNet/OTSL) carry no image
-  size anyway, so STRICT would be a no-op for them. Needs a maintainer
-  design decision (IR schema + OQ-3) — not a drop-in increment.
+- **§8 STRICT — DONE (0.0.17, ADR 0012).** Was the heaviest of the three.
+  Resolved cleanly: added optional `image_width`/`image_height` to
+  `TableSample` (additive; all 6 codec constructions are keyword-based so
+  field insertion was safe; conformance `_ir_to_dict` lists fields explicitly
+  so it was unaffected). STRICT semantics = option C. Key de-risking insight:
+  **OQ-3 is orthogonal** — the cross-check is containment, precision-
+  independent — so int dims shipped without touching OQ-3. loss_matrix stayed
+  unchanged (dims are sample metadata no codec carries; documented in
+  `loss.py`). Remaining: populate dims in a codec (future patch) so STRICT
+  fires on real data.
 - **§11 conformance extraction — deferred (premature, v1.0 gate).** The
   `conformance/` tree is self-contained and `test_conformance.py` reads it
   by relative path. Extraction = new vendor-neutral repo + distribution +
@@ -170,10 +172,15 @@ rest are genuine feature/roadmap work.
   `tablecodec.codecs` entry-point group (stdlib `importlib.metadata`,
   idempotent); the CLI calls it after the built-ins. No external package
   ships one yet, so the live group is empty (tested via monkeypatch).
-- **§8 — STRICT profile == DEFAULT. Deferred to v1.0 planning** (see the
-  Roadmap decision above). Confirmed `profiles.STRICT` uses the DEFAULT
-  check tuple; the cross-check needs IR image metadata (not present) and is
-  entangled with OQ-3.
+- **§8 — STRICT profile. RESOLVED (0.0.17).** `profiles.STRICT` now enforces
+  the bbox-in-image cross-check (ADR 0012, option C): bbox-free → pass;
+  bbox present + no dims → `STRICT-IMAGE-METADATA`; dims present → every bbox
+  must lie within the image rectangle (`STRICT-BBOX-OUT-OF-BOUNDS`, upper
+  bound inclusive). `TableSample` gained optional `image_width`/`image_height`.
+  OQ-3 turned out to be ORTHOGONAL (containment is precision-independent), so
+  STRICT ships with int dims without resolving it. **Follow-up**: no codec
+  populates dims yet, so a bbox-bearing codec-read sample fails STRICT until
+  one does (e.g. `pubtables1m` from VOC `<size>`) — a separate future patch.
 - **§7/§13 — extras reconciled + `[teds]` implemented (0.0.14, 0.0.16).**
   `[fast]`/`[validate]` **removed** (ADR 0009). `[teds]` (apted/lxml)
   **implemented** in 0.0.16 (`tablecodec.teds`, ADR 0011) — core-external,
