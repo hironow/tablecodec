@@ -1,5 +1,5 @@
 # tablecodec task runner.
-# ROOT_AGENTS.md compliance: exactly one justfile at repo root, default → help.
+# Project convention: exactly one justfile at repo root, default → help.
 
 default: help
 

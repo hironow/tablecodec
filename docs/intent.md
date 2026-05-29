@@ -14,10 +14,10 @@
 |---|---|---|
 | `SPEC.md` | 仕様の唯一の正典。挙動・契約・不変条件はここで定義 | 最高 |
 | `IMPLEMENTATION_BRIEF.md` (本書) | 実装順序、技術選定、品質基準 | 高 |
-| `ROOT_AGENTS.md` (dotfiles 由来) | コーディング標準、コミット規約、共通 lint ルール | 高 |
+| `CLAUDE.md` / グローバルガイドライン | コーディング標準、コミット規約、共通 lint ルール | 高 |
 | `CONTRIBUTING.md` | 外部コントリビュータ向けガイド (M0 で作成) | 中 |
 
-**矛盾が生じた場合、優先順位は `SPEC.md` > `IMPLEMENTATION_BRIEF.md` > `ROOT_AGENTS.md`** とする。SPEC を破る変更を提案する場合は、先に SPEC への PR を出して合意を取ること。
+**矛盾が生じた場合、優先順位は `SPEC.md` > `IMPLEMENTATION_BRIEF.md` > `CLAUDE.md`（グローバルガイドライン）** とする。SPEC を破る変更を提案する場合は、先に SPEC への PR を出して合意を取ること。
 
 ---
 
@@ -26,7 +26,7 @@
 `SPEC.md` §1〜§2 を参照。実装側の追加ミッションとして：
 
 - 各マイルストーン完了時点で `main` ブランチが**常にリリース可能**な状態であること
-- 第三者（Docling、PaddleOCR、社内パイプライン）が**読まずに動かせる**ドキュメント密度を維持すること
+- 第三者（Docling、PaddleOCR、in-house パイプライン）が**読まずに動かせる**ドキュメント密度を維持すること
 - パフォーマンス回帰を**コミット単位で検知**できる体制（M3 以降）
 
 ---
@@ -57,9 +57,9 @@ Kent Beck の流儀に従う。例外なし：
 
 PR は M0/M1/... 単位、または同マイルストーン内の論理的に分離可能な単位で出す。1 PR に複数マイルストーンを詰め込むのは reject。
 
-### 2.5 ROOT_AGENTS.md 準拠
+### 2.5 グローバルガイドライン準拠
 
-社の dotfiles で定義された Semgrep meta-rules、justfile 規約、Conventional Commits フォーマッタ、`.yaml` 拡張子（`.yml` ではない）の規律はそのまま継承する。本ブリーフはそれらに**追加で**課す制約のみを記述する。
+グローバルガイドライン（`CLAUDE.md`）で定義された Semgrep meta-rules、justfile 規約、Conventional Commits フォーマッタ、`.yaml` 拡張子（`.yml` ではない）の規律はそのまま継承する。本ブリーフはそれらに**追加で**課す制約のみを記述する。
 
 ---
 
@@ -68,15 +68,15 @@ PR は M0/M1/... 単位、または同マイルストーン内の論理的に分
 | 項目 | 選定 | 根拠 |
 |---|---|---|
 | Python 最小バージョン | **3.11** | PEP 604 (`int \| None`), `dataclass(slots=True)`, `Self` 型 |
-| パッケージマネージャ | **uv** | 社の標準 |
+| パッケージマネージャ | **uv** | プロジェクト標準 |
 | ビルドバックエンド | **hatchling** | uv との相性、シンプル |
-| Lint | **ruff** | `ROOT_AGENTS.md` 準拠 |
+| Lint | **ruff** | グローバルガイドライン準拠 |
 | 型チェック | **pyright (strict)** | mypy より速く、推論が強い |
 | テストランナー | **pytest** | デファクト |
 | Property-based test | **hypothesis** | M1 の IR 不変条件テストで必須 |
 | カバレッジ | **coverage.py** | pytest-cov 経由 |
 | CLI フレームワーク | **click** | M6、`[cli]` extra でのみ依存 |
-| タスクランナー | **just** | 社の標準 |
+| タスクランナー | **just** | プロジェクト標準 |
 | CI | **GitHub Actions** | OSS デファクト |
 | ライセンス | **MIT** | SPEC §16 で確定済み |
 
@@ -452,7 +452,7 @@ ADR 0011）。§8 STRICT は 0.0.17（ADR 0012）。docling bridge は read+writ
 
 実装中に SPEC で曖昧な点や、本ブリーフのルールを破る必要が生じた場合：
 
-1. **小規模な疑義**: Linear のチケットコメントで議論し、決定を SPEC または本書の更新 PR に反映
+1. **小規模な疑義**: issue tracker のチケットコメントで議論し、決定を SPEC または本書の更新 PR に反映
 2. **SPEC を変更する必要がある場合**: 先に `SPEC.md` への PR を出し、merge 後に実装に着手
 3. **本ブリーフのルールを一時的に緩める必要**: PR description に明記し、レビュアの明示的な承認を得る（例：M1 で型ヒントの一部省略を許可、など）
 
@@ -486,11 +486,11 @@ just ci
 
 ## 11. 着手順序（推奨）
 
-1. **本書と SPEC.md を熟読** — 不明点を Linear にチケット化
+1. **本書と SPEC.md を熟読** — 不明点を issue tracker にチケット化
 2. **M0 を着手** — リポジトリの土台を確実に
 3. **M0 の PR を merge してから M1** — 早期に CI 緑を実現
 4. M1 → M2 → ... と順番に
-5. 各マイルストーン完了時に Linear のチケットをクローズし、CHANGELOG を更新
+5. 各マイルストーン完了時に issue tracker のチケットをクローズし、CHANGELOG を更新
 
 **並行作業は M5 と M6 以降のみ許容**（依存関係が独立しているため）。M0〜M4 は厳密に逐次。
 
