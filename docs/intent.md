@@ -1,7 +1,7 @@
 # tablecodec — 実装ブリーフ
 
 **バージョン:** 1.0
-**最終更新:** 2026-05-28
+**最終更新:** 2026-05-29
 **ステータス:** Active — このブリーフに従って実装を進める
 
 ---
@@ -335,7 +335,8 @@ tablecodec/
 
 **方針変更（実行時の決定）**: 当初は M1-M8 を経て v0.1.0 で公開する計画だったが、
 codec を 1 つずつ **0.0.x の patch bump** として出荷する方針に切り替えた（現在
-0.0.10、9 codec すべて出荷済み）。PyPI 公開は人間側の Trusted Publishing 設定が
+0.0.17、9 codec + `[teds]` + §8 STRICT 出荷済み、docling bridge は別 package
+0.0.2）。PyPI 公開は人間側の Trusted Publishing 設定が
 済むまで **保留**。手順は gitignore 下の `private/PYPI_RELEASE_STEPS.md`。
 
 **Goal**: PyPI 公開、GitHub Release、告知（設定完了後）。
