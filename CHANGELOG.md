@@ -432,20 +432,7 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.17...HEAD
-[0.0.17]: https://github.com/hironow/tablecodec/releases/tag/v0.0.17
-[0.0.16]: https://github.com/hironow/tablecodec/releases/tag/v0.0.16
-[0.0.15]: https://github.com/hironow/tablecodec/releases/tag/v0.0.15
-[0.0.14]: https://github.com/hironow/tablecodec/releases/tag/v0.0.14
-[0.0.13]: https://github.com/hironow/tablecodec/releases/tag/v0.0.13
-[0.0.12]: https://github.com/hironow/tablecodec/releases/tag/v0.0.12
-[0.0.11]: https://github.com/hironow/tablecodec/releases/tag/v0.0.11
-[0.0.10]: https://github.com/hironow/tablecodec/releases/tag/v0.0.10
-[0.0.9]: https://github.com/hironow/tablecodec/releases/tag/v0.0.9
-[0.0.8]: https://github.com/hironow/tablecodec/releases/tag/v0.0.8
-[0.0.7]: https://github.com/hironow/tablecodec/releases/tag/v0.0.7
-[0.0.6]: https://github.com/hironow/tablecodec/releases/tag/v0.0.6
-[0.0.5]: https://github.com/hironow/tablecodec/releases/tag/v0.0.5
-[0.0.4]: https://github.com/hironow/tablecodec/releases/tag/v0.0.4
-[0.0.3]: https://github.com/hironow/tablecodec/releases/tag/v0.0.3
-[0.0.2]: https://github.com/hironow/tablecodec/releases/tag/v0.0.2
+<!-- No git tags / GitHub Releases yet (still 0.0.x, pre-release). Per-version
+     links will be added once releases are cut; until then the version headings
+     above are plain text and `[Unreleased]` points at the commit history. -->
+[Unreleased]: https://github.com/hironow/tablecodec/commits/main

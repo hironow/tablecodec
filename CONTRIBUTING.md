@@ -36,8 +36,8 @@ A commit that mixes structural and behavioral changes is rejected on review.
 3. **Refactor**: improve structure without changing behavior. Run tests
    between each refactor.
 
-Pair this with [Tidy First](https://www.amazon.com/dp/B0CMTNXSBT/): never
-rename, extract, or move code in the same commit as a behavior change.
+Pair this with *Tidy First?* (Kent Beck): never rename, extract, or move
+code in the same commit as a behavior change.
 
 ## Conventional Commits
 

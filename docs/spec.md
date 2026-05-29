@@ -401,7 +401,7 @@ only.
 
 - PubTabNet: <https://github.com/ibm-aur-nlp/PubTabNet>
 - PubTabNet on Hugging Face (current mirror): <https://huggingface.co/datasets/ajimeno/PubTabNet>
-- FinTabNet: <https://developer.ibm.com/exchanges/data/all/fintabnet/>
+- FinTabNet (IBM; the original `/exchanges/data/all/fintabnet/` page has been retired — see the IBM Data Exchange index): <https://developer.ibm.com/exchanges/data/>
 - FinTabNet_OTSL (Docling Project): <https://huggingface.co/datasets/ds4sd/FinTabNet_OTSL> · <https://huggingface.co/datasets/docling-project/FinTabNet_OTSL>
 - PubTables-1M (Microsoft): <https://github.com/microsoft/table-transformer>
 - TableBank: <https://github.com/doc-analysis/TableBank>
@@ -428,7 +428,7 @@ only.
 ### Related ecosystem
 
 - Docling (project): <https://github.com/docling-project/docling>
-- Linux Foundation Agentic AI Foundation (AAIF): <https://aaif.linuxfoundation.org/>
+- Linux Foundation Agentic AI Foundation (AAIF)
 - Granite-Docling-258M (DocTags origin, January 2026): <https://huggingface.co/ibm-granite/granite-docling-258M>
 
 ### Prior-art naming conventions
