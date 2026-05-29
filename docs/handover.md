@@ -73,9 +73,12 @@ duplicate it. Pick the next item from there when resuming.
   `pip install -e .` guard stay clean. There is exactly ONE justfile (root);
   it orchestrates the bridge via `docling-*` recipes.
 - **Zero-dep core is sacred.** Only `cli.py` (click) and the core-external
-  `teds.py` (apted/lxml) may import third-party; both are excluded from
-  `semgrep.yaml`'s core list and NOT imported by `tablecodec/__init__`.
-  `import tablecodec` must work on a bare interpreter.
+  `teds.py` (apted/lxml) may import third-party; both are excluded from the
+  `.semgrep/rules/core-deps/...` core list and NOT imported by
+  `tablecodec/__init__`. `import tablecodec` must work on a bare interpreter.
+  Semgrep rules live in `.semgrep/rules/<category>/` with co-located
+  `semgrep test` fixtures; `just semgrep` scans, `just semgrep-test` checks
+  rule correctness (both in `just ci`).
 - **Attributed ports** (keep headers + `THIRD_PARTY_NOTICES.md`):
   `_otslgrid.py` (docling-ibm-models, MIT, ADR 0005) and `teds.py`
   (IBM PubTabNet metric, Apache-2.0, ADR 0011).

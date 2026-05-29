@@ -141,7 +141,7 @@ tablecodec/
 ├── pyrightconfig.json
 ├── .gitignore
 ├── .pre-commit-config.yaml
-├── semgrep.yaml                # 「コアに3rd party import 禁止」を強制
+├── .semgrep/rules/             # 「コアに3rd party import 禁止」等を強制（+ co-located test）
 ├── LICENSE                     # MIT
 ├── README.md
 ├── SPEC.md
@@ -166,7 +166,7 @@ tablecodec/
 - `ruff.toml`, `pyrightconfig.json`
 - `.github/workflows/ci.yaml` (matrix: Python 3.11, 3.12, 3.13 / Ubuntu, macOS)
 - `.gitignore`, `.pre-commit-config.yaml`
-- `semgrep.yaml`: ルール「`src/tablecodec/` 配下で許可された stdlib モジュール以外の import を禁止」を含む
+- `.semgrep/rules/`: ルール「`src/tablecodec/` 配下で許可された stdlib モジュール以外の import を禁止」等を含む（各ルールは co-located な `semgrep test` fixture 付き）
 - `LICENSE` (MIT)
 - `README.md` (最小限のあいさつと SPEC へのリンクのみ)
 - `CONTRIBUTING.md` (TDD 必須、Conventional Commits、PR テンプレ)
@@ -178,7 +178,7 @@ tablecodec/
 - [ ] `just ci` がローカルで成功
 - [ ] CI が GitHub で緑
 - [ ] `pip install -e .` が成功
-- [ ] `semgrep --config semgrep.yaml src/` がノイズなく走る
+- [ ] `semgrep --config .semgrep/rules/ src/` がノイズなく走り、`semgrep test .semgrep/rules/` が通る
 
 **TDD ノート**: M0 は土台整備なので Red-Green-Refactor は test_smoke.py のみに適用。それ以外は構造変更コミット。
 
@@ -525,9 +525,12 @@ cov:
     pytest tests/ --cov=tablecodec --cov-report=term-missing --cov-report=html
 
 semgrep:
-    semgrep --config semgrep.yaml src/
+    semgrep --config .semgrep/rules/ --error src/
 
-ci: lint type test semgrep
+semgrep-test:
+    semgrep test .semgrep/rules/
+
+ci: lint type test semgrep semgrep-test
     @echo "✓ All checks passed"
 
 clean:
@@ -537,47 +540,18 @@ clean:
 
 ---
 
-## 付録 B: semgrep.yaml のコアルール例（M0 で作成）
+## 付録 B: semgrep ルール（実装は `.semgrep/rules/`）
 
-```yaml
-rules:
-  - id: no-third-party-imports-in-core
-    pattern-either:
-      - pattern: import pydantic
-      - pattern: from pydantic import ...
-      - pattern: import numpy
-      - pattern: import PIL
-      - pattern: from PIL import ...
-      - pattern: import cv2
-      - pattern: import pandas
-    paths:
-      include:
-        - src/tablecodec/ir.py
-        - src/tablecodec/_invariants.py
-        - src/tablecodec/validate.py
-        - src/tablecodec/io.py
-        - src/tablecodec/codecs/_base.py
-        - src/tablecodec/codecs/pubtabnet.py
-        - src/tablecodec/codecs/otsl.py
-        # cli.py, loss.py は extra で許容するため除外
-    message: |
-      Core modules must not depend on third-party packages. See SPEC.md §13.
-    severity: ERROR
-    languages: [python]
+ルールは実装済みで `.semgrep/rules/<category>/<rule-id>.yaml` に1ファイル1ルールで
+存在する（各ルールは co-located な `<rule-id>.py` の `semgrep test` fixture 付き）：
 
-  - id: no-full-file-read
-    pattern-either:
-      - pattern: $F.read()
-      - pattern: $F.readlines()
-    paths:
-      include:
-        - src/tablecodec/io.py
-        - src/tablecodec/codecs/
-    message: |
-      Codecs and io must stream. Full-file reads violate SPEC.md §10.
-    severity: WARNING
-    languages: [python]
-```
+- `core-deps/tablecodec-no-third-party-imports-in-core.yaml` — コアは stdlib のみ
+  （`cli.py` / `teds.py` は core-external として除外、`loss.py` は **含む**）。
+- `streaming/tablecodec-no-full-file-read.yaml` — `$F.read()` / `$F.readlines()` 禁止。
+- `typing/tablecodec-no-untagged-type-ignore.yaml` — 無印 `# type: ignore` 禁止。
+
+`just semgrep` で scan、`just semgrep-test` でルール正しさを検証（両方 `just ci`）。
+詳細は `.semgrep/README.md` を参照。
 
 ---
 

@@ -29,9 +29,9 @@ A Python library giving a neutral, lossless **Internal Representation
 - **Zero-dependency core.** `src/tablecodec/{ir,_invariants,validate,io,
   loss}.py` and `src/tablecodec/codecs/{_base,__init__,_htmltable,
   pubtabnet,otsl,fintabnet,tableformer,...}.py` import **stdlib only**.
-  This is enforced by `semgrep.yaml`
-  (`tablecodec-no-third-party-imports-in-core`). When you add a core
-  module, add it to that rule's `paths.include` list.
+  This is enforced by the semgrep rule
+  `.semgrep/rules/core-deps/tablecodec-no-third-party-imports-in-core.yaml`.
+  When you add a core module, add it to that rule's `paths.include` list.
 - **Optional features are extras.** Two modules are permitted third-party
   imports and are excluded from the semgrep core list: `cli.py` (click,
   `[cli]` extra) and `teds.py` (apted/lxml, `[teds]` extra — the TEDS metric,
@@ -43,23 +43,25 @@ A Python library giving a neutral, lossless **Internal Representation
   **separate package** under `packages/`, not part of this core package at all
   (ADR 0013).
 - **Streaming, not slurping.** `read` yields lazily; never `f.read()` /
-  `f.readlines()` a whole dataset. `semgrep.yaml`
-  (`tablecodec-no-full-file-read`) enforces this in `io.py` and
-  `codecs/`. SPEC §10 requires constant memory.
+  `f.readlines()` a whole dataset. The semgrep rule
+  `.semgrep/rules/streaming/tablecodec-no-full-file-read.yaml` enforces this
+  in `io.py` and `codecs/`. SPEC §10 requires constant memory.
 - **IR is immutable.** `BBox`, `GridCell`, `TableSample` are
   `@dataclass(frozen=True, slots=True)`, hashable, and safe to send
   across process boundaries.
 
 ## Quality gate
 
-`just ci` = `lint type test semgrep docs-check`. Everything must be
-green before commit. Specifically:
+`just ci` = `lint type test semgrep semgrep-test docs-check`. Everything must
+be green before commit. Specifically:
 
-- `just lint` — ruff check + ruff format --check.
+- `just lint` — ruff check + ruff format --check (config in `pyproject.toml`).
 - `just type` — pyright **strict** (`pyrightconfig.json`). Zero errors.
 - `just test` — pytest. Benchmarks are marked `benchmark` and excluded
   by default; run with `just bench`.
-- `just semgrep` — the core meta-rules.
+- `just semgrep` — scan `src/` with the core meta-rules (`.semgrep/rules/`).
+- `just semgrep-test` — `semgrep test .semgrep/rules/`: verify each rule
+  against its co-located fixture (rule correctness, never against real code).
 - `just docs-check` — regenerates `docs/format_support.md` and
   `docs/loss_matrix.md` and fails if they differ from what's committed.
 
@@ -101,7 +103,8 @@ Most new work is "add codec X". The established recipe:
 6. Register the codec in both doc generators
    (`scripts/gen_format_support.py`, `scripts/gen_loss_matrix.py`) and
    run `just docs`.
-7. Add the new core module path to `semgrep.yaml`'s core include list.
+7. Add the new core module path to the `paths.include` list of
+   `.semgrep/rules/core-deps/tablecodec-no-third-party-imports-in-core.yaml`.
 8. Patch-bump the version within **0.0.x** (one codec ≈ one patch bump:
    `pyproject.toml` + `src/tablecodec/__init__.py`), add a CHANGELOG
    `[0.0.N]` section, update the compare/tag links.

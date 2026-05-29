@@ -72,7 +72,7 @@ Scope: prefer SPEC chapter or module name (`ir`, `codec`, `cli`, `ci`, ...).
 
 See [`docs/intent.md` §6](docs/intent.md) for the full table. Highlights:
 
-- Third-party imports under `src/tablecodec/{ir,_invariants,validate,io,codecs/_base,codecs/pubtabnet,codecs/otsl}.py` — enforced by `semgrep.yaml`.
+- Third-party imports under `src/tablecodec/{ir,_invariants,validate,io,codecs/_base,codecs/pubtabnet,codecs/otsl}.py` — enforced by `.semgrep/rules/` (`just semgrep`; rules tested via `just semgrep-test`).
 - `f.read()` / `f.readlines()` in `io.py` or `codecs/` — violates SPEC §10.
 - `# type: ignore` without an explanatory comment.
 - Bug fix without a regression test.

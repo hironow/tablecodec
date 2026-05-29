@@ -330,7 +330,7 @@ All commands stream input and exit non-zero on validation failures, suitable for
 | `tablecodec[hf]`          | `datasets`, `defusedxml` (occasional, local-only e2e harness; not a library runtime dependency) |
 | `tablecodec[all]`         | All of the above                               |
 
-A pull request that introduces a new third-party dependency to the core package MUST be rejected. CI enforces this via an import-graph linter (`semgrep.yaml`).
+A pull request that introduces a new third-party dependency to the core package MUST be rejected. CI enforces this via an import-graph linter (the semgrep rules under `.semgrep/rules/`).
 
 > The earlier `fast` (orjson) and `validate` (pydantic) extras were removed
 > (ADR 0009): the work they would touch — JSONL parsing, IR construction,
