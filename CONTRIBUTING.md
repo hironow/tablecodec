@@ -1,8 +1,7 @@
 # Contributing to tablecodec
 
 Thank you for considering a contribution to `tablecodec`. This project follows
-Kent Beck's TDD discipline and the workflow described in
-[`docs/intent.md`](docs/intent.md).
+Kent Beck's TDD discipline and the workflow described below.
 
 ## Quick start
 
@@ -70,7 +69,7 @@ Scope: prefer SPEC chapter or module name (`ir`, `codec`, `cli`, `ci`, ...).
 
 ## Anti-patterns (auto-reject)
 
-See [`docs/intent.md` §6](docs/intent.md) for the full table. Highlights:
+Key anti-patterns that get a PR auto-rejected on review:
 
 - Third-party imports under `src/tablecodec/{ir,_invariants,validate,io,codecs/_base,codecs/pubtabnet,codecs/otsl}.py` — enforced by `.semgrep/rules/` (`just semgrep`; rules tested via `just semgrep-test`).
 - `f.read()` / `f.readlines()` in `io.py` or `codecs/` — violates SPEC §10.
@@ -82,11 +81,11 @@ See [`docs/intent.md` §6](docs/intent.md) for the full table. Highlights:
 
 ## Asking questions
 
-If SPEC is ambiguous or a rule in `docs/intent.md` needs to be relaxed:
+If SPEC is ambiguous or a project rule needs to be relaxed:
 
 1. Open an issue describing the ambiguity and your proposed reading.
 2. For SPEC changes, send a PR to `docs/spec.md` **first**, then implement.
-3. For a one-off exception to `docs/intent.md`, document it in the PR
+3. For a one-off exception to a project rule, document it in the PR
    description and obtain explicit reviewer approval.
 
 Silent workarounds are not acceptable.
