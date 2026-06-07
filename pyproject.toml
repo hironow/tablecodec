@@ -88,8 +88,11 @@ exclude-newer = "2026-06-07T00:00:00Z"
 [tool.hatch.build.targets.wheel]
 packages = ["src/tablecodec"]
 
+# only-include (not include): hatchling's sdist otherwise defaults to every
+# VCS-tracked file, so `include` is additive and ships dev trees (.semgrep/,
+# conformance/, packages/). only-include restricts the sdist to exactly these.
 [tool.hatch.build.targets.sdist]
-include = [
+only-include = [
     "src/tablecodec",
     "tests",
     "docs/spec.md",
