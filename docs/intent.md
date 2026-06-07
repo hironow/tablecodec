@@ -15,7 +15,6 @@
 | `SPEC.md` | 仕様の唯一の正典。挙動・契約・不変条件はここで定義 | 最高 |
 | `IMPLEMENTATION_BRIEF.md` (本書) | 実装順序、技術選定、品質基準 | 高 |
 | `CLAUDE.md` / グローバルガイドライン | コーディング標準、コミット規約、共通 lint ルール | 高 |
-| `CONTRIBUTING.md` | 外部コントリビュータ向けガイド (M0 で作成) | 中 |
 
 **矛盾が生じた場合、優先順位は `SPEC.md` > `IMPLEMENTATION_BRIEF.md` > `CLAUDE.md`（グローバルガイドライン）** とする。SPEC を破る変更を提案する場合は、先に SPEC への PR を出して合意を取ること。
 
@@ -144,7 +143,6 @@ tablecodec/
 ├── README.md
 ├── SPEC.md
 ├── IMPLEMENTATION_BRIEF.md
-├── CONTRIBUTING.md
 └── CHANGELOG.md                # Keep a Changelog 形式
 ```
 
@@ -167,7 +165,6 @@ tablecodec/
 - `.semgrep/rules/`: ルール「`src/tablecodec/` 配下で許可された stdlib モジュール以外の import を禁止」等を含む（各ルールは co-located な `semgrep test` fixture 付き）
 - `LICENSE` (MIT)
 - `README.md` (最小限のあいさつと SPEC へのリンクのみ)
-- `CONTRIBUTING.md` (TDD 必須、Conventional Commits、PR テンプレ)
 - `CHANGELOG.md` (Unreleased セクションのみ)
 - `src/tablecodec/__init__.py`: `__version__ = "0.0.1"` のみ
 - `tests/test_smoke.py`: import と version assertion

@@ -142,8 +142,6 @@ for the data-source decisions and the canonical-vs-real-shape caveats.
   vs a "degenerate" bbox).
 - [`docs/intent.md`](docs/intent.md) — Implementation brief (milestones, order,
   quality bar).
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — TDD-first workflow, Conventional
-  Commits, PR template.
 - [`CHANGELOG.md`](CHANGELOG.md) — Keep a Changelog format.
 
 ## License

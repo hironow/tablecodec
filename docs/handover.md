@@ -14,7 +14,7 @@ The release pipeline now: all actions full-SHA-pinned; release DAG is
 build -> provenance (SLSA) -> publish (OIDC trusted publishing, PEP 740 auto
 attestations, skip-existing) -> github-release; CI + release build route
 installs through Takumi Guard (screened registry); `[tool.uv] exclude-newer`
-absolute date + `uv sync --locked`; Dependabot 7-day cooldown; `SECURITY.md`;
+absolute date + `uv sync --locked`; Dependabot 7-day cooldown;
 PEP 639 SPDX license. The release trigger is tag-only (`v*`) with per-job
 `github.repository == 'hironow/tablecodec'` fork guards. No library behavior
 changed (all ci/chore/docs/build).

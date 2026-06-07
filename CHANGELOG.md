@@ -48,9 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     screening proxy that blocks known-malicious packages; `[tool.uv]
     exclude-newer` is pinned to an absolute date and `uv sync --locked`
     guards against lockfile drift.
-  - Added `SECURITY.md` (private vulnerability reporting + supply-chain
-    assurances) and PEP 639 SPDX license metadata (`license = "MIT"` +
-    `license-files`; core-metadata 2.4 via hatchling >= 1.29).
+  - PEP 639 SPDX license metadata (`license = "MIT"` + `license-files`;
+    core-metadata 2.4 via hatchling >= 1.29).
 
 ## [0.0.17] - 2026-05-29
 
