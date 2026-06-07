@@ -56,7 +56,7 @@ Verified in CI (see [`.github/workflows/ci.yaml`](.github/workflows/ci.yaml)).
 
 | Component | Supported | Notes |
 |---|---|---|
-| Python | 3.11 – 3.13 | core is stdlib-only (zero runtime deps, SPEC §13) |
+| Python | 3.11 – 3.14 | core is stdlib-only (zero runtime deps, SPEC §13) |
 | Codecs | 9 built-in | `pubtabnet-1.0.0/2.0.0`, `otsl-1.0.0`, `fintabnet`, `fintabnet-otsl`, `tableformer`, `tablebank`, `pubtables-1m`, `doctags-tables` |
 | Extras | `[cli]` `[teds]` `[hf]` | click · apted+lxml · datasets (occasional/local e2e) |
 | Bridge | `docling-tables` | a separate `tablecodec-docling` package (`packages/`, own version) |
