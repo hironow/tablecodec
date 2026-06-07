@@ -1,5 +1,6 @@
 [build-system]
-requires = ["hatchling>=1.25"]
+# hatchling >= 1.27 emits PEP 639 / core-metadata 2.4 License-Expression.
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
@@ -8,7 +9,10 @@ version = "0.0.17"
 description = "Neutral Internal Representation and Codec registry for image-based table-recognition datasets"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { file = "LICENSE" }
+# PEP 639: SPDX license expression + license-files (NOT the deprecated
+# `license = {file = ...}` table form nor a `License ::` classifier).
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "hironow", email = "hironow365@gmail.com" },
 ]
@@ -17,7 +21,6 @@ classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
