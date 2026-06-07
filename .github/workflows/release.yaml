@@ -1,13 +1,24 @@
-# Release workflow.
+# Release: OIDC Trusted Publishing, no long-lived publish tokens (ADR 0014).
 #
-# Security review (per GitHub Actions injection guide):
-#   - Triggered only by maintainer-pushed version tags (refs/tags/v*).
-#   - The only GitHub context referenced in any run: step is github.ref,
-#     passed through an env var (GIT_REF) and shell-quoted before use.
-#   - No attacker-controlled github.event.{issue,pull_request,comment,
-#     review,commits,head_commit}.* fields are interpolated anywhere.
-#   - Publishing uses PyPI Trusted Publishing (OIDC); no long-lived API
-#     token is stored as a secret.
+# Trigger: pushing a `v*` tag. Build + provenance run to completion BEFORE the
+# publish job, so a publish is only ever attempted on fully-built, attested
+# artifacts (build -> provenance -> publish -> github-release).
+#
+# Publish auth is OIDC only:
+#   - PyPI: pypa/gh-action-pypi-publish uploads via Trusted Publishing and emits
+#     PEP 740 publish attestations automatically (verified on PyPI). No
+#     long-lived API token is stored as a secret.
+# Additively, actions/attest-build-provenance produces a GitHub SLSA build
+# provenance for the distributions (a SEPARATE artifact, verified with
+# `gh attestation verify` -- NOT the PyPI PEP 740 attestation).
+#
+# Security notes:
+#   - No attacker-controlled github.event.{issue,pull_request,comment,review,
+#     commits,head_commit}.* field is interpolated anywhere; the only GitHub
+#     context in a run: step is github.ref, passed via env (GIT_REF) and quoted.
+#   - Every action is pinned to a full commit SHA (repo policy: sha_pinning_required).
+#   - The PyPI trusted-publisher binding must match this workflow EXACTLY:
+#     repo hironow/tablecodec, workflow filename release.yaml, environment pypi.
 
 name: Release
 
@@ -17,8 +28,14 @@ on:
       - "v*"
   workflow_dispatch:
 
+# Read-only by default; the publish jobs elevate to id-token: write per job.
 permissions:
   contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  # Never cancel a release run mid-publish.
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -32,6 +49,15 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
+          version: "0.11.17"
+
+      # Route the build-backend (hatchling) resolution through Takumi Guard
+      # (blocks known-malicious packages before they execute; sets
+      # UV_INDEX_URL/PIP_INDEX_URL to the screened registry for this job).
+      # Blocking-only mode, no account needed. Must precede `uv build` so the
+      # published artifact is built only from screened build dependencies.
+      - name: Route installs through Takumi Guard
+        uses: flatt-security/setup-takumi-guard-pypi@733047c120b6377fa05fb77f714df8d8cd3a41a9 # v1.0.1
 
       - name: Set up Python 3.11
         run: uv python install 3.11
@@ -55,9 +81,34 @@ jobs:
           name: dist
           path: dist/
 
+  provenance:
+    name: SLSA build provenance (GitHub artifact attestation)
+    needs: build
+    # Only attest a real tag push, never a workflow_dispatch dry run.
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download dist artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist/
+
+      # GitHub SLSA build provenance for the wheels/sdist. This is a DIFFERENT
+      # artifact from the PyPI PEP 740 attestation (verified with
+      # `gh attestation verify`, not on PyPI). Kept separate on purpose.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: "dist/*"
+
   publish:
     name: publish to PyPI (trusted publishing)
-    needs: build
+    needs: provenance
     runs-on: ubuntu-latest
     # Only publish on a real tag push, never on a workflow_dispatch dry run.
     if: startsWith(github.ref, 'refs/tags/v')
@@ -73,8 +124,15 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Publish to PyPI
+      - name: Publish to PyPI via Trusted Publishing
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+        with:
+          packages-dir: dist
+          # Idempotent re-runs: if a prior attempt uploaded some files before
+          # failing, skip the ones already on PyPI instead of colliding. PyPI
+          # never allows overwriting an existing file, so this is the safe retry.
+          skip-existing: true
+          # PEP 740 attestations are generated automatically (default since v1.11).
 
   github-release:
     name: create GitHub Release
