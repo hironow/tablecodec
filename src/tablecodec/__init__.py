@@ -9,6 +9,8 @@ Public API (M1):
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError, version
+
 from tablecodec.ir import BBox, GridCell, TableSample
 from tablecodec.loss import LossReport, analyze_loss
 from tablecodec.validate import Profile, ValidationError, profiles, validate
@@ -26,4 +28,7 @@ __all__ = [
     "validate",
 ]
 
-__version__: str = "0.0.18"
+try:
+    __version__ = version("tablecodec")
+except PackageNotFoundError:  # source checkout without an installed build
+    __version__ = "0.0.0+unknown"
