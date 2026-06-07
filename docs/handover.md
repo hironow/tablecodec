@@ -80,9 +80,12 @@ separate from these settings and must be resolved for Actions to actually run.
 
 ## Known Risks / Blockers
 
-- **Remote CI is account-blocked** (GitHub billing): Actions end in ~2s / 0
-  steps — NOT a code problem. **Local `just ci` / `just ci-all` is the real
-  gate.**
+- **Remote CI `startup_failure` was a MISDIAGNOSIS (resolved 2026-06-07).** The
+  ~2s / 0-step failures were NOT GitHub billing — the repo enforces
+  `sha_pinning_required: true`, and the old tag-pinned workflows (`@v3` etc.)
+  were rejected at startup. Pinning every action to a full SHA fixed it: CI now
+  runs green on real Actions (verified on `main`). Local `just ci` / `just
+  ci-all` is still the fast gate.
 - **codex plan review is rate-limited** (was until 2026-05-31). When it
   errors with a usage-limit message, CLAUDE.md says skip the review.
 - **A security hook hard-blocks any edit containing the substring `eval`** —
