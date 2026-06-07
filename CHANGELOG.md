@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.19] - 2026-06-07
+
+### Added
+
+- **Python 3.14 support.** 3.14 is now in the CI matrix (ubuntu + macOS) and the
+  trove classifiers; the full suite (core + `[cli]`/`[teds]`/dev, incl
+  lxml/apted) passes on 3.14. `requires-python` stays `>=3.11` with no upper
+  bound.
+
+### Changed
+
+- `__version__` (both the core package and the `tablecodec-docling` bridge) is
+  now derived from the installed package metadata (`importlib.metadata`,
+  stdlib), so `pyproject.toml` is the single human-edited version source — no
+  more hand-syncing a literal in `__init__.py`.
+- README restructured (badges, a Supported table, a Development section) and the
+  first release marked shipped across `docs/intent.md` / `docs/handover.md`.
+- The source distribution now ships only the package, tests, and `docs/spec.md`
+  (hatchling `only-include`), dropping the dev trees (`.semgrep/`,
+  `conformance/`, `packages/`) it previously bundled. The wheel is unchanged.
+- `.github/dependabot.yml` renamed to `.github/dependabot.yaml` (project
+  convention; GitHub supports both).
+
+### Removed
+
+- `CONTRIBUTING.md` and `SECURITY.md` (GitHub private vulnerability reporting
+  stays enabled for security reports).
+
 ## [0.0.18] - 2026-06-07
 
 ### Added
@@ -454,5 +482,6 @@ are being added incrementally within the 0.0.x series.
 <!-- v0.0.18 is the first cut release (tag + GitHub Release created by
      .github/workflows/release.yaml). Earlier 0.0.x headings stay plain text
      (no tags were pushed for them). -->
-[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.18...main
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.19...main
+[0.0.19]: https://github.com/hironow/tablecodec/compare/v0.0.18...v0.0.19
 [0.0.18]: https://github.com/hironow/tablecodec/releases/tag/v0.0.18

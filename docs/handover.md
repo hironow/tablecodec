@@ -6,18 +6,21 @@
 ## Current State
 
 `tablecodec` is feature-complete against `docs/spec.md`, staying in **0.0.x**
-(no public PyPI release yet). `main` package version is **0.0.18**; the
-in-repo `tablecodec-docling` bridge is at its own **0.0.2**.
+and **published on PyPI**. `main` package version is **0.0.19**; the in-repo
+`tablecodec-docling` bridge is at its own **0.0.2**. `__version__` is derived
+from the installed package metadata (`importlib.metadata`, firepact-style), so
+`pyproject.toml` is the single human-edited version source.
 
-**0.0.18 is a supply-chain-hardening + first-publish-prep release (ADR 0014).**
-The release pipeline now: all actions full-SHA-pinned; release DAG is
-build -> provenance (SLSA) -> publish (OIDC trusted publishing, PEP 740 auto
-attestations, skip-existing) -> github-release; CI + release build route
-installs through Takumi Guard (screened registry); `[tool.uv] exclude-newer`
-absolute date + `uv sync --locked`; Dependabot 7-day cooldown;
-PEP 639 SPDX license. The release trigger is tag-only (`v*`) with per-job
-`github.repository == 'hironow/tablecodec'` fork guards. No library behavior
-changed (all ci/chore/docs/build).
+**0.0.18 was the first public release** (supply-chain-hardening + first publish,
+ADR 0014); **0.0.19 adds Python 3.14 support**, the metadata-derived
+`__version__`, and housekeeping (README restructure, cleaner sdist, removed
+CONTRIBUTING/SECURITY, `dependabot.yaml`). The release pipeline: all actions
+full-SHA-pinned; DAG is build -> provenance (SLSA) -> publish (OIDC trusted
+publishing, PEP 740 auto attestations, skip-existing) -> github-release; CI +
+release build route installs through Takumi Guard (screened registry);
+`[tool.uv] exclude-newer` absolute date + `uv sync --locked`; Dependabot 7-day
+cooldown; PEP 639 SPDX license. The release trigger is tag-only (`v*`) with
+per-job `github.repository == 'hironow/tablecodec'` fork guards.
 
 Shipped:
 
@@ -50,19 +53,23 @@ roadmap work are consolidated in `docs/intent.md` §8.
 
 ## In Progress
 
-Nothing active. **v0.0.18 is LIVE on PyPI** (first public release, 2026-06-07).
+Nothing active. **0.0.18 is LIVE on PyPI** (first public release); **0.0.19**
+(Python 3.14 + metadata-derived `__version__` + housekeeping) is prepared and
+ready to tag.
 
 ## Next Actions
 
-**Released — `tablecodec 0.0.18` is on PyPI.** The whole release fired from a
-`v0.0.18` tag push via OIDC Trusted Publishing (no token); verified end to end:
+**Released — `tablecodec` is on PyPI.** The first release fired from a `v0.0.18`
+tag push via OIDC Trusted Publishing (no token); verified end to end:
 
 - PyPI: wheel + sdist, `License-Expression: MIT`, requires-python >=3.11.
 - Release pipeline build -> provenance -> publish -> github-release all green;
   the `v*` Ruleset blocked the tag and the admin bypass let it through (working).
 - **PEP 740** attestation on PyPI (integrity API 200) + **SLSA build provenance**
   verified locally (`gh attestation verify` -> slsa.dev/provenance/v1, signed by
-  hironow/tablecodec). GitHub Release `v0.0.18` created with both assets.
+  hironow/tablecodec). GitHub Release created with both assets.
+
+`0.0.19` repeats this flow: push `main`, then `git push origin v0.0.19`.
 
 The GitHub repo settings (Actions allowlist, Environment `release` + reviewer,
 `v*` Ruleset, secret scanning / push protection / Dependabot security / private

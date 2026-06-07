@@ -330,7 +330,7 @@ tablecodec/
 
 **方針変更（実行時の決定）**: 当初は M1-M8 を経て v0.1.0 で公開する計画だったが、
 codec を 1 つずつ **0.0.x の patch bump** として出荷する方針に切り替えた（現在
-0.0.18、9 codec + `[teds]` + §8 STRICT 出荷済み、docling bridge は別 package
+0.0.19、9 codec + `[teds]` + §8 STRICT 出荷済み、docling bridge は別 package
 0.0.2）。**2026-06-07 に PyPI へ初公開（v0.0.18）** — OIDC Trusted Publishing で
 トークンレス、PEP 740 attestations + SLSA build provenance 付き。一回限りの
 人間側設定（PyPI pending publisher / GitHub Environment・Ruleset）手順は
@@ -400,7 +400,7 @@ gitignore 下の `private/PYPI_RELEASE_STEPS.md`。
 **実績（0.0.x で達成済み）**: 当初は codec を 0.2.0〜0.4.0 の minor で追加する計画
 だったが、実際には全 9 codec（pubtabnet 1.0/2.0、otsl、fintabnet、fintabnet-otsl、
 tableformer、tablebank、pubtables-1m、doctags-tables）を **0.0.x の patch bump** で
-出荷した（現在 0.0.18）。TEDS extra は 0.0.16 で実装済み（`tablecodec.teds`、
+出荷した（現在 0.0.19）。TEDS extra は 0.0.16 で実装済み（`tablecodec.teds`、
 ADR 0011）。§8 STRICT は 0.0.17（ADR 0012）。docling bridge は read+write を
 `packages/tablecodec-docling/`（own 0.0.2）に in-repo monorepo で実装済み
 （ADR 0013、別 repo 抽出は publish 前）。
