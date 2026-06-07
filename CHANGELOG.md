@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     guards against lockfile drift.
   - Added `SECURITY.md` (private vulnerability reporting + supply-chain
     assurances) and PEP 639 SPDX license metadata (`license = "MIT"` +
-    `license-files`; core-metadata 2.4 via hatchling >= 1.27).
+    `license-files`; core-metadata 2.4 via hatchling >= 1.29).
 
 ## [0.0.17] - 2026-05-29
 
