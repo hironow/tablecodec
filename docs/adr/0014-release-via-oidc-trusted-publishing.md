@@ -40,7 +40,7 @@ Publishing is done **from GitHub Actions via OIDC Trusted Publishing, with no
 long-lived publish token in the repo, CI secrets, or the maintainer runbook.**
 
 - A `v*` tag push drives `.github/workflows/release.yaml`. Publish is gated
-  **both** by a protected GitHub Environment (`pypi`) **and** by a Ruleset that
+  **both** by a protected GitHub Environment (`release`) **and** by a Ruleset that
   restricts who may create `v*` tags — the Environment alone only pauses for a
   reviewer; it does not stop a write-holder from pushing a `v*` tag, so
   tag-creation must be restricted at the ref level too.
@@ -96,10 +96,10 @@ token exists that could bypass it.**
   (and `provenance` for the attestation).
 - The PyPI **pending/trusted-publisher binding**, which must match the workflow
   **exactly**: owner/repo `hironow/tablecodec`, the workflow **filename**
-  `release.yaml`, and the environment `pypi`. A one-character mismatch fails the
+  `release.yaml`, and the environment `release`. A one-character mismatch fails the
   OIDC publish.
-- The `pypi` GitHub Environment name, matched on both the workflow and the PyPI
-  binding; plus a Ruleset restricting `v*` tag creation.
+- The `release` GitHub Environment name, matched on both the workflow and the
+  PyPI binding; plus a Ruleset restricting `v*` tag creation.
 - Two distinct, separately-verified attestations: the **PyPI PEP 740 publish
   attestation** (on PyPI, auto-emitted) and the **GitHub SLSA build provenance**
   (artifact attestation, verified via `gh attestation verify`).
@@ -113,7 +113,7 @@ token exists that could bypass it.**
   **no such secret is ever created** (pending publisher needs none).
 - A release workflow with over-broad permissions or run from an unprotected ref.
   Closed by: explicit minimal `permissions:`, read-only default `GITHUB_TOKEN`,
-  the `pypi` Environment (reviewer gate), **and a Ruleset restricting `v*` tag
+  the `release` Environment (reviewer gate), **and a Ruleset restricting `v*` tag
   creation** — the Environment only pauses for a reviewer, it does not stop the
   tag push that triggers the run.
 - A swapped or compromised third-party action. Closed by: **full-SHA pinning**
@@ -130,7 +130,7 @@ publishing, so enforcement is verified structurally rather than by a RED test:
 - PyPI **trusted-publisher enforcement** is the fail-closed control: with no
   token issued, a bypass publish has no credential.
 - A repo check (zizmor / a small workflow lint) asserts each publish job
-  declares only the minimal permissions and runs under the `pypi` Environment.
+  declares only the minimal permissions and runs under the `release` Environment.
 - `git grep -nE '_TOKEN' .github/` asserts no `*_TOKEN` publish secret is
   referenced in any workflow.
 - Provenance is verifiable post-publish: `pip download` + `gh attestation

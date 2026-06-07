@@ -66,9 +66,8 @@ finalize repo config). Verified diff vs the sibling `hironow/firepact` repo
    use: `astral-sh/setup-uv@*`, `pypa/gh-action-pypi-publish@*`,
    `flatt-security/setup-takumi-guard-pypi@*` (`actions/*` is already covered).
    Without this, CI + release fail with "action not allowed".
-2. **Environment `pypi`**: create it (firepact has `release` with a required
-   reviewer + tag deployment policy). Optionally add `hironow` as required
-   reviewer.
+2. **Environment `release`**: create it (matches firepact: a required reviewer
+   + tag deployment policy). Add `hironow` as required reviewer.
 3. **Ruleset "Protect release tags (v*)"**: restrict creation/update/deletion
    of `v*` tags to the repo-admin role (firepact has this; tablecodec has none).
 4. **Repo security toggles**: enable Secret scanning + Push protection +

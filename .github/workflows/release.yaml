@@ -18,7 +18,7 @@
 #     context in a run: step is github.ref, passed via env (GIT_REF) and quoted.
 #   - Every action is pinned to a full commit SHA (repo policy: sha_pinning_required).
 #   - The PyPI trusted-publisher binding must match this workflow EXACTLY:
-#     repo hironow/tablecodec, workflow filename release.yaml, environment pypi.
+#     repo hironow/tablecodec, workflow filename release.yaml, environment release.
 
 name: Release
 
@@ -110,7 +110,7 @@ jobs:
     if: github.repository == 'hironow/tablecodec'
     runs-on: ubuntu-latest
     environment:
-      name: pypi
+      name: release
       url: https://pypi.org/p/tablecodec
     permissions:
       id-token: write  # required for OIDC trusted publishing
