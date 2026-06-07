@@ -34,19 +34,24 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
+          # Pin uv so CI resolves uv.lock identically to local -- required for
+          # the `uv sync --locked` guard to be reliable (lock revision is
+          # uv-version-tied).
+          version: "0.11.17"
           enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
-      - name: Set up Python
-        env:
-          PY_VERSION: ${{ matrix.python-version }}
-        run: uv python install "$PY_VERSION"
+      # Route PyPI installs through Takumi Guard (blocks known-malicious
+      # packages before they execute; sets UV_INDEX_URL/PIP_INDEX_URL to the
+      # screened registry for this job). Blocking-only mode, no account needed.
+      # Must precede any uv/pip install.
+      - name: Route installs through Takumi Guard
+        uses: flatt-security/setup-takumi-guard-pypi@733047c120b6377fa05fb77f714df8d8cd3a41a9 # v1.0.1
 
-      - name: Create venv and install (dev + cli + teds extras)
-        env:
-          PY_VERSION: ${{ matrix.python-version }}
-        run: |
-          uv venv --python "$PY_VERSION"
-          uv pip install -e ".[dev,cli,teds]"
+      # --locked fails if uv.lock drifts from pyproject.toml (e.g. a version
+      # bump that forgot to sync the lock), catching it before a release tag.
+      - name: Install (locked; dev + cli + teds extras)
+        run: uv sync --locked --extra dev --extra cli --extra teds
 
       - name: Lint (ruff check + format)
         run: |

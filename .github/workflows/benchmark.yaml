@@ -32,15 +32,20 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
+          # Pin uv so CI resolves uv.lock identically to local (lock revision is
+          # uv-version-tied), keeping `uv sync --locked` reliable.
+          version: "0.11.17"
           enable-cache: true
+          python-version: "3.11"
 
-      - name: Set up Python 3.11
-        run: uv python install 3.11
+      # Route PyPI installs through Takumi Guard (blocks known-malicious
+      # packages before they execute; sets UV_INDEX_URL/PIP_INDEX_URL to the
+      # screened registry for this job). Blocking-only mode, no account needed.
+      - name: Route installs through Takumi Guard
+        uses: flatt-security/setup-takumi-guard-pypi@733047c120b6377fa05fb77f714df8d8cd3a41a9 # v1.0.1
 
-      - name: Create venv and install dev + cli extras
-        run: |
-          uv venv --python 3.11
-          uv pip install -e ".[dev,cli]"
+      - name: Install (locked; dev + cli extras)
+        run: uv sync --locked --extra dev --extra cli
 
       - name: Run benchmarks
         run: |
