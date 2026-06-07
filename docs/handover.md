@@ -1,13 +1,23 @@
 # Handover
 
-**Last updated:** 2026-05-29 (JST)
+**Last updated:** 2026-06-07 (JST)
 **Updated by:** Claude (Opus 4.8, 1M context)
 
 ## Current State
 
 `tablecodec` is feature-complete against `docs/spec.md`, staying in **0.0.x**
-(no public PyPI release yet). `main` package version is **0.0.17**; the
+(no public PyPI release yet). `main` package version is **0.0.18**; the
 in-repo `tablecodec-docling` bridge is at its own **0.0.2**.
+
+**0.0.18 is a supply-chain-hardening + first-publish-prep release (ADR 0014).**
+The release pipeline now: all actions full-SHA-pinned; release DAG is
+build -> provenance (SLSA) -> publish (OIDC trusted publishing, PEP 740 auto
+attestations, skip-existing) -> github-release; CI + release build route
+installs through Takumi Guard (screened registry); `[tool.uv] exclude-newer`
+absolute date + `uv sync --locked`; Dependabot 7-day cooldown; `SECURITY.md`;
+PEP 639 SPDX license. The release trigger is tag-only (`v*`) with per-job
+`github.repository == 'hironow/tablecodec'` fork guards. No library behavior
+changed (all ci/chore/docs/build).
 
 Shipped:
 
@@ -40,16 +50,36 @@ roadmap work are consolidated in `docs/intent.md` §8.
 
 ## In Progress
 
-Nothing active. Session closed after a test-sufficiency audit of the recent
-work (TEDS / loss classification / STRICT / docling) — gaps filled, dead code
-removed. Detail in git log + CHANGELOG.
+Nothing active in code. The 0.0.18 hardening is committed locally (NOT pushed,
+NOT tagged). The publish is blocked on human-only GitHub/PyPI configuration —
+see Next Actions.
 
 ## Next Actions
 
-Nothing active. **All future/roadmap work lives in `docs/intent.md` §8**
-(the single home: extraction & publish, codec image-dims population, the
-docling-core e2e, and the OQ-1..4 open questions) — handover does not
-duplicate it. Pick the next item from there when resuming.
+**Human-only release setup** (the assistant cannot register a PyPI publisher or
+finalize repo config). Verified diff vs the sibling `hironow/firepact` repo
+(2026-06-07) — these are NOT yet done on `hironow/tablecodec`:
+
+1. **Actions allowlist**: the repo is `allowed_actions: selected` +
+   `sha_pinning_required: true` (good), but the allowlist only has
+   `jdx/mise-action`, `opentofu/setup-opentofu`. ADD the actions the workflows
+   use: `astral-sh/setup-uv@*`, `pypa/gh-action-pypi-publish@*`,
+   `flatt-security/setup-takumi-guard-pypi@*` (`actions/*` is already covered).
+   Without this, CI + release fail with "action not allowed".
+2. **Environment `pypi`**: create it (firepact has `release` with a required
+   reviewer + tag deployment policy). Optionally add `hironow` as required
+   reviewer.
+3. **Ruleset "Protect release tags (v*)"**: restrict creation/update/deletion
+   of `v*` tags to the repo-admin role (firepact has this; tablecodec has none).
+4. **Repo security toggles**: enable Secret scanning + Push protection +
+   Dependabot security updates (firepact has all three; tablecodec has none).
+5. **PyPI pending publisher** (PyPI side, fully human): project `tablecodec`,
+   owner `hironow`, repo `tablecodec`, workflow `release.yaml`, environment
+   `pypi`. See `private/PYPI_RELEASE_STEPS.md`.
+
+Then `git push origin main` (confirm CI green) and `git push origin v0.0.18`
+to fire the release. **All other future/roadmap work lives in
+`docs/intent.md` §8.**
 
 ## Known Risks / Blockers
 
@@ -111,9 +141,9 @@ A docling-core-driven e2e is a deliberate non-gap (the bridge's round-trip +
 
 - `docs/spec.md` — source of truth. `docs/intent.md` — brief/roadmap.
   `docs/glossary.md` — vocabulary (tablecodec vs borrowed terms + origins).
-- `docs/adr/000{1..9}.md` + `0010..0013` — decision history (0009 drop extras;
+- `docs/adr/000{1..9}.md` + `0010..0014` — decision history (0009 drop extras;
   0010 I-05 content-emptiness; 0011 TEDS port; 0012 STRICT/image-dims;
-  0013 docling monorepo).
+  0013 docling monorepo; 0014 release via OIDC trusted publishing).
 - `tests/test_spec_surface.py` — black-box conformance to the public surface;
   run after any public-API/CLI/profile change.
 - `src/tablecodec/teds.py`, `packages/tablecodec-docling/` — the two

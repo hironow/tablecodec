@@ -14,7 +14,7 @@ PubTables-1M, TableBank.
 
 ## Status
 
-**0.0.17 (pre-alpha).** Not yet published to PyPI. The nine codecs, the TEDS
+**0.0.18 (pre-alpha).** Not yet published to PyPI. The nine codecs, the TEDS
 metric (`[teds]`), and the STRICT validation profile were all added
 incrementally within the 0.0.x series; a separate `tablecodec-docling` bridge
 codec lives in `packages/` (its own version). The 0.x line makes no

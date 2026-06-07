@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tablecodec"
-version = "0.0.17"
+version = "0.0.18"
 description = "Neutral Internal Representation and Codec registry for image-based table-recognition datasets"
 readme = "README.md"
 requires-python = ">=3.11"

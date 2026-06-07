@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.18] - 2026-06-07
+
 ### Added
 
 - Conformance corpus (`conformance/`, SPEC §11) now covers **all nine codecs**
@@ -31,6 +33,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `lossy_write = {"tokens", "extras"}` (docling stores one string per cell;
     no home for IR extras). `writable = True`, so docling-tables is now a real
     `analyze_loss` conversion target.
+
+### Security
+
+- Hardened the release pipeline ahead of the first PyPI publish (ADR 0014):
+  - All GitHub Actions are pinned to full commit SHAs (was mutable tags;
+    `pypa/gh-action-pypi-publish` now at the v1.14.0 SHA), with Dependabot
+    tracking bumps behind a 7-day cooldown (`.github/dependabot.yml`).
+  - The release workflow records a **SLSA build provenance** attestation
+    (`actions/attest-build-provenance`) and notes that PyPI **PEP 740**
+    publish attestations are emitted automatically by Trusted Publishing.
+    `skip-existing` makes a partial-failure re-run idempotent.
+  - CI (and the release build) route installs through Takumi Guard, a
+    screening proxy that blocks known-malicious packages; `[tool.uv]
+    exclude-newer` is pinned to an absolute date and `uv sync --locked`
+    guards against lockfile drift.
+  - Added `SECURITY.md` (private vulnerability reporting + supply-chain
+    assurances) and PEP 639 SPDX license metadata (`license = "MIT"` +
+    `license-files`; core-metadata 2.4 via hatchling >= 1.27).
 
 ## [0.0.17] - 2026-05-29
 
@@ -432,7 +452,8 @@ are being added incrementally within the 0.0.x series.
   the sample and comparing the IR to the independent expectation.
   `jsonschema` added to the `[dev]` extra (test-only).
 
-<!-- No git tags / GitHub Releases yet (still 0.0.x, pre-release). Per-version
-     links will be added once releases are cut; until then the version headings
-     above are plain text and `[Unreleased]` points at the commit history. -->
-[Unreleased]: https://github.com/hironow/tablecodec/commits/main
+<!-- v0.0.18 is the first cut release (tag + GitHub Release created by
+     .github/workflows/release.yaml). Earlier 0.0.x headings stay plain text
+     (no tags were pushed for them). -->
+[Unreleased]: https://github.com/hironow/tablecodec/compare/v0.0.18...main
+[0.0.18]: https://github.com/hironow/tablecodec/releases/tag/v0.0.18
