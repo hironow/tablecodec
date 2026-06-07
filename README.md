@@ -140,6 +140,8 @@ for the data-source decisions and the canonical-vs-real-shape caveats.
 - [`docs/glossary.md`](docs/glossary.md) — Precise vocabulary: terms tablecodec
   defines vs. borrows, and the words most likely to be misread (e.g. "loss"
   vs a "degenerate" bbox).
+- [`docs/intent.md`](docs/intent.md) — Implementation brief (milestones, order,
+  quality bar).
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — TDD-first workflow, Conventional
   Commits, PR template.
 - [`CHANGELOG.md`](CHANGELOG.md) — Keep a Changelog format.

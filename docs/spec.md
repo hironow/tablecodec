@@ -389,9 +389,9 @@ The Conformance Suite repository is a separate, MIT-licensed artifact intended f
 
 The IR/contract points intentionally left undecided for v1.0 (cell ordering,
 in-cell tokenization, float `bbox`, IR JSON Schema), together with all other
-forward-looking work, are tracked in the project's internal implementation
-brief (the single home for roadmap/未来 items, kept outside this repository).
-This spec documents the current contract only.
+forward-looking work, are tracked in **`docs/intent.md` (Future work)** — the
+single home for roadmap/未来 items. This spec documents the current contract
+only.
 
 ---
 
