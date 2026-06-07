@@ -56,29 +56,27 @@ see Next Actions.
 
 ## Next Actions
 
-**Human-only release setup** (the assistant cannot register a PyPI publisher or
-finalize repo config). Verified diff vs the sibling `hironow/firepact` repo
-(2026-06-07) — these are NOT yet done on `hironow/tablecodec`:
+**GitHub repo settings — DONE (applied 2026-06-07 via `gh api`)**, now matching
+the sibling `hironow/firepact` posture:
+- Actions allowlist now includes `astral-sh/setup-uv@*`,
+  `pypa/gh-action-pypi-publish@*`, `flatt-security/setup-takumi-guard-pypi@*`
+  (on top of `selected` + `sha_pinning_required: true`).
+- Environment `release` created (required reviewer `hironow` + `v*` tag policy).
+- Ruleset "Protect release tags (v*)" active (creation/update/deletion, admin bypass).
+- Secret scanning + push protection + Dependabot security updates + private
+  vulnerability reporting all enabled.
 
-1. **Actions allowlist**: the repo is `allowed_actions: selected` +
-   `sha_pinning_required: true` (good), but the allowlist only has
-   `jdx/mise-action`, `opentofu/setup-opentofu`. ADD the actions the workflows
-   use: `astral-sh/setup-uv@*`, `pypa/gh-action-pypi-publish@*`,
-   `flatt-security/setup-takumi-guard-pypi@*` (`actions/*` is already covered).
-   Without this, CI + release fail with "action not allowed".
-2. **Environment `release`**: create it (matches firepact: a required reviewer
-   + tag deployment policy). Add `hironow` as required reviewer.
-3. **Ruleset "Protect release tags (v*)"**: restrict creation/update/deletion
-   of `v*` tags to the repo-admin role (firepact has this; tablecodec has none).
-4. **Repo security toggles**: enable Secret scanning + Push protection +
-   Dependabot security updates (firepact has all three; tablecodec has none).
-5. **PyPI pending publisher** (PyPI side, fully human): project `tablecodec`,
-   owner `hironow`, repo `tablecodec`, workflow `release.yaml`, environment
-   `pypi`. See `private/PYPI_RELEASE_STEPS.md`.
+**Remaining before the release can fire:**
+1. **PyPI pending publisher** (PyPI side, fully human — needs PyPI login):
+   project `tablecodec`, owner `hironow`, repo `tablecodec`, workflow
+   `release.yaml`, environment `release`. See `private/PYPI_RELEASE_STEPS.md` §B.
+2. Then `git push origin main` (confirm CI green) and `git push origin v0.0.18`
+   to fire `release.yaml`. The publish pauses for the `release` Environment
+   reviewer (hironow) before uploading.
 
-Then `git push origin main` (confirm CI green) and `git push origin v0.0.18`
-to fire the release. **All other future/roadmap work lives in
-`docs/intent.md` §8.**
+**Note:** remote CI may still be billing-blocked (see Known Risks) — that is
+separate from these settings and must be resolved for Actions to actually run.
+**All other future/roadmap work lives in `docs/intent.md` §8.**
 
 ## Known Risks / Blockers
 
