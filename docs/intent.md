@@ -326,13 +326,15 @@ tablecodec/
 
 ---
 
-### M8 — Public Release（PyPI、**保留中**）
+### M8 — Public Release（PyPI、**完了 v0.0.18**）
 
 **方針変更（実行時の決定）**: 当初は M1-M8 を経て v0.1.0 で公開する計画だったが、
 codec を 1 つずつ **0.0.x の patch bump** として出荷する方針に切り替えた（現在
 0.0.18、9 codec + `[teds]` + §8 STRICT 出荷済み、docling bridge は別 package
-0.0.2）。PyPI 公開は人間側の Trusted Publishing 設定が
-済むまで **保留**。手順は gitignore 下の `private/PYPI_RELEASE_STEPS.md`。
+0.0.2）。**2026-06-07 に PyPI へ初公開（v0.0.18）** — OIDC Trusted Publishing で
+トークンレス、PEP 740 attestations + SLSA build provenance 付き。一回限りの
+人間側設定（PyPI pending publisher / GitHub Environment・Ruleset）手順は
+gitignore 下の `private/PYPI_RELEASE_STEPS.md`。
 
 **Goal**: PyPI 公開、GitHub Release、告知（設定完了後）。
 
@@ -343,7 +345,7 @@ codec を 1 つずつ **0.0.x の patch bump** として出荷する方針に切
 - `.github/workflows/release.yaml`（`v*` タグで発火、Trusted Publishing / OIDC）
   — サプライチェーン硬化済み（全 action full-SHA pin / SLSA build provenance /
   PEP 740 attestations / skip-existing / Takumi Guard 経由の screened build /
-  Dependabot 7日 cooldown、ADR 0014）。PyPI 側の pending publisher 登録が済むまで inert
+  Dependabot 7日 cooldown、ADR 0014）。v0.0.18 で初公開・全ジョブ稼働確認済み
 - README に installation / basic usage / SPEC リンク（済）
 - （任意）GitHub Discussions / Issues テンプレート
 
@@ -422,10 +424,11 @@ ADR 0011）。§8 STRICT は 0.0.17（ADR 0012）。docling bridge は read+writ
 - **Conformance Suite を別 vendor-neutral repo へ抽出**（v1.0 前、ADR 0001）。
   corpus は全 9 codec が expected-IR を持つ（pubtabnet-2.0 / otsl は各3ケース、
   他7 codec は各1ケース）。各 codec のケース数をさらに増やす余地あり。
-- **PyPI 公開**（M8、Trusted Publishing 設定後）。リリースパイプラインは
-  サプライチェーン硬化済み（ADR 0014）。残りは人間側の PyPI pending publisher /
-  GitHub Environment / Ruleset 設定。手順は gitignore 下の
-  `private/PYPI_RELEASE_STEPS.md`。
+- **PyPI 公開** — **完了（v0.0.18, 2026-06-07）**。OIDC Trusted Publishing で
+  トークンレス公開、PEP 740 attestations + SLSA build provenance 付き（ADR 0014）。
+  人間側の一回限り設定（PyPI pending publisher / GitHub Environment `release` /
+  Ruleset）も適用済み。以降の steady-state リリース手順は gitignore 下の
+  `private/PYPI_RELEASE_STEPS.md` §C。
 
 ### 機能フォローアップ（コード）
 

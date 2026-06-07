@@ -50,33 +50,27 @@ roadmap work are consolidated in `docs/intent.md` §8.
 
 ## In Progress
 
-Nothing active in code. The 0.0.18 hardening is committed locally (NOT pushed,
-NOT tagged). The publish is blocked on human-only GitHub/PyPI configuration —
-see Next Actions.
+Nothing active. **v0.0.18 is LIVE on PyPI** (first public release, 2026-06-07).
 
 ## Next Actions
 
-**GitHub repo settings — DONE (applied 2026-06-07 via `gh api`)**, now matching
-the sibling `hironow/firepact` posture:
-- Actions allowlist now includes `astral-sh/setup-uv@*`,
-  `pypa/gh-action-pypi-publish@*`, `flatt-security/setup-takumi-guard-pypi@*`
-  (on top of `selected` + `sha_pinning_required: true`).
-- Environment `release` created (required reviewer `hironow` + `v*` tag policy).
-- Ruleset "Protect release tags (v*)" active (creation/update/deletion, admin bypass).
-- Secret scanning + push protection + Dependabot security updates + private
-  vulnerability reporting all enabled.
+**Released — `tablecodec 0.0.18` is on PyPI.** The whole release fired from a
+`v0.0.18` tag push via OIDC Trusted Publishing (no token); verified end to end:
 
-**Remaining before the release can fire:**
-1. **PyPI pending publisher** (PyPI side, fully human — needs PyPI login):
-   project `tablecodec`, owner `hironow`, repo `tablecodec`, workflow
-   `release.yaml`, environment `release`. See `private/PYPI_RELEASE_STEPS.md` §B.
-2. Then `git push origin main` (confirm CI green) and `git push origin v0.0.18`
-   to fire `release.yaml`. The publish pauses for the `release` Environment
-   reviewer (hironow) before uploading.
+- PyPI: wheel + sdist, `License-Expression: MIT`, requires-python >=3.11.
+- Release pipeline build -> provenance -> publish -> github-release all green;
+  the `v*` Ruleset blocked the tag and the admin bypass let it through (working).
+- **PEP 740** attestation on PyPI (integrity API 200) + **SLSA build provenance**
+  verified locally (`gh attestation verify` -> slsa.dev/provenance/v1, signed by
+  hironow/tablecodec). GitHub Release `v0.0.18` created with both assets.
 
-**Note:** remote CI may still be billing-blocked (see Known Risks) — that is
-separate from these settings and must be resolved for Actions to actually run.
-**All other future/roadmap work lives in `docs/intent.md` §8.**
+The GitHub repo settings (Actions allowlist, Environment `release` + reviewer,
+`v*` Ruleset, secret scanning / push protection / Dependabot security / private
+vulnerability reporting) were applied 2026-06-07 via `gh api`, matching firepact.
+
+**Steady-state release from here** (`private/PYPI_RELEASE_STEPS.md` §C): bump
+version + `[tool.uv] exclude-newer`, `uv lock`, promote CHANGELOG, push `main`,
+push `vX.Y.Z`. **All other future/roadmap work lives in `docs/intent.md` §8.**
 
 ## Known Risks / Blockers
 
