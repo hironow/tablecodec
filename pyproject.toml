@@ -77,6 +77,14 @@ dev = [
 [project.scripts]
 tablecodec = "tablecodec.cli:main"
 
+[tool.uv]
+# Supply-chain cooldown: pin dependency resolution to distributions uploaded
+# before this absolute date, so a compromised-then-yanked release is not pulled
+# into uv.lock. MUST be an absolute date, NOT a relative span -- a span makes
+# `uv sync --locked` non-deterministic (astral-sh/uv#18775). When merging a
+# Dependabot uv update, bump this to that day's date and re-run `uv lock`.
+exclude-newer = "2026-06-07T00:00:00Z"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/tablecodec"]
 
