@@ -26,7 +26,6 @@ on:
   push:
     tags:
       - "v*"
-  workflow_dispatch:
 
 # Read-only by default; the publish jobs elevate to id-token: write per job.
 permissions:
@@ -40,6 +39,7 @@ concurrency:
 jobs:
   build:
     name: build sdist + wheel
+    if: github.repository == 'hironow/tablecodec'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -66,7 +66,6 @@ jobs:
         run: uv build
 
       - name: Verify built version matches the tag
-        if: startsWith(github.ref, 'refs/tags/v')
         env:
           GIT_REF: ${{ github.ref }}
         run: |
@@ -84,8 +83,7 @@ jobs:
   provenance:
     name: SLSA build provenance (GitHub artifact attestation)
     needs: build
-    # Only attest a real tag push, never a workflow_dispatch dry run.
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.repository == 'hironow/tablecodec'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -109,9 +107,8 @@ jobs:
   publish:
     name: publish to PyPI (trusted publishing)
     needs: provenance
+    if: github.repository == 'hironow/tablecodec'
     runs-on: ubuntu-latest
-    # Only publish on a real tag push, never on a workflow_dispatch dry run.
-    if: startsWith(github.ref, 'refs/tags/v')
     environment:
       name: pypi
       url: https://pypi.org/p/tablecodec
@@ -137,8 +134,8 @@ jobs:
   github-release:
     name: create GitHub Release
     needs: publish
+    if: github.repository == 'hironow/tablecodec'
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write  # required to create a release
     steps:
