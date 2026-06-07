@@ -1,6 +1,6 @@
 [build-system]
 # hatchling >= 1.27 emits PEP 639 / core-metadata 2.4 License-Expression.
-requires = ["hatchling>=1.27"]
+requires = ["hatchling>=1.29.0"]
 build-backend = "hatchling.build"
 
 [project]
