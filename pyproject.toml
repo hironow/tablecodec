@@ -46,7 +46,7 @@ teds = [
     "lxml>=5.0",
 ]
 cli = [
-    "click>=8.1",
+    "click>=8.4.1",
 ]
 # NOTE: the `fast` (orjson) and `validate` (pydantic) extras were dropped
 # (see ADR 0009): both would have to run inside the zero-dependency core
