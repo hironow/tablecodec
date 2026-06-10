@@ -1,6 +1,11 @@
+# prek (j178/prek) -- Rust reimplementation of pre-commit. See ~/dotfiles.
+# Install: just hooks        (mise exec -- prek install -t pre-commit -t pre-push)
+# Run all: just pre-commit   (mise exec -- prek run --all-files)
+minimum_prek_version: "0.4.0"
+
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+  # Rust-native builtin hooks (fast, no external repo clone).
+  - repo: builtin
     hooks:
       - id: check-yaml
       - id: check-toml
@@ -30,6 +35,17 @@ repos:
         types: [python]
         files: ^(src|tests|scripts)/
 
+      # markdownlint via the mise-pinned cli2 so the hook matches `just fmt`.
+      # Immutable ADRs, generated tables, corpus, and data dirs are excluded
+      # (kept in sync with .markdownlint-cli2.yaml ignores, which only apply
+      # to glob expansion).
+      - id: markdownlint
+        name: markdownlint-cli2 (--fix)
+        entry: mise exec -- markdownlint-cli2 --fix
+        language: system
+        files: '\.md$'
+        exclude: '^(docs/adr/|docs/(format_support|loss_matrix)\.md$|conformance/|input/|output/|private/)'
+
       - id: pyright
         name: pyright (strict)
         entry: uv run --extra teds pyright src/ tests/
@@ -50,3 +66,14 @@ repos:
         language: system
         files: ^\.semgrep/
         pass_filenames: false
+
+  # pre-push: the full pre-merge gate (just check == just ci).
+  - repo: local
+    hooks:
+      - id: just-check
+        name: just check (full gate)
+        entry: just check
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        description: Full pre-merge gate (lint, type, test, semgrep, semgrep-test, docs-check).

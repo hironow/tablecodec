@@ -1,6 +1,10 @@
 # tablecodec task runner.
 # Project convention: exactly one justfile at repo root, default → help.
 
+# mise-pinned external tools (see mise.toml), wrapped so the pinned version wins.
+MARKDOWNLINT := "mise exec -- markdownlint-cli2"
+PREK := "mise exec -- prek"
+
 default: help
 
 # Show available tasks (default)
@@ -11,23 +15,32 @@ help:
 install:
     uv pip install -e ".[dev,cli,teds]"
 
-# Install git hooks via prek (reads .pre-commit-config.yaml)
+# Install git hooks via prek (pre-commit + pre-push; reads .pre-commit-config.yaml)
 hooks:
-    prek install
+    {{PREK}} install -t pre-commit -t pre-push
+
+alias install-hooks := hooks
+
+# Run every prek hook against all files (matches what git invokes)
+pre-commit:
+    {{PREK}} run --all-files
 
 # Run unit tests (--extra teds so the optional TEDS tests run, not skip)
 test:
     uv run --extra teds pytest tests/ -v
 
-# Lint (ruff check + format check)
+# Lint (ruff check + format check + markdown, no writes).
+# docs/adr/ is excluded: ADRs are immutable records, not reformatted/gated.
 lint:
     uv run ruff check src/ tests/ scripts/
     uv run ruff format --check src/ tests/ scripts/
+    git ls-files -z '*.md' ':!docs/adr' | xargs -0 -r {{MARKDOWNLINT}}
 
 # Format and auto-fix (does not fail the build)
 fmt:
     uv run ruff format src/ tests/ scripts/
     uv run ruff check --fix src/ tests/ scripts/
+    git ls-files -z '*.md' ':!docs/adr' | xargs -0 -r {{MARKDOWNLINT}} --fix
 
 # Strict type check (--extra teds so apted/lxml resolve when checking teds.py)
 type:
@@ -77,6 +90,10 @@ docs-check:
 # Full local pre-merge gate (core package only; stays zero-dep-focused)
 ci: lint type test semgrep semgrep-test docs-check
     @echo "OK: all checks passed"
+
+# Strict no-write gate == ci (the pre-push hook runs this; nothing weaker
+# than the full gate catches what CI catches here)
+alias check := ci
 
 # ---- docling bridge sub-package (packages/tablecodec-docling, ADR 0013) ----
 # Run in its OWN uv project so docling-core stays out of the core env.

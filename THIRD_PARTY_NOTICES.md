@@ -13,7 +13,7 @@ The OTSL grid-reconstruction logic in
 
 - Project: docling-project/docling-ibm-models
 - File: `docling_ibm_models/tableformer/otsl.py`
-- URL: https://github.com/docling-project/docling-ibm-models
+- URL: <https://github.com/docling-project/docling-ibm-models>
 
 It was reimplemented for tablecodec's neutral Internal Representation
 (it emits `GridCell` spans rather than HTML strings) and carries no
@@ -52,7 +52,7 @@ formula) is adapted from:
 
 - Project: ibm-aur-nlp/PubTabNet
 - File: `src/metric.py`
-- URL: https://github.com/ibm-aur-nlp/PubTabNet/blob/master/src/metric.py
+- URL: <https://github.com/ibm-aur-nlp/PubTabNet/blob/master/src/metric.py>
 
 Changes: the entry point is IR-native (`teds(pred, true)` over
 `TableSample`s), the normalized Levenshtein is reimplemented in pure Python

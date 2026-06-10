@@ -1,0 +1,5 @@
+# Pinned tool versions (mise). Recipes wrap these with `mise exec --` so the
+# pinned version is used regardless of brew/global shadows (cf. ~/dotfiles).
+[tools]
+prek = "0.4.3"               # pre-commit framework (Rust); git hooks
+markdownlint-cli2 = "0.22.1" # markdown lint/format
