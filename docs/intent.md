@@ -157,6 +157,7 @@ tablecodec/
 **Goal**: リポジトリの土台を整え、`just ci` が空のテスト一式に対してグリーンになる状態を作る。
 
 **Deliverables**:
+
 - `pyproject.toml` (hatchling, Python 3.11+, extras: `teds`, `cli`, `hf`, `all`, `dev`)
 - `justfile` (targets: `install`, `hooks`, `test`, `lint`, `type`, `fmt`, `cov`, `semgrep`, `semgrep-test`, `ci`, `clean`)
 - ruff (`[tool.ruff]`) と pyright (`[tool.pyright]`) は `pyproject.toml` に統一
@@ -170,6 +171,7 @@ tablecodec/
 - `tests/test_smoke.py`: import と version assertion
 
 **Acceptance Criteria**:
+
 - [ ] `just ci` がローカルで成功
 - [ ] CI が GitHub で緑
 - [ ] `pip install -e .` が成功
@@ -184,6 +186,7 @@ tablecodec/
 **Goal**: SPEC §5 の IR と §5.2 の不変条件 I-01〜I-07 を実装し、property-based testing で網羅する。
 
 **Deliverables**:
+
 - `src/tablecodec/ir.py`: `BBox`, `GridCell`, `TableSample`
 - `src/tablecodec/_invariants.py`: 各 I-XX を独立した関数として実装
 - `src/tablecodec/validate.py`: `validate(sample, profile=...)`, `profiles.{LENIENT,DEFAULT,PUBTABNET_2_0,TABLEFORMER,STRICT}`
@@ -193,6 +196,7 @@ tablecodec/
 - `tests/test_invariants_hypothesis.py`: 「valid な TableSample を生成 → すべての invariant がパス」「特定の invariant を壊した時、その invariant のみが失敗を報告」
 
 **Acceptance Criteria**:
+
 - [ ] I-01〜I-07 のすべてに positive / negative テストあり
 - [ ] hypothesis が 10,000 ケース回って fail なし
 - [ ] `TableSample` が pickle 可能、hashable、`__slots__` 持ち
@@ -200,6 +204,7 @@ tablecodec/
 - [ ] pyright strict で warning ゼロ
 
 **TDD 順序の指針**:
+
 1. `test_ir.py::test_gridcell_is_frozen` を Red → `GridCell` の最小定義で Green
 2. 同様に `TableSample` を進める
 3. I-01 から順に Red → Green → Refactor を繰り返す
@@ -213,6 +218,7 @@ tablecodec/
 **Goal**: SPEC §6 の Codec 契約を確定し、最初の codec として `pubtabnet-2.0.0` を実装。
 
 **Deliverables**:
+
 - `src/tablecodec/codecs/_base.py`: `Codec` Protocol
 - `src/tablecodec/codecs/__init__.py`: registry (`register`, `get`, `detect`, `list_codecs`)
 - `src/tablecodec/codecs/pubtabnet.py`: `PubTabNet20Codec` (read + write)
@@ -220,6 +226,7 @@ tablecodec/
 - `tests/fixtures/pubtabnet/`: 公式サンプル数件（PMC license 上問題なし、`exploring_PubTabNet_dataset.ipynb` の examples フォルダから借用、出典明記）
 
 **Acceptance Criteria**:
+
 - [ ] `codecs.get("pubtabnet-2.0.0").read(f)` がストリームで `TableSample` を yield
 - [ ] read → write → read の往復で `lossy_read()` 申告以外のフィールドが完全一致
 - [ ] HTML トークン列の rowspan/colspan パースが正しく `GridCell.rowspan/colspan` に反映
@@ -228,6 +235,7 @@ tablecodec/
 - [ ] `lossy_read()` と `lossy_write()` の申告が round-trip テストと一致
 
 **TDD 順序**:
+
 1. `Codec` Protocol を `_base.py` に置く
 2. registry の `register/get` を Red → Green
 3. `PubTabNet20Codec` のシンプルな単一サンプル read を Red → Green
@@ -242,6 +250,7 @@ tablecodec/
 **Goal**: SPEC §10 のストリーミング保証を担保し、レガシー codec を追加。
 
 **Deliverables**:
+
 - `src/tablecodec/io.py`: `open(path, codec=None)`, `detect(source)`
 - `src/tablecodec/codecs/pubtabnet.py`: `PubTabNet10Codec` を追加（bbox なし）
 - `tests/test_io_streaming.py`: メモリ使用量がデータサイズに依存しないことを assert（`tracemalloc` で確認）
@@ -249,6 +258,7 @@ tablecodec/
 - `docs/format_support.md`: 対応 codec 表（自動生成スクリプト含む）
 
 **Acceptance Criteria**:
+
 - [ ] 100,000 件の jsonl をストリーミング処理しても peak memory < 50MB
 - [ ] `detect()` が先頭 5 行で codec 名を返す
 - [ ] benchmark の baseline が `main` に commit される
@@ -261,11 +271,13 @@ tablecodec/
 **Goal**: 異なる token language である OTSL を実装し、Codec 契約の汎用性を実証する。
 
 **Deliverables**:
+
 - `src/tablecodec/codecs/otsl.py`: `OTSL10Codec`
 - `tests/codecs/test_otsl.py`: round-trip + IBM 公式 reference（`docling-ibm-models/tableformer/otsl.py`）との挙動一致テスト（テスト時のみ optional 依存）
 - IBM の OTSL リファレンスを `[dev]` extra でインストールし、cross-validation テストを optional に実行
 
 **Acceptance Criteria**:
+
 - [ ] OTSL の 5 トークン語彙（`fcel`, `ecel`, `lcel`, `ucel`, `xcel` + `nl`）すべてが正しく解釈される
 - [ ] square table assumption の検証ロジックを持つ
 - [ ] OTSL → IR → OTSL のラウンドトリップが完全一致
@@ -280,11 +292,13 @@ tablecodec/
 **Goal**: SPEC §9 を実装。`tablecodec` の独自価値の核を完成させる。
 
 **Deliverables**:
+
 - `src/tablecodec/loss.py`: `analyze_loss(source: str, target: str) -> LossReport`
 - `tests/test_loss.py`: 全 codec 組み合わせの分析が安定して動作
 - `docs/loss_matrix.md`: スクリプトで自動生成、CI で更新が必須
 
 **Acceptance Criteria**:
+
 - [ ] `analyze_loss` が静的に動作（実データを読まずに codec の `lossy_*` メタから判定）
 - [ ] `round_trip_classification` が `"lossless"` / `"structure-preserving"` / `"lossy"` を正しく返す
 - [ ] loss_matrix.md がコミット差分なしで再生成可能
@@ -296,12 +310,14 @@ tablecodec/
 **Goal**: SPEC §12 の CLI サブコマンドを実装。
 
 **Deliverables**:
+
 - `src/tablecodec/cli.py`: click ベース、`[cli]` extra
 - `pyproject.toml` の `[project.scripts]` に `tablecodec = "tablecodec.cli:main"`
 - `tests/test_cli.py`: click の `CliRunner` で各サブコマンドを検証
 - `README.md` に CLI セクション追加
 
 **Acceptance Criteria**:
+
 - [ ] `tablecodec validate` が validation failure で非ゼロ exit code
 - [ ] `tablecodec convert --dry-run` がデータを読まずに loss レポートのみ返す
 - [ ] `tablecodec stats` がストリーミングで動作
@@ -314,12 +330,14 @@ tablecodec/
 **Goal**: 別リポジトリ `tablecodec/conformance` を立ち上げ、SPEC §11 の初期 fixtures を配置。
 
 **Deliverables**:
+
 - 別リポジトリ作成: `github.com/hironow/tablecodec-conformance`（個人 org 配下、後で `tablecodec` org に移行可能）
 - `INDEX.json` の JSON Schema 定義
 - 初期 fixtures: pubtabnet-2.0.0 と otsl-1.0.0 各 3 件以上
 - `tablecodec` 本体側に `tests/test_conformance.py`: conformance リポジトリを git submodule または HF dataset として取得して通す
 
 **Acceptance Criteria**:
+
 - [ ] Conformance リポジトリが MIT で公開
 - [ ] `INDEX.json` Schema が dereferenceable
 - [ ] 本体側のテストが Conformance を取得して PASS
@@ -339,6 +357,7 @@ gitignore 下の `private/PYPI_RELEASE_STEPS.md`。
 **Goal**: PyPI 公開、GitHub Release、告知（設定完了後）。
 
 **Deliverables**:
+
 - version は 0.0.x のまま（codec 追加 = patch bump、`pyproject.toml` +
   `src/tablecodec/__init__.py` を同期）
 - リリース時に `CHANGELOG.md` の `[Unreleased]` を `[0.0.N]` へ昇格
@@ -350,6 +369,7 @@ gitignore 下の `private/PYPI_RELEASE_STEPS.md`。
 - （任意）GitHub Discussions / Issues テンプレート
 
 **Acceptance Criteria（公開を実施する場合）**:
+
 - [ ] `pip install tablecodec` が動作（core は zero-dep）
 - [ ] `pip install "tablecodec[cli]"` が動作
 - [ ] `import tablecodec; tablecodec.__version__` が現行 0.0.x と一致

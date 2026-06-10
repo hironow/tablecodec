@@ -53,10 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   core package and its environment are unaffected. Discover it via
   `tablecodec.codecs.load_plugins()`. Run its checks with `just docling-ci`
   (or `just ci-all` for the whole monorepo).
-  - **read** (0.0.1): JSONL of `DoclingDocument`s -> one `TableSample` per
+    - **read** (0.0.1): JSONL of `DoclingDocument`s -> one `TableSample` per
     table; populates `image_width`/`image_height` from page size so
     docling-read samples can be validated under the STRICT profile.
-  - **write** (0.0.2): each `TableSample` -> one `DoclingDocument` (the inverse
+    - **write** (0.0.2): each `TableSample` -> one `DoclingDocument` (the inverse
     of read), so `read(write([s]))` round-trips modulo
     `lossy_write = {"tokens", "extras"}` (docling stores one string per cell;
     no home for IR extras). `writable = True`, so docling-tables is now a real
@@ -65,18 +65,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Hardened the release pipeline ahead of the first PyPI publish (ADR 0014):
-  - All GitHub Actions are pinned to full commit SHAs (was mutable tags;
+    - All GitHub Actions are pinned to full commit SHAs (was mutable tags;
     `pypa/gh-action-pypi-publish` now at the v1.14.0 SHA), with Dependabot
     tracking bumps behind a 7-day cooldown (`.github/dependabot.yml`).
-  - The release workflow records a **SLSA build provenance** attestation
+    - The release workflow records a **SLSA build provenance** attestation
     (`actions/attest-build-provenance`) and notes that PyPI **PEP 740**
     publish attestations are emitted automatically by Trusted Publishing.
     `skip-existing` makes a partial-failure re-run idempotent.
-  - CI (and the release build) route installs through Takumi Guard, a
+    - CI (and the release build) route installs through Takumi Guard, a
     screening proxy that blocks known-malicious packages; `[tool.uv]
     exclude-newer` is pinned to an absolute date and `uv sync --locked`
     guards against lockfile drift.
-  - PEP 639 SPDX license metadata (`license = "MIT"` + `license-files`;
+    - PEP 639 SPDX license metadata (`license = "MIT"` + `license-files`;
     core-metadata 2.4 via hatchling >= 1.29).
 
 ## [0.0.17] - 2026-05-29
