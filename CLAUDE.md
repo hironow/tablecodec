@@ -53,9 +53,12 @@ A Python library giving a neutral, lossless **Internal Representation
 ## Quality gate
 
 `just ci` = `lint type test semgrep semgrep-test docs-check`. Everything must
-be green before commit. Specifically:
+be green before commit. `just check` is an alias for `just ci` (the prek
+pre-push hook runs it). Specifically:
 
-- `just lint` — ruff check + ruff format --check (config in `pyproject.toml`).
+- `just lint` — ruff check, ruff format --check (config in `pyproject.toml`),
+  and markdownlint-cli2 over tracked markdown (`.markdownlint-cli2.yaml`
+  ignores the generated tables; `docs/adr/` is excluded as immutable).
 - `just type` — pyright **strict** (`pyproject.toml [tool.pyright]`). Zero errors.
 - `just test` — pytest. Benchmarks are marked `benchmark` and excluded
   by default; run with `just bench`.
@@ -65,7 +68,9 @@ be green before commit. Specifically:
 - `just docs-check` — regenerates `docs/format_support.md` and
   `docs/loss_matrix.md` and fails if they differ from what's committed.
 
-Run `just fmt` to auto-fix, `just docs` to regenerate the tables.
+Run `just fmt` to auto-fix (ruff + markdownlint --fix), `just docs` to
+regenerate the tables. Git hooks are prek-managed: `just hooks` installs the
+pre-commit + pre-push stages from `.pre-commit-config.yaml`.
 
 `just ci` covers the **core package only** (and runs `test`/`type` with
 `--extra teds` so the optional TEDS tests run rather than skip). The in-repo

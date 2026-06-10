@@ -1,0 +1,11 @@
+gitignore: true
+# Generated tables are owned by `just docs`; ADRs are immutable records;
+# conformance corpus, local data dirs, and private/ are not prose we lint.
+ignores:
+  - docs/adr/**
+  - docs/format_support.md
+  - docs/loss_matrix.md
+  - conformance/**
+  - input/**
+  - output/**
+  - private/**
