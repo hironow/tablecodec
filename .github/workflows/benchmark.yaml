@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@ae62891fec2bb8e7d6c99fc78c9fec3a63790f8d # v10.0.0
         with:
           # Pin uv so CI resolves uv.lock identically to local (lock revision is
           # uv-version-tied), keeping `uv sync --locked` reliable.
@@ -42,7 +42,7 @@ jobs:
       # packages before they execute; sets UV_INDEX_URL/PIP_INDEX_URL to the
       # screened registry for this job). Blocking-only mode, no account needed.
       - name: Route installs through Takumi Guard
-        uses: flatt-security/setup-takumi-guard-pypi@733047c120b6377fa05fb77f714df8d8cd3a41a9 # v1.0.1
+        uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
 
       - name: Install (locked; dev + cli extras)
         run: uv sync --locked --extra dev --extra cli
