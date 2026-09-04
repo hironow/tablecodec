@@ -11,7 +11,7 @@ Shipped: the IR and invariants I-01..I-07, validation profiles, all nine core
 codecs behind the registry, streaming I/O, static loss analysis, the `[teds]`
 metric, the `[cli]` app, and the in-repo conformance corpus. The core keeps zero
 third-party runtime dependencies. Since the release the only movement has been
-tooling and Dependabot bumps; CI, Benchmark and CodeQL are green on the tip of
+tooling and Dependabot bumps. CI, Benchmark and CodeQL are green on the tip of
 `main`.
 
 **CodeQL default setup was enabled 2026-09-04**: languages `actions` and
@@ -22,7 +22,7 @@ workflow file in the repo — do not add one.
 ## In Progress
 
 No code work is active. The one open item is the **broken Dependabot `uv`
-updater** below. It is what stands between this repo and a clean security board.
+updater** below, all that stands between this repo and a clean security board.
 
 ## Next Actions
 
@@ -60,16 +60,18 @@ Project rules, the add-a-codec recipe and the hard-won gotchas live in
 `CLAUDE.md`; the release flow and the repository settings behind it live in
 `docs/release.md`. Read those first. What neither of them says:
 
-- **`main` has no ruleset.** Only `v*` tags are protected. Nothing mechanically
-  requires a pull request or a green check before a commit lands. Use a pull
-  request anyway.
+- **`main` has no ruleset.** Only `v*` tags are protected, so nothing
+  mechanically requires a pull request or a green check. Use one anyway.
 - **Issues are disabled on this repo.** Anything needing a human decision goes
-  into `docs/decision-queue.md`, not an issue tracker.
+  into `docs/decision-queue.md`.
 - **`sha_pinning_required` is on for Actions.** A workflow naming an action by
   tag is rejected at startup and shows as a ~2s `startup_failure` with zero
-  steps, which reads like a billing or infrastructure problem and is not one.
+  steps, which reads like a billing problem and is not one.
 - **`exclude-newer` couples the lockfile to Dependabot.** Every merged `uv` bump
   must carry a cutoff bump and a re-lock in the same change.
+- **An agent security hook on hironow's machine blocks any edit containing the
+  substring `eval`**, which trips the `ast.literal_eval` in
+  `scripts/e2e_hf_check.py`. Surface it and ask rather than obfuscating.
 
 ## Relevant Files and Commands
 
