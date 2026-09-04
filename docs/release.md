@@ -96,7 +96,9 @@ before they execute. It is declared in three places, and each must match
 - `pyproject.toml` — `[[tool.uv.index]]` with `default = true`. A local
   `uv lock` or `just deps-upgrade` therefore records the screened registry with
   no environment variable set; forgetting one is no longer a way to corrupt the
-  lock.
+  lock. `packages/tablecodec-docling` is a separate uv project with its own
+  lockfile, so it carries the same declaration, and `just docling-ci` runs
+  `--locked` to keep it honest.
 - The workflows — `flatt-security/setup-takumi-guard-pypi`, blocking-only mode,
   sets `UV_INDEX_URL` and `PIP_INDEX_URL` for the CI test job, the benchmark
   job, and the release build job. Same URL, so it agrees with `pyproject.toml`

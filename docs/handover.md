@@ -27,13 +27,10 @@ resolve again — unproven until its next weekly run.
 
 ## Next Actions
 
-1. **Decide whether `packages/tablecodec-docling` should use the screened
-   index.** Its own `uv.lock` records plain `https://pypi.org/simple`, and no
-   CI job runs `uv sync --locked` against it, so nothing fails today — but the
-   bridge resolves unscreened. Record the call in `docs/decision-queue.md`.
-2. **Decide whether that sub-package deserves its own Dependabot entry** too,
-   so it gets routine bumps and not only security ones.
-3. Beyond that, take work from `docs/intent.md` §8, which holds the roadmap.
+1. **Decide whether `packages/tablecodec-docling` deserves its own Dependabot
+   entry**, so the bridge gets routine bumps and not only security ones. Record
+   the call in `docs/decision-queue.md`.
+2. Beyond that, take work from `docs/intent.md` §8, which holds the roadmap.
 
 ## Known Risks / Blockers
 
@@ -41,9 +38,13 @@ resolve again — unproven until its next weekly run.
   is recomputed on every fresh resolution, so `uv lock --upgrade` on two
   different days can pick different versions. The lock is the reproducibility
   artifact, and CI installs from it with `uv sync --locked`.
-- **The screened index is declared in three files** — `pyproject.toml`, the
-  workflows, and `.github/dependabot.yaml` — carrying one URL. Change one alone
-  and the lock drifts to pypi.org, where `uv sync --locked` rejects it.
+- **The screened index is declared in four files** — both `pyproject.toml`s,
+  the workflows, and `.github/dependabot.yaml` — carrying one URL. Change one
+  alone and that lock drifts to pypi.org, where `--locked` rejects it.
+- **The bridge inherits the core's `exclude-newer`.** Its own pyproject declares
+  none; uv reads the root's as parent configuration, so its lock records
+  `exclude-newer-span = "P7D"`. Extracting the bridge (ADR 0013) drops that
+  window unless it is declared there.
 - **`packages/tablecodec-docling` gets no routine Dependabot bumps.**
   `.github/dependabot.yaml` configures only `/` for the `uv` ecosystem. The
   bumps that did land there were security updates, which need no config entry.
