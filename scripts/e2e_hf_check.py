@@ -291,7 +291,7 @@ def _voc_owners(
 
 
 def _voc_cell(
-    r: int, c: int, rs: int, cs: int, rows: list[_VocBox], cols: list[_VocBox], *, header: bool
+    r: int, c: int, rs: int, cs: int, *, rows: list[_VocBox], cols: list[_VocBox], header: bool
 ) -> dict[str, Any]:
     return {
         "row": r,
@@ -334,7 +334,7 @@ def voc_to_pubtables1m_payload(row: dict[str, Any]) -> dict[str, Any]:
         for j in range(len(cols)):
             gid = owner.get((i, j))
             if gid is None:
-                cells.append(_voc_cell(i, j, 1, 1, rows, cols, header=i in header_rows))
+                cells.append(_voc_cell(i, j, 1, 1, rows=rows, cols=cols, header=i in header_rows))
             elif gid not in seen:
                 seen.add(gid)
                 members = [k for k, g in owner.items() if g == gid]
@@ -342,7 +342,13 @@ def voc_to_pubtables1m_payload(row: dict[str, Any]) -> dict[str, Any]:
                 r1, c1 = max(m[0] for m in members), max(m[1] for m in members)
                 cells.append(
                     _voc_cell(
-                        r0, c0, r1 - r0 + 1, c1 - c0 + 1, rows, cols, header=r0 in header_rows
+                        r0,
+                        c0,
+                        r1 - r0 + 1,
+                        c1 - c0 + 1,
+                        rows=rows,
+                        cols=cols,
+                        header=r0 in header_rows,
                     )
                 )
     return {
@@ -539,6 +545,7 @@ def _check_row(
     check: Check,
     row: dict[str, Any],
     row_index: int,
+    *,
     profile: Any,
     report: Report,
     recorder: FindingsRecorder,
@@ -654,7 +661,7 @@ def _run_local_tar(
                 continue
             xml = fobj.read().decode("utf-8", errors="replace")
             row = {"xml": xml, "filename": Path(member.name).name, "imgid": None}
-            _check_row(check, row, i, profile, report, recorder)
+            _check_row(check, row, i, profile=profile, report=report, recorder=recorder)
             i += 1
     return report
 
@@ -691,7 +698,7 @@ def run_check(
     for i, row in enumerate(stream):
         if limit and i >= limit:
             break
-        _check_row(check, row, i, profile, report, recorder)
+        _check_row(check, row, i, profile=profile, report=report, recorder=recorder)
     return report
 
 
@@ -819,7 +826,9 @@ def self_test() -> int:
             skipped += 1
             continue
         report = Report(label=check.label)
-        _check_row(check, _synthetic_row_for(check), 0, profile, report, recorder)
+        _check_row(
+            check, _synthetic_row_for(check), 0, profile=profile, report=report, recorder=recorder
+        )
         if report.ok != 1:
             failures.append(f"{check.label}: {report.examples}")
 
