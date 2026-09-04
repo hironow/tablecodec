@@ -11,13 +11,35 @@
 # NOTE on the uv ecosystem: pyproject.toml sets `[tool.uv] exclude-newer` to the
 # relative window `"7 days"` (ADR 0015), so a Dependabot uv pull request now
 # resolves without anyone editing a date first. Both delays are seven days on
-# purpose -- see the comment on the uv `cooldown` below.
+# purpose -- see the comment on the uv `cooldown` below. Dependabot resolves
+# through the same screened index CI uses -- see `registries` below.
 #
 # Ecosystems in this repo:
 #   github-actions  -> .github/workflows/*.yaml (SHA-pinned actions)
 #   uv              -> pyproject.toml + uv.lock (dev/cli/teds/hf extras only;
 #                      the runtime core is zero-dependency)
 version: 2
+
+# Registries Dependabot is allowed to reach. It talks to nothing that is not
+# declared here, so without this block its uv runs resolve against pypi.org and
+# rewrite every `source = { registry = ... }` line in uv.lock to that URL. CI
+# then injects the screened index through UV_INDEX_URL, and `uv sync --locked`
+# fails with "The lockfile at `uv.lock` needs to be updated". That is exactly
+# what happened to the first batch of uv pull requests after the updater came
+# back (all 64 registry lines flipped to pypi.org).
+#
+# The URL has to match `registry = "https://pypi.flatt.tech/simple/"` in uv.lock
+# character for character, trailing slash included; a mismatch reproduces the
+# same failure. No credentials appear here because Takumi Guard's blocking-only
+# mode is unauthenticated, so nothing reaches into repository secrets.
+registries:
+  takumi-guard-pypi:
+    type: python-index
+    url: https://pypi.flatt.tech/simple/
+    # Resolve through the screened index instead of pypi.org, matching what
+    # flatt-security/setup-takumi-guard-pypi does for every CI and release job.
+    replaces-base: true
+
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -36,6 +58,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Resolve through the screened index declared above rather than pypi.org,
+    # so the lockfile a Dependabot pull request produces is the one CI verifies
+    # with `uv sync --locked`.
+    registries: "*"
     # Seven days here is the same seven days as `[tool.uv] exclude-newer =
     # "7 days"` in pyproject.toml (ADR 0015). Dependabot waits a week before
     # proposing a version; uv refuses to resolve anything younger than a week.
