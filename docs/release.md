@@ -19,9 +19,10 @@ How `tablecodec` reaches PyPI. Rationale and the full threat model:
   "Protect release tags (v*)"). This is what restricts who can start a release.
   The environment gate below cannot: it only pauses a run that a tag push has
   already triggered.
-- **`main` has no ruleset.** Unlike the sibling repos, nothing mechanically
-  requires a pull request or a green check before a commit lands. Use a pull
-  request anyway.
+- `main` is protected by the `protect` ruleset: pull requests required,
+  squash-only merges, linear history, four required status checks, review
+  threads resolved, and **no bypass actors** — admins included. Approvals
+  themselves are not required.
 - Publishing waits for a reviewer in the `release` environment (required
   reviewer `hironow`, self-review permitted). Its deployment branch policy
   admits exactly one ref pattern: the tag `v*`.
@@ -125,15 +126,21 @@ live settings; the workflow wins on any disagreement.
 
 ### The `exclude-newer` cutoff
 
-`[tool.uv] exclude-newer` pins resolution to distributions uploaded before an
-absolute date. It must stay absolute; a relative span makes `uv sync --locked`
-non-deterministic (astral-sh/uv#18775).
+`[tool.uv] exclude-newer` is `"7 days"`: resolution only sees distributions
+public for a week, so a compromised-then-yanked release is not pulled in on day
+zero. uv records the span in `uv.lock` (`exclude-newer-span = "P7D"`), not a
+date. The reasoning, and what it supersedes in ADR 0014, is
+[ADR 0015](adr/0015-exclude-newer-is-a-relative-window.md).
 
-The trap: **a fix published after the cutoff cannot be resolved at all.** When
-that fix is what Dependabot is trying to apply, the updater fails outright
-rather than opening a smaller pull request, and stays failing for every later
-run — security updates included. Merging any Dependabot `uv` pull request
-therefore means bumping the cutoff and re-running `uv lock` in the same change.
-`just deps-refresh` does that bump, the relock and the `uv sync --locked` check
-in one step, through the same screened index CI uses.
-`docs/handover.md` records whether the cutoff is blocking anything right now.
+The window moving does not disturb `uv sync --locked`: the cutoff is an upper
+bound that only travels forward, so a version already in the lock cannot fall
+outside a later window. What the relative form gives up is time-independent
+re-derivation — locking from scratch on two different days can pick different
+versions. The lock is the reproducibility artifact.
+
+**`just deps-upgrade` moves dependencies forward**, through the screened index
+and verified with `uv sync --locked`. `--upgrade` forces the fresh resolution
+that recomputes the window; a plain `uv lock` keeps existing pins.
+
+A fix newer than the window needs `exclude-newer-package = { some-package =
+false }`, exempting one package rather than widening it for everything.
