@@ -95,6 +95,12 @@ known-malicious packages before they execute, and `uv.lock` records that
 registry (`https://pypi.flatt.tech/simple/`) as its source. Consumers reach
 PyPI directly and the sdist ships no lockfile, so they are unaffected.
 
+Dependabot resolves through the same index, declared as a `python-index`
+registry with `replaces-base` in `.github/dependabot.yaml`. It reaches no
+registry it has not been given, so without that declaration it resolves against
+pypi.org, rewrites every registry line in `uv.lock`, and `uv sync --locked`
+rejects the result.
+
 ## First release / bootstrap
 
 Already done; recorded in case the repository is recreated. One-time web-UI

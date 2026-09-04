@@ -27,10 +27,12 @@ resolve again — unproven until its next weekly run.
 
 ## Next Actions
 
-1. **Confirm the Dependabot `uv` updater recovers.** It failed every run from
-   2026-07-22 because the absolute cutoff hid newer releases. The window is
-   relative now, so check the next weekly run. If it still fails, read the run
-   log first — that is where the previous diagnosis came from.
+1. **Watch the re-issued Dependabot `uv` pull requests.** The updater recovered
+   on 2026-09-04 and opened five (#39-#43), but every one failed CI: Dependabot
+   resolved against pypi.org and rewrote each registry line in `uv.lock`.
+   Declaring the screened index in `.github/dependabot.yaml` is the fix. Once
+   that lands Dependabot re-issues them; check the lock still carries
+   `https://pypi.flatt.tech/simple/`.
 2. **Decide whether `packages/tablecodec-docling` deserves its own Dependabot
    entry**, so the bridge gets routine bumps and not only security ones. Record
    the call in `docs/decision-queue.md`.
@@ -42,9 +44,9 @@ resolve again — unproven until its next weekly run.
   is recomputed on every fresh resolution, so `uv lock --upgrade` on two
   different days can pick different versions. The lock is the reproducibility
   artifact, and CI installs from it with `uv sync --locked`.
-- **The updater's recovery is unverified.** Its last success was 2026-07-22.
-  The six packages it choked on (hypothesis, ruff, lxml, datasets, coverage,
-  pytest-benchmark) should resolve now, but nothing has re-run yet.
+- **Dependabot resolves where it is told, and nowhere else.** Until the
+  registry declaration lands its uv pull requests rewrite `uv.lock` to pypi.org
+  and fail `uv sync --locked`; the same trap waits for any new ecosystem.
 - **`packages/tablecodec-docling` gets no routine Dependabot bumps.**
   `.github/dependabot.yaml` configures only `/` for the `uv` ecosystem. The
   bumps that did land there were security updates, which need no config entry.
