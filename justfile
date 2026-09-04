@@ -112,18 +112,22 @@ alias check := ci
 # Run in its OWN uv project so docling-core stays out of the core env.
 _DOCLING := "packages/tablecodec-docling"
 
-# Lint the docling bridge package
+# Lint the docling bridge package.
+# --locked asserts the bridge lockfile matches its pyproject.toml, the same
+# guard CI applies to the core with `uv sync --locked`. Without it a drifted
+# bridge lock (a stale pin, or one resolved off the screened index) goes
+# unnoticed, because no CI job gates this sub-package.
 docling-lint:
-    uv run --project {{_DOCLING}} ruff check {{_DOCLING}}
-    uv run --project {{_DOCLING}} ruff format --check {{_DOCLING}}
+    uv run --project {{_DOCLING}} --locked ruff check {{_DOCLING}}
+    uv run --project {{_DOCLING}} --locked ruff format --check {{_DOCLING}}
 
 # Type-check the docling bridge package (pyright strict)
 docling-type:
-    uv run --project {{_DOCLING}} pyright {{_DOCLING}}/src {{_DOCLING}}/tests
+    uv run --project {{_DOCLING}} --locked pyright {{_DOCLING}}/src {{_DOCLING}}/tests
 
 # Test the docling bridge package
 docling-test:
-    uv run --project {{_DOCLING}} pytest {{_DOCLING}}/tests
+    uv run --project {{_DOCLING}} --locked pytest {{_DOCLING}}/tests
 
 # Full gate for the docling bridge sub-package
 docling-ci: docling-lint docling-type docling-test
