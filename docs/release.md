@@ -134,4 +134,6 @@ that fix is what Dependabot is trying to apply, the updater fails outright
 rather than opening a smaller pull request, and stays failing for every later
 run — security updates included. Merging any Dependabot `uv` pull request
 therefore means bumping the cutoff and re-running `uv lock` in the same change.
+`just deps-refresh` does that bump, the relock and the `uv sync --locked` check
+in one step, through the same screened index CI uses.
 `docs/handover.md` records whether the cutoff is blocking anything right now.
