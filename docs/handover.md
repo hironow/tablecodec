@@ -1,153 +1,83 @@
 # Handover
 
-**Last updated:** 2026-06-07 (JST)
-**Updated by:** Claude (Opus 4.8, 1M context)
+**Last updated:** 2026-09-04 13:30 (JST)
+**Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq (delegated by hironow)
 
 ## Current State
 
-`tablecodec` is feature-complete against `docs/spec.md`, staying in **0.0.x**
-and **published on PyPI**. `main` package version is **0.0.19**; the in-repo
-`tablecodec-docling` bridge is at its own **0.0.2**. `__version__` is derived
-from the installed package metadata (`importlib.metadata`, firepact-style), so
-`pyproject.toml` is the single human-edited version source.
+`tablecodec` is feature-complete against `docs/spec.md` and **live on PyPI at
+0.0.19**; the in-repo `tablecodec-docling` bridge carries its own `0.0.2`.
+Shipped: the IR and invariants I-01..I-07, validation profiles, all nine core
+codecs behind the registry, streaming I/O, static loss analysis, the `[teds]`
+metric, the `[cli]` app, and the in-repo conformance corpus. The core keeps zero
+third-party runtime dependencies. Since the release the only movement has been
+tooling and Dependabot bumps. CI, Benchmark and CodeQL are green on the tip of
+`main`.
 
-**0.0.18 was the first public release** (supply-chain-hardening + first publish,
-ADR 0014); **0.0.19 adds Python 3.14 support**, the metadata-derived
-`__version__`, and housekeeping (README restructure, cleaner sdist, removed
-CONTRIBUTING/SECURITY, `dependabot.yaml`). The release pipeline: all actions
-full-SHA-pinned; DAG is build -> provenance (SLSA) -> publish (OIDC trusted
-publishing, PEP 740 auto attestations, skip-existing) -> github-release; CI +
-release build route installs through Takumi Guard (screened registry);
-`[tool.uv] exclude-newer` absolute date + `uv sync --locked`; Dependabot 7-day
-cooldown; PEP 639 SPDX license. The release trigger is tag-only (`v*`) with
-per-job `github.repository == 'hironow/tablecodec'` fork guards.
-
-Shipped:
-
-- IR + invariants (I-01..I-07) + validation profiles + codec registry +
-  streaming I/O + static loss analysis + click CLI + in-repo conformance.
-- **All nine core codecs**: `pubtabnet-1.0.0/2.0.0`, `otsl-1.0.0`,
-  `fintabnet`, `fintabnet-otsl`, `tableformer`, `tablebank`, `pubtables-1m`,
-  `doctags-tables`.
-- **`[teds]`** TEDS metric (`tablecodec.teds`, 0.0.16, ADR 0011).
-  Verified (2026-05-29) **bit-identical** to a verbatim run of IBM's PubTabNet
-  `metric.py` across a 9-case corpus (full + structure_only, max abs diff 0.0)
-  — see ADR 0011 §Verification. `teds_html(...)` reproduces the canonical
-  PubTabNet TEDS exactly; the IR-native `teds(...)` renders via
-  `_sample_to_html` first (renderer-defined, per ADR 0011 §2).
-- **§8 STRICT** profile + optional `TableSample.image_width/height`
-  (0.0.17, ADR 0012).
-- **`tablecodec-docling`** read+write bridge codec (`packages/`, ADR 0013).
-- **No declared-but-unwired extras**: `[fast]`/`[validate]` dropped (ADR 0009);
-  `[teds]`/`[cli]`/`[hf]` all wire real features.
-
-Both gates green: `just ci` (core: ruff + pyright-strict + pytest + semgrep +
-docs-check; zero-dep core, semgrep-enforced) and `just docling-ci` (the
-bridge). `just ci-all` runs both. Coverage: core ~91% (recent-work modules
-`_invariants`/`ir`/`loss`/`validate` 100%, `teds` 99%); docling codec 100%.
-
-The spec/intent are reconciled to the code; the §-by-§ conformance audit is
-complete (see git history + the ADRs below). The remaining open contract
-questions (cell ordering, tokenization, float bbox, IR JSON Schema) and all
-roadmap work are consolidated in `docs/intent.md` §8.
+**CodeQL default setup was enabled 2026-09-04**: languages `actions` and
+`python`, default query suite, weekly schedule, first scan green with zero
+alerts. It runs from GitHub's default setup, so there is deliberately no CodeQL
+workflow file in the repo — do not add one.
 
 ## In Progress
 
-Nothing active. **0.0.18 is LIVE on PyPI** (first public release); **0.0.19**
-(Python 3.14 + metadata-derived `__version__` + housekeeping) is prepared and
-ready to tag.
+No code work is active. The one open item is the **broken Dependabot `uv`
+updater** below, all that stands between this repo and a clean security board.
 
 ## Next Actions
 
-**Released — `tablecodec` is on PyPI.** The first release fired from a `v0.0.18`
-tag push via OIDC Trusted Publishing (no token); verified end to end:
-
-- PyPI: wheel + sdist, `License-Expression: MIT`, requires-python >=3.11.
-- Release pipeline build -> provenance -> publish -> github-release all green;
-  the `v*` Ruleset blocked the tag and the admin bypass let it through (working).
-- **PEP 740** attestation on PyPI (integrity API 200) + **SLSA build provenance**
-  verified locally (`gh attestation verify` -> slsa.dev/provenance/v1, signed by
-  hironow/tablecodec). GitHub Release created with both assets.
-
-`0.0.19` repeats this flow: push `main`, then `git push origin v0.0.19`.
-
-The GitHub repo settings (Actions allowlist, Environment `release` + reviewer,
-`v*` Ruleset, secret scanning / push protection / Dependabot security / private
-vulnerability reporting) were applied 2026-06-07 via `gh api`, matching firepact.
-
-**Steady-state release from here** (`private/PYPI_RELEASE_STEPS.md` §C): bump
-version + `[tool.uv] exclude-newer`, `uv lock`, promote CHANGELOG, push `main`,
-push `vX.Y.Z`. **All other future/roadmap work lives in `docs/intent.md` §8.**
+1. **Move the `exclude-newer` cutoff and relock.** `[tool.uv] exclude-newer` in
+   `pyproject.toml` is `2026-07-22T00:00:00Z`. Bump it to a current date, run
+   `uv lock`, and land one consolidated relock PR — the pattern hironow used in
+   #26. That single change unblocks the updater and pulls in the aiohttp
+   security fix.
+2. **Decide whether `packages/tablecodec-docling` deserves its own Dependabot
+   entry**, so the bridge gets routine bumps and not only security ones. Record
+   the call in `docs/decision-queue.md`.
+3. Beyond that, take work from `docs/intent.md` §8, which holds the roadmap.
 
 ## Known Risks / Blockers
 
-- **Remote CI `startup_failure` was a MISDIAGNOSIS (resolved 2026-06-07).** The
-  ~2s / 0-step failures were NOT GitHub billing — the repo enforces
-  `sha_pinning_required: true`, and the old tag-pinned workflows (`@v3` etc.)
-  were rejected at startup. Pinning every action to a full SHA fixed it: CI now
-  runs green on real Actions (verified on `main`). Local `just ci` / `just
-  ci-all` is still the fast gate.
-- **codex plan review is rate-limited** (was until 2026-05-31). When it
-  errors with a usage-limit message, CLAUDE.md says skip the review.
-- **A security hook hard-blocks any edit containing the substring `eval`** —
-  trips `ast.literal_eval` (used in the apoidea e2e adapter; user approved).
-  Don't obfuscate around it; surface + ask.
-- **Conformance + docling bridge are in-repo** (ADR 0001 / 0013), to be
-  extracted before v1.0 / publish.
+- **The `exclude-newer` cutoff is blocking a security fix.** Three open
+  Dependabot alerts on `aiohttp` (one high, two medium) are fixed in 3.14.3,
+  published 2026-07-23 — one day after the cutoff. aiohttp is not in the
+  published wheel: it arrives via `fsspec` under `datasets`, so only the opt-in
+  `[hf]` extra is affected.
+- **The same cutoff breaks every `uv` Dependabot run.** The updater last
+  succeeded on 2026-07-22 and has failed on every run since, including the six
+  security-update attempts on 2026-08-05 that would have produced the aiohttp
+  PR. The latest failure reports six "No solution found" errors, each hinting at
+  `exclude-newer`.
+- **`packages/tablecodec-docling` gets no routine Dependabot bumps.**
+  `.github/dependabot.yaml` configures only `/` for the `uv` ecosystem. The
+  bumps that did land there were security updates, which need no config entry.
+- **Conformance corpus and the docling bridge are still in-repo** (ADR 0001 and
+  0013). Both must be extracted before v1.0.
 
 ## Context the Next Actor Needs
 
-- **Monorepo layout (ADR 0013).** The docling bridge is a separate uv project
-  (`[tool.uv.sources] tablecodec = {path=../../, editable}`), run with
-  `uv run --project packages/tablecodec-docling`. docling-core (+ numpy/pandas)
-  install into the SUB-package `.venv` only; the core env and the zero-dep
-  `pip install -e .` guard stay clean. There is exactly ONE justfile (root);
-  it orchestrates the bridge via `docling-*` recipes.
-- **Zero-dep core is sacred.** Only `cli.py` (click) and the core-external
-  `teds.py` (apted/lxml) may import third-party; both are excluded from the
-  `.semgrep/rules/core-deps/...` core list and NOT imported by
-  `tablecodec/__init__`. `import tablecodec` must work on a bare interpreter.
-  Semgrep rules live in `.semgrep/rules/<category>/` with co-located
-  `semgrep test` fixtures; `just semgrep` scans, `just semgrep-test` checks
-  rule correctness (both in `just ci`).
-- **Attributed ports** (keep headers + `THIRD_PARTY_NOTICES.md`):
-  `_otslgrid.py` (docling-ibm-models, MIT, ADR 0005) and `teds.py`
-  (IBM PubTabNet metric, Apache-2.0, ADR 0011).
-- **scripts/ is ruff-linted but NOT type-checked.** `just lint`/`fmt` now
-  cover `src/ tests/ scripts/` (scripts uses a `PLR0913` per-file-ignore for
-  its many-arg adapters). `just type` (pyright) stays `src/`+`tests/` only —
-  the e2e script imports `datasets` (the `[hf]` extra) which pyright can't
-  resolve, so type-checking it would be noise.
-- **`input/`, `output/`, `private/`** are gitignored local-only trees.
-- **TDD discipline**: 1 commit = 1 Conventional-Commit type; structural vs
-  behavioural never mixed. The `just ci` gate forbids committing a failing
-  (RED) test alone, so bundle a TDD test+impl in one commit. Run `just docs`
-  after any codec name/`lossy_*` change (`docs-check` enforces it).
+Project rules, the add-a-codec recipe and the hard-won gotchas live in
+`CLAUDE.md`; the release flow and the repository settings behind it live in
+`docs/release.md`. Read those first. What neither of them says:
 
-## E2E harness (`scripts/e2e_hf_check.py`) — occasional / local-only
-
-Streams REAL datasets through `codec.read()` + validates. NOT in CI (`[hf]`
-extra). 16 checks; `just e2e-selftest` runs every adapter offline; `just e2e
-N` samples live; `just e2e-fetch-pubtables1m` fetches the native VOC archive.
-Data sources: docling OTSL family (all codecs; ADR 0003), native PubTabNet via
-`apoidea/pubtabnet-html` (ADR 0004), native PubTables-1M VOC via
-`bsmock/pubtables-1m` (ADR 0006). Failures → `output/e2e_findings/` (gitignored)
-with replayable payloads; `output/e2e_findings/TRIAGE.md` holds the
-AI-authored, needs-confirmation triage. Last full sweep (16k rows):
-`parse_errors = 1/16,000`; all other findings are genuine upstream DATA quirks.
-A docling-core-driven e2e is a deliberate non-gap (the bridge's round-trip +
-30 tests are the coverage); revisit at extraction.
+- **`main` has no ruleset.** Only `v*` tags are protected, so nothing
+  mechanically requires a pull request or a green check. Use one anyway.
+- **Issues are disabled on this repo.** Anything needing a human decision goes
+  into `docs/decision-queue.md`.
+- **`sha_pinning_required` is on for Actions.** A workflow naming an action by
+  tag is rejected at startup and shows as a ~2s `startup_failure` with zero
+  steps, which reads like a billing problem and is not one.
+- **`exclude-newer` couples the lockfile to Dependabot.** Every merged `uv` bump
+  must carry a cutoff bump and a re-lock in the same change.
+- **An agent security hook on hironow's machine blocks any edit containing the
+  substring `eval`**, which trips the `ast.literal_eval` in
+  `scripts/e2e_hf_check.py`. Surface it and ask rather than obfuscating.
 
 ## Relevant Files and Commands
 
-- `docs/spec.md` — source of truth. `docs/intent.md` — brief/roadmap.
-  `docs/glossary.md` — vocabulary (tablecodec vs borrowed terms + origins).
-- `docs/adr/000{1..9}.md` + `0010..0014` — decision history (0009 drop extras;
-  0010 I-05 content-emptiness; 0011 TEDS port; 0012 STRICT/image-dims;
-  0013 docling monorepo; 0014 release via OIDC trusted publishing).
-- `tests/test_spec_surface.py` — black-box conformance to the public surface;
-  run after any public-API/CLI/profile change.
-- `src/tablecodec/teds.py`, `packages/tablecodec-docling/` — the two
-  core-external features.
-- `just ci` / `just ci-all` — gates. `just docling-ci` — bridge only.
-  `just e2e-selftest` — offline e2e smoke.
+- `docs/spec.md` — the contract. `docs/intent.md` §8 — the roadmap.
+  `docs/release.md` — how a release reaches PyPI. `docs/adr/` — the reasoning.
+- `pyproject.toml` `[tool.uv] exclude-newer` — the cutoff behind both risks above.
+- `just ci` — the full core gate (alias `just check`); `just docling-ci` the
+  bridge, `just ci-all` both. `just docs` — regenerate the tables after any
+  codec name or `lossy_*` change.
