@@ -110,9 +110,11 @@ Most new work is "add codec X". The established recipe:
    run `just docs`.
 7. Add the new core module path to the `paths.include` list of
    `.semgrep/rules/core-deps/tablecodec-no-third-party-imports-in-core.yaml`.
-8. Patch-bump the version within **0.0.x** (one codec ≈ one patch bump:
-   `pyproject.toml` + `src/tablecodec/__init__.py`), add a CHANGELOG
-   `[0.0.N]` section, update the compare/tag links.
+8. Patch-bump the version within **0.0.x** in `pyproject.toml` only (one
+   codec ≈ one patch bump; `__version__` is derived from the installed
+   metadata, so there is no literal to sync), add a CHANGELOG `[0.0.N]`
+   section, and update the compare/tag links — see
+   [`docs/release.md`](docs/release.md).
 
 ## Gotchas (learned the hard way)
 
@@ -152,12 +154,14 @@ the codecs so the suite catches read-path regressions.
 
 ## Versioning & release
 
-- Staying in **0.0.x** for now (no public PyPI release yet). Each codec
-  is a patch bump.
-- The release workflow lives at `.github/workflows/release.yaml` and
-  fires on a `v*` tag, publishing via PyPI Trusted Publishing (OIDC).
-  It is inert until the PyPI-side setup is done — the runbook is in the
-  gitignored `private/PYPI_RELEASE_STEPS.md`.
+Staying in **0.0.x**; one codec is roughly one patch bump. `pyproject.toml`
+is the single human-edited version source — `__version__` is derived from the
+installed package metadata. `tablecodec` is published on PyPI; a release is a
+`v*` tag push driving `.github/workflows/release.yaml`.
+
+**See [`docs/release.md`](docs/release.md)** for the procedure, the repository
+rules that enforce it, the `[tool.uv] exclude-newer` trap, and the local checks
+to run first.
 
 ## Where things live
 
@@ -166,7 +170,8 @@ the codecs so the suite catches read-path regressions.
   (§8 "Future work")**; spec §17 and handover point here, not the reverse.
 - `docs/handover.md` — current session state (read for "where are we"); it
   references intent §8 for the roadmap rather than duplicating it.
-  `docs/adr/` — decision history.
+  `docs/release.md` — how a release reaches PyPI (the only home for the
+  release procedure). `docs/adr/` — decision history.
 - `src/tablecodec/` — the library (see "Non-negotiable invariants").
   `teds.py` is the core-external TEDS metric (`[teds]`, ADR 0011).
 - `packages/tablecodec-docling/` — the docling bridge codec, an in-repo
