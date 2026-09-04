@@ -88,18 +88,26 @@ pull requests to `main` and uploads a JSON artifact. It gates nothing.
 
 ### Installs route through Takumi Guard
 
-`flatt-security/setup-takumi-guard-pypi` runs in blocking-only mode in the CI
-test job, the benchmark job, and the release build job. It points
-`UV_INDEX_URL` and `PIP_INDEX_URL` at a screening proxy that blocks
-known-malicious packages before they execute, and `uv.lock` records that
-registry (`https://pypi.flatt.tech/simple/`) as its source. Consumers reach
-PyPI directly and the sdist ships no lockfile, so they are unaffected.
+Everything that resolves a Python dependency uses one screened index,
+`https://pypi.flatt.tech/simple/` — a proxy that blocks known-malicious packages
+before they execute. It is declared in three places, and each must match
+`registry = "..."` in `uv.lock` character for character:
 
-Dependabot resolves through the same index, declared as a `python-index`
-registry with `replaces-base` in `.github/dependabot.yaml`. It reaches no
-registry it has not been given, so without that declaration it resolves against
-pypi.org, rewrites every registry line in `uv.lock`, and `uv sync --locked`
-rejects the result.
+- `pyproject.toml` — `[[tool.uv.index]]` with `default = true`. A local
+  `uv lock` or `just deps-upgrade` therefore records the screened registry with
+  no environment variable set; forgetting one is no longer a way to corrupt the
+  lock.
+- The workflows — `flatt-security/setup-takumi-guard-pypi`, blocking-only mode,
+  sets `UV_INDEX_URL` and `PIP_INDEX_URL` for the CI test job, the benchmark
+  job, and the release build job. Same URL, so it agrees with `pyproject.toml`
+  rather than overriding it.
+- `.github/dependabot.yaml` — a `python-index` registry with `replaces-base`.
+  Dependabot reaches no registry it has not been given, so without this it
+  resolves against pypi.org, rewrites every registry line in `uv.lock`, and
+  `uv sync --locked` rejects the result.
+
+Consumers are unaffected: `pip install tablecodec` reaches PyPI directly, and
+the sdist ships no lockfile.
 
 ## First release / bootstrap
 
