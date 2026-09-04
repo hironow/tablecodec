@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 15:04 (JST)
+**Last updated:** 2026-09-04 20:18 (JST)
 **Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq (delegated by hironow)
 
 ## Current State
@@ -10,9 +10,17 @@
 Shipped: the IR and invariants I-01..I-07, validation profiles, all nine core
 codecs behind the registry, streaming I/O, static loss analysis, the `[teds]`
 metric, the `[cli]` app, and the in-repo conformance corpus. The core keeps zero
-third-party runtime dependencies. Since the release the only movement has been
-tooling and Dependabot bumps. CI, Benchmark and CodeQL are green on the tip of
-`main`.
+third-party runtime dependencies.
+
+Since the release the movement has been supply-chain and gating work, all
+landed 2026-09-04. `exclude-newer` became a relative seven-day window
+(ADR 0015), which unblocked the Dependabot `uv` updater after six weeks of
+failures, and the screened index is now declared in both
+`pyproject.toml`s, the workflows and `dependabot.yaml`, so every lockfile
+records it — the bridge's included. The `protect` ruleset requires eleven status
+checks, and CI calls the justfile recipes rather than its own copies, so the
+justfile alone defines what lint and type checking cover. CI, Benchmark and
+CodeQL are green on the tip of `main`.
 
 **CodeQL default setup was enabled 2026-09-04**: languages `actions` and
 `python`, default query suite, weekly schedule, first scan green with zero
