@@ -41,6 +41,16 @@ Repository = "https://github.com/hironow/tablecodec"
 [tool.uv.sources]
 tablecodec = { path = "../../", editable = true }
 
+# The same screened index the core package declares. This is a separate uv
+# project with its own lockfile, so it needs its own declaration -- the root
+# pyproject.toml does not reach it. `default = true` replaces PyPI rather than
+# adding to it, so `uv lock` here records the screened registry with no
+# environment variable set, matching the core.
+[[tool.uv.index]]
+name = "takumi-guard"
+url = "https://pypi.flatt.tech/simple/"
+default = true
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",

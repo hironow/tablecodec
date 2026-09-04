@@ -5,12 +5,6 @@
 MARKDOWNLINT := "mise exec -- markdownlint-cli2"
 PREK := "mise exec -- prek"
 
-# The screened registry Takumi Guard points CI at
-# (flatt-security/setup-takumi-guard-pypi). uv.lock records the index per
-# package, so a local relock has to use the same one or the lockfile drifts to
-# plain PyPI. Export UV_INDEX_URL to override.
-SCREENED_INDEX := env("UV_INDEX_URL", "https://pypi.flatt.tech/simple/")
-
 default: help
 
 # Show available tasks (default)
@@ -25,12 +19,14 @@ install:
 # it forces a fresh resolution, which is when the relative `[tool.uv]
 # exclude-newer` window is recomputed, so anything published since the last
 # resolution becomes reachable. A plain `uv lock` deliberately keeps existing
-# pins and would move nothing. There is no date to hand-edit any more.
+# pins and would move nothing. There is no date to hand-edit any more, and the
+# screened index comes from `[[tool.uv.index]]` in pyproject.toml, so there is
+# no environment variable to set either.
 #
-# Re-resolve every dependency through the screened index and verify the lock
+# Re-resolve every dependency and verify the lock the way CI does
 deps-upgrade:
-    UV_INDEX_URL="{{SCREENED_INDEX}}" uv lock --upgrade
-    UV_INDEX_URL="{{SCREENED_INDEX}}" uv sync --locked
+    uv lock --upgrade
+    uv sync --locked
 
 # Install git hooks via prek (pre-commit + pre-push; reads .pre-commit-config.yaml)
 hooks:
@@ -116,18 +112,22 @@ alias check := ci
 # Run in its OWN uv project so docling-core stays out of the core env.
 _DOCLING := "packages/tablecodec-docling"
 
-# Lint the docling bridge package
+# Lint the docling bridge package.
+# --locked asserts the bridge lockfile matches its pyproject.toml, the same
+# guard CI applies to the core with `uv sync --locked`. Without it a drifted
+# bridge lock (a stale pin, or one resolved off the screened index) goes
+# unnoticed, because no CI job gates this sub-package.
 docling-lint:
-    uv run --project {{_DOCLING}} ruff check {{_DOCLING}}
-    uv run --project {{_DOCLING}} ruff format --check {{_DOCLING}}
+    uv run --project {{_DOCLING}} --locked ruff check {{_DOCLING}}
+    uv run --project {{_DOCLING}} --locked ruff format --check {{_DOCLING}}
 
 # Type-check the docling bridge package (pyright strict)
 docling-type:
-    uv run --project {{_DOCLING}} pyright {{_DOCLING}}/src {{_DOCLING}}/tests
+    uv run --project {{_DOCLING}} --locked pyright {{_DOCLING}}/src {{_DOCLING}}/tests
 
 # Test the docling bridge package
 docling-test:
-    uv run --project {{_DOCLING}} pytest {{_DOCLING}}/tests
+    uv run --project {{_DOCLING}} --locked pytest {{_DOCLING}}/tests
 
 # Full gate for the docling bridge sub-package
 docling-ci: docling-lint docling-type docling-test

@@ -27,16 +27,10 @@ resolve again — unproven until its next weekly run.
 
 ## Next Actions
 
-1. **Watch the re-issued Dependabot `uv` pull requests.** The updater recovered
-   on 2026-09-04 and opened five (#39-#43), but every one failed CI: Dependabot
-   resolved against pypi.org and rewrote each registry line in `uv.lock`.
-   Declaring the screened index in `.github/dependabot.yaml` is the fix. Once
-   that lands Dependabot re-issues them; check the lock still carries
-   `https://pypi.flatt.tech/simple/`.
-2. **Decide whether `packages/tablecodec-docling` deserves its own Dependabot
+1. **Decide whether `packages/tablecodec-docling` deserves its own Dependabot
    entry**, so the bridge gets routine bumps and not only security ones. Record
    the call in `docs/decision-queue.md`.
-3. Beyond that, take work from `docs/intent.md` §8, which holds the roadmap.
+2. Beyond that, take work from `docs/intent.md` §8, which holds the roadmap.
 
 ## Known Risks / Blockers
 
@@ -44,9 +38,13 @@ resolve again — unproven until its next weekly run.
   is recomputed on every fresh resolution, so `uv lock --upgrade` on two
   different days can pick different versions. The lock is the reproducibility
   artifact, and CI installs from it with `uv sync --locked`.
-- **Dependabot resolves where it is told, and nowhere else.** Until the
-  registry declaration lands its uv pull requests rewrite `uv.lock` to pypi.org
-  and fail `uv sync --locked`; the same trap waits for any new ecosystem.
+- **The screened index is declared in four files** — both `pyproject.toml`s,
+  the workflows, and `.github/dependabot.yaml` — carrying one URL. Change one
+  alone and that lock drifts to pypi.org, where `--locked` rejects it.
+- **The bridge inherits the core's `exclude-newer`.** Its own pyproject declares
+  none; uv reads the root's as parent configuration, so its lock records
+  `exclude-newer-span = "P7D"`. Extracting the bridge (ADR 0013) drops that
+  window unless it is declared there.
 - **`packages/tablecodec-docling` gets no routine Dependabot bumps.**
   `.github/dependabot.yaml` configures only `/` for the `uv` ecosystem. The
   bumps that did land there were security updates, which need no config entry.
