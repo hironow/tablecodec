@@ -66,8 +66,6 @@ Project rules, the add-a-codec recipe and the hard-won gotchas live in
 - **`sha_pinning_required` is on for Actions.** A workflow naming an action by
   tag is rejected at startup as a ~2s `startup_failure` with zero steps, which
   reads like a billing problem and is not one.
-- **`exclude-newer` couples the lockfile to Dependabot.** Every merged `uv` bump
-  must carry a cutoff bump and a re-lock in the same change.
 - **An agent security hook on hironow's machine blocks any edit containing the
   substring `eval`**, which trips the `ast.literal_eval` in
   `scripts/e2e_hf_check.py`. Surface it and ask rather than obfuscating.
