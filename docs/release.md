@@ -19,9 +19,10 @@ How `tablecodec` reaches PyPI. Rationale and the full threat model:
   "Protect release tags (v*)"). This is what restricts who can start a release.
   The environment gate below cannot: it only pauses a run that a tag push has
   already triggered.
-- **`main` has no ruleset.** Unlike the sibling repos, nothing mechanically
-  requires a pull request or a green check before a commit lands. Use a pull
-  request anyway.
+- `main` is protected by the `protect` ruleset: pull requests required,
+  squash-only merges, linear history, four required status checks, review
+  threads resolved, and **no bypass actors** — admins included. Approvals
+  themselves are not required.
 - Publishing waits for a reviewer in the `release` environment (required
   reviewer `hironow`, self-review permitted). Its deployment branch policy
   admits exactly one ref pattern: the tag `v*`.
@@ -128,7 +129,8 @@ live settings; the workflow wins on any disagreement.
 `[tool.uv] exclude-newer` is `"7 days"`: resolution only sees distributions
 public for a week, so a compromised-then-yanked release is not pulled in on day
 zero. uv records the span in `uv.lock` (`exclude-newer-span = "P7D"`), not a
-date.
+date. The reasoning, and what it supersedes in ADR 0014, is
+[ADR 0015](adr/0015-exclude-newer-is-a-relative-window.md).
 
 The window moving does not disturb `uv sync --locked`: the cutoff is an upper
 bound that only travels forward, so a version already in the lock cannot fall

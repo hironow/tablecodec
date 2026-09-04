@@ -1,7 +1,7 @@
 # 0014. Release via OIDC Trusted Publishing; no long-lived publish tokens
 
 **Date:** 2026-06-07
-**Status:** Accepted
+**Status:** Accepted — the `exclude-newer` clause is superseded by [0015](0015-exclude-newer-is-a-relative-window.md)
 
 ## Context
 

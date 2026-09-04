@@ -57,8 +57,9 @@ Project rules, the add-a-codec recipe and the hard-won gotchas live in
 `CLAUDE.md`; the release flow and the repository settings behind it live in
 `docs/release.md`. Read those first. What neither of them says:
 
-- **`main` has no ruleset.** Only `v*` tags are protected, so nothing
-  mechanically requires a pull request or a green check. Use one anyway.
+- **`main` is protected by the `protect` ruleset.** Pull requests are required,
+  squash-only, linear history, four required checks, and **no bypass actors** —
+  admins included. Approvals are not required, but review threads must resolve.
 - **Issues are disabled on this repo.** Anything needing a human decision goes
   into `docs/decision-queue.md`.
 - **`sha_pinning_required` is on for Actions.** A workflow naming an action by
