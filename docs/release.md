@@ -143,7 +143,9 @@ live settings; the workflow wins on any disagreement.
 ## Local checks before any release
 
 - `just ci` green (alias `just check`); the prek pre-push hook runs it, and
-  `CLAUDE.md` lists what it covers.
+  `CLAUDE.md` lists what it covers. CI calls the same recipes rather than its
+  own copies of the commands, so the justfile is the only place that defines
+  what lint and type checking cover.
 - `just ci-all` if anything under `packages/` changed.
 - `just docs` after any codec name or `lossy_*` change, so the generated tables
   match. `docs-check` fails the build otherwise.
