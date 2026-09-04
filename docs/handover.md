@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 13:30 (JST)
+**Last updated:** 2026-09-04 14:24 (JST)
 **Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq (delegated by hironow)
 
 ## Current State
@@ -21,16 +21,18 @@ workflow file in the repo — do not add one.
 
 ## In Progress
 
-No code work is active. The one open item is the **broken Dependabot `uv`
-updater** below, all that stands between this repo and a clean security board.
+No code work is active. The security board is clean — the aiohttp alerts have
+closed. The **Dependabot `uv` updater is still broken** for routine bumps,
+described below.
 
 ## Next Actions
 
-1. **Move the `exclude-newer` cutoff and relock.** `[tool.uv] exclude-newer` in
-   `pyproject.toml` is `2026-07-22T00:00:00Z`. Bump it to a current date, run
-   `uv lock`, and land one consolidated relock PR — the pattern hironow used in
-   #26. That single change unblocks the updater and pulls in the aiohttp
-   security fix.
+1. **Advance the global `exclude-newer` cutoff, as its own pull request.**
+   `just deps-refresh` rewrites the cutoff to today, relocks through the
+   screened index, and verifies the result. The timing is a human call, since it
+   moves every dependency at once. Drop the aiohttp `exclude-newer-package`
+   override in the same change: once the global cutoff passes 2026-07-24 the
+   override stops protecting and starts holding aiohttp back.
 2. **Decide whether `packages/tablecodec-docling` deserves its own Dependabot
    entry**, so the bridge gets routine bumps and not only security ones. Record
    the call in `docs/decision-queue.md`.
@@ -38,16 +40,14 @@ updater** below, all that stands between this repo and a clean security board.
 
 ## Known Risks / Blockers
 
-- **The `exclude-newer` cutoff is blocking a security fix.** Three open
-  Dependabot alerts on `aiohttp` (one high, two medium) are fixed in 3.14.3,
-  published 2026-07-23 — one day after the cutoff. aiohttp is not in the
-  published wheel: it arrives via `fsspec` under `datasets`, so only the opt-in
-  `[hf]` extra is affected.
-- **The same cutoff breaks every `uv` Dependabot run.** The updater last
-  succeeded on 2026-07-22 and has failed on every run since, including the six
-  security-update attempts on 2026-08-05 that would have produced the aiohttp
-  PR. The latest failure reports six "No solution found" errors, each hinting at
-  `exclude-newer`.
+- **The aiohttp fix rides on a per-package override.** `exclude-newer-package`
+  lifts the cutoff for aiohttp alone to 2026-07-24, which is how 3.14.3 got in
+  ahead of the global cutoff. It turns into a brake the moment that cutoff
+  moves past the same date.
+- **The cutoff still breaks every `uv` Dependabot run.** The updater last
+  succeeded on 2026-07-22 and has failed on every run since, reporting "No
+  solution found" for hypothesis, ruff, lxml, datasets, coverage and
+  pytest-benchmark. No routine Python bump lands until the cutoff moves.
 - **`packages/tablecodec-docling` gets no routine Dependabot bumps.**
   `.github/dependabot.yaml` configures only `/` for the `uv` ecosystem. The
   bumps that did land there were security updates, which need no config entry.
