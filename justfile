@@ -5,12 +5,6 @@
 MARKDOWNLINT := "mise exec -- markdownlint-cli2"
 PREK := "mise exec -- prek"
 
-# The screened registry Takumi Guard points CI at
-# (flatt-security/setup-takumi-guard-pypi). uv.lock records the index per
-# package, so a local relock has to use the same one or the lockfile drifts to
-# plain PyPI. Export UV_INDEX_URL to override.
-SCREENED_INDEX := env("UV_INDEX_URL", "https://pypi.flatt.tech/simple/")
-
 default: help
 
 # Show available tasks (default)
@@ -25,12 +19,14 @@ install:
 # it forces a fresh resolution, which is when the relative `[tool.uv]
 # exclude-newer` window is recomputed, so anything published since the last
 # resolution becomes reachable. A plain `uv lock` deliberately keeps existing
-# pins and would move nothing. There is no date to hand-edit any more.
+# pins and would move nothing. There is no date to hand-edit any more, and the
+# screened index comes from `[[tool.uv.index]]` in pyproject.toml, so there is
+# no environment variable to set either.
 #
-# Re-resolve every dependency through the screened index and verify the lock
+# Re-resolve every dependency and verify the lock the way CI does
 deps-upgrade:
-    UV_INDEX_URL="{{SCREENED_INDEX}}" uv lock --upgrade
-    UV_INDEX_URL="{{SCREENED_INDEX}}" uv sync --locked
+    uv lock --upgrade
+    uv sync --locked
 
 # Install git hooks via prek (pre-commit + pre-push; reads .pre-commit-config.yaml)
 hooks:
