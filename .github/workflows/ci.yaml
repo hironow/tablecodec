@@ -31,6 +31,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # The gate below is `just`, so the justfile recipes are the single
+      # definition of what lint/type/test cover -- CI cannot drift to a
+      # narrower path set than the local gate. Two tools the recipes reach
+      # for are installed here: `just` itself, and mise, which supplies the
+      # pinned markdownlint-cli2 that `just lint` runs over tracked markdown.
+      #
+      # mise goes in BEFORE setup-uv on purpose: each action prepends to PATH,
+      # so installing uv last keeps the pinned 0.11.17 ahead of anything mise
+      # might shim.
+      - name: Install just
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+
+      - name: Install mise-pinned tools (markdownlint-cli2, prek)
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          cache: true
+
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -40,6 +57,12 @@ jobs:
           version: "0.11.17"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
+
+      - name: Tool versions
+        run: |
+          just --version
+          uv --version
+          mise --version
 
       # Route PyPI installs through Takumi Guard (blocks known-malicious
       # packages before they execute; sets UV_INDEX_URL/PIP_INDEX_URL to the
@@ -53,26 +76,23 @@ jobs:
       - name: Install (locked; dev + cli + teds extras)
         run: uv sync --locked --extra dev --extra cli --extra teds
 
-      - name: Lint (ruff check + format)
-        run: |
-          uv run ruff check src/ tests/
-          uv run ruff format --check src/ tests/
+      # ruff check + ruff format --check over src/ tests/ scripts/, plus
+      # markdownlint over tracked markdown. The paths live in the justfile.
+      - name: Lint
+        run: just lint
 
       - name: Type check (pyright strict)
-        run: uv run pyright src/ tests/
+        run: just type
 
-      - name: Unit tests (pytest)
-        run: uv run pytest tests/ -v
+      - name: Unit tests
+        run: just test
 
       # Regenerate the codec-derived docs and fail if they drift from what is
-      # committed (the `just docs-check` gate, run once on a single matrix leg).
+      # committed. Run once on a single matrix leg; the result is platform- and
+      # version-independent.
       - name: Docs up to date (generated tables)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
-        run: |
-          uv run python scripts/gen_format_support.py
-          uv run python scripts/gen_loss_matrix.py
-          git diff --quiet docs/format_support.md docs/loss_matrix.md \
-            || { echo "docs/{format_support,loss_matrix}.md is stale; run 'just docs'"; exit 1; }
+        run: just docs-check
 
   semgrep:
     name: semgrep (rules + core scan)
@@ -81,14 +101,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Install just
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+
       - name: Install semgrep
         run: pipx install semgrep
 
       - name: Test semgrep rules (rule correctness, not real code)
-        run: semgrep test .semgrep/rules/
+        run: just semgrep-test
 
       - name: Scan source with semgrep meta-rules
-        run: semgrep --config .semgrep/rules/ --error src/
+        run: just semgrep
 
   pip-install-check:
     name: pip install -e .
