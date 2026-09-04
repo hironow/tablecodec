@@ -58,15 +58,14 @@ Project rules, the add-a-codec recipe and the hard-won gotchas live in
 `docs/release.md`. Read those first. What neither of them says:
 
 - **`main` is protected by the `protect` ruleset.** Pull requests are required,
-  squash-only, linear history, four required checks, and **no bypass actors** —
-  admins included. Approvals are not required, but review threads must resolve.
+  squash-only, linear history, resolved review threads, **no bypass actors**.
+  Eleven checks are required, one per pull-request job in `ci.yaml` and
+  `benchmark.yaml`; rename a job and nothing merges until the ruleset matches.
 - **Issues are disabled on this repo.** Anything needing a human decision goes
   into `docs/decision-queue.md`.
 - **`sha_pinning_required` is on for Actions.** A workflow naming an action by
-  tag is rejected at startup and shows as a ~2s `startup_failure` with zero
-  steps, which reads like a billing problem and is not one.
-- **`exclude-newer` couples the lockfile to Dependabot.** Every merged `uv` bump
-  must carry a cutoff bump and a re-lock in the same change.
+  tag is rejected at startup as a ~2s `startup_failure` with zero steps, which
+  reads like a billing problem and is not one.
 - **An agent security hook on hironow's machine blocks any edit containing the
   substring `eval`**, which trips the `ast.literal_eval` in
   `scripts/e2e_hf_check.py`. Surface it and ask rather than obfuscating.

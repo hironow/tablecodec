@@ -20,9 +20,22 @@ How `tablecodec` reaches PyPI. Rationale and the full threat model:
   The environment gate below cannot: it only pauses a run that a tag push has
   already triggered.
 - `main` is protected by the `protect` ruleset: pull requests required,
-  squash-only merges, linear history, four required status checks, review
-  threads resolved, and **no bypass actors** — admins included. Approvals
-  themselves are not required.
+  squash-only merges, linear history, resolved review threads, and **no bypass
+  actors** — admins included. Approvals themselves are not required.
+- **Eleven status checks are required**, strictly, so a branch must also be up
+  to date before it merges: `pytest-benchmark`, `pip install -e .`,
+  `semgrep (rules + core scan)`, `test (py3.11 / ubuntu-latest)`,
+  `test (py3.12 / ubuntu-latest)`, `test (py3.13 / ubuntu-latest)`,
+  `test (py3.14 / ubuntu-latest)`, `test (py3.11 / macos-latest)`,
+  `test (py3.12 / macos-latest)`, `test (py3.13 / macos-latest)` and
+  `test (py3.14 / macos-latest)`. That is every job `ci.yaml` and
+  `benchmark.yaml` run on a pull request. CodeQL's `Analyze` jobs are not among
+  them: they come from GitHub's default setup, not from a workflow here.
+- **Renaming a job blocks every merge.** Checks are matched by name, so a
+  renamed job or a dropped matrix leg reports under a name the ruleset never
+  sees, and the configured name waits forever as "Expected — Waiting for status
+  to be reported". No bypass actor exists. Update the ruleset in the same change
+  that touches a job name or the matrix.
 - Publishing waits for a reviewer in the `release` environment (required
   reviewer `hironow`, self-review permitted). Its deployment branch policy
   admits exactly one ref pattern: the tag `v*`.
@@ -67,8 +80,8 @@ cancels a run mid-publish.
    over trusted publishing and emits PEP 740 attestations by itself.
    `skip-existing` makes a partial-failure re-run safe, since PyPI never permits
    overwriting a file that already exists.
-4. **github-release** — `gh release create` with the built distributions
-   attached. This is the only job with `contents: write`.
+4. **github-release** — `gh release create` with the distributions attached.
+   The only job with `contents: write`.
 
 `benchmark.yaml` is **not on this path**. It runs pytest-benchmark on pushes and
 pull requests to `main` and uploads a JSON artifact. It gates nothing.
@@ -79,33 +92,31 @@ pull requests to `main` and uploads a JSON artifact. It gates nothing.
 test job, the benchmark job, and the release build job. It points
 `UV_INDEX_URL` and `PIP_INDEX_URL` at a screening proxy that blocks
 known-malicious packages before they execute, and `uv.lock` records that
-registry (`https://pypi.flatt.tech/simple/`) as its source. Consumers are
-unaffected: `pip install tablecodec` reaches PyPI directly, and the sdist ships
-no lockfile.
+registry (`https://pypi.flatt.tech/simple/`) as its source. Consumers reach
+PyPI directly and the sdist ships no lockfile, so they are unaffected.
 
 ## First release / bootstrap
 
-Already done; recorded in case the repository is recreated. One-time setup in
-the GitHub and PyPI web interfaces, not automatable from CI:
+Already done; recorded in case the repository is recreated. One-time web-UI
+setup, not automatable from CI:
 
 1. On PyPI, register a **pending publisher** carrying the binding named above.
-   No token is created at any point.
 2. On GitHub, create the `release` environment with a required reviewer and a
    deployment branch policy limited to the `v*` tag pattern.
 3. On GitHub, create the ruleset restricting creation, update, and deletion of
    `v*` tags.
-4. Push the first `vX.Y.Z` tag, which needs an admin bypass because of step 3.
+4. Push the first `vX.Y.Z` tag, which needs an admin bypass (step 3).
 
-**Unverified:** the maintainer's own runbook, `private/PYPI_RELEASE_STEPS.md`,
+**Unverified:** `private/PYPI_RELEASE_STEPS.md`, the maintainer's own runbook,
 is gitignored and was not read. Everything here comes from the workflow and the
 live settings; the workflow wins on any disagreement.
 
 ## Verified on 0.0.19 (released 2026-06-07, re-checked 2026-09-04)
 
-- PyPI carries 0.0.18 and 0.0.19, each as an sdist plus a `py3-none-any` wheel.
-- **PEP 740 attestations** are present on PyPI for both versions (the integrity
-  endpoint returns 200), each naming publisher GitHub, repository
-  `hironow/tablecodec`, workflow `release.yaml`, environment `release`.
+- PyPI carries 0.0.18 and 0.0.19, each as an sdist plus a wheel.
+- **PEP 740 attestations** are on PyPI for both versions (integrity endpoint
+  200), each naming publisher GitHub, `hironow/tablecodec`, `release.yaml`,
+  environment `release`.
 - **SLSA build provenance** verifies: `gh attestation verify` on the 0.0.19
   wheel succeeds, reporting `https://slsa.dev/provenance/v1` over both wheel and
   sdist, built from `release.yaml` at `refs/tags/v0.0.19`.
