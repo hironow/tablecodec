@@ -21,26 +21,15 @@ help:
 install:
     uv pip install -e ".[dev,cli,teds]"
 
-# Run this when merging a Dependabot uv pull request, or to reach a fix
-# published after the current cutoff -- docs/release.md explains why such a fix
-# kills the updater outright rather than degrading. If the relock leaves an
-# exclude-newer-package override whose date now precedes the global cutoff,
-# drop the override in the same change; it would otherwise hold that one
-# package back.
+# Run this to pull dependencies forward. `--upgrade` is the part that matters:
+# it forces a fresh resolution, which is when the relative `[tool.uv]
+# exclude-newer` window is recomputed, so anything published since the last
+# resolution becomes reachable. A plain `uv lock` deliberately keeps existing
+# pins and would move nothing. There is no date to hand-edit any more.
 #
-# Move [tool.uv] exclude-newer to today (UTC), relock, and verify the lock
-deps-refresh:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cutoff="$(date -u '+%Y-%m-%dT00:00:00Z')"
-    if [ "$(grep -cE '^exclude-newer = ".*"$' pyproject.toml)" != "1" ]; then
-        echo "expected exactly one [tool.uv] exclude-newer line in pyproject.toml" >&2
-        exit 1
-    fi
-    sed -i.bak -E "s|^exclude-newer = \".*\"$|exclude-newer = \"${cutoff}\"|" pyproject.toml
-    rm -f pyproject.toml.bak
-    echo "exclude-newer -> ${cutoff}"
-    UV_INDEX_URL="{{SCREENED_INDEX}}" uv lock
+# Re-resolve every dependency through the screened index and verify the lock
+deps-upgrade:
+    UV_INDEX_URL="{{SCREENED_INDEX}}" uv lock --upgrade
     UV_INDEX_URL="{{SCREENED_INDEX}}" uv sync --locked
 
 # Install git hooks via prek (pre-commit + pre-push; reads .pre-commit-config.yaml)
