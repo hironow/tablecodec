@@ -104,8 +104,28 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.17"
+          enable-cache: true
+
+      # Screen this install like every other one. Must precede `uv tool
+      # install`, which is what it points at the proxy.
+      - name: Route installs through Takumi Guard
+        uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
+
+      # Pinned on purpose. semgrep gates merges, so an unpinned upgrade can
+      # fail CI on code nobody touched -- a new or widened rule turns green
+      # into red with no commit behind it. Dependabot does not track this
+      # version: semgrep is neither a workflow action nor a project dependency,
+      # so raising it is always a deliberate edit here.
+      #
+      # When raising it, pick a version the screened index actually carries and
+      # that is older than the seven-day `exclude-newer` window the project
+      # applies elsewhere. 1.176.0 satisfied neither when this was written.
       - name: Install semgrep
-        run: pipx install semgrep
+        run: uv tool install semgrep==1.175.0
 
       - name: Test semgrep rules (rule correctness, not real code)
         run: just semgrep-test

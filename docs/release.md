@@ -145,7 +145,10 @@ live settings; the workflow wins on any disagreement.
 - `just ci` green (alias `just check`); the prek pre-push hook runs it, and
   `CLAUDE.md` lists what it covers. CI calls the same recipes rather than its
   own copies of the commands, so the justfile is the only place that defines
-  what lint and type checking cover.
+  what lint and type checking cover. CI pins semgrep to 1.175.0 and installs it
+  through the screened index; Dependabot does not track it, so raising the
+  version is a deliberate edit — pick one the proxy carries and that is older
+  than the seven-day window.
 - `just ci-all` if anything under `packages/` changed.
 - `just docs` after any codec name or `lossy_*` change, so the generated tables
   match. `docs-check` fails the build otherwise.
