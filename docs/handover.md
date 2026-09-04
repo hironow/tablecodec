@@ -41,10 +41,6 @@ resolve again — unproven until its next weekly run.
 - **The screened index is declared in four files** — both `pyproject.toml`s,
   the workflows, and `.github/dependabot.yaml` — carrying one URL. Change one
   alone and that lock drifts to pypi.org, where `--locked` rejects it.
-- **The bridge inherits the core's `exclude-newer`.** Its own pyproject declares
-  none; uv reads the root's as parent configuration, so its lock records
-  `exclude-newer-span = "P7D"`. Extracting the bridge (ADR 0013) drops that
-  window unless it is declared there.
 - **`packages/tablecodec-docling` gets no routine Dependabot bumps.**
   `.github/dependabot.yaml` configures only `/` for the `uv` ecosystem. The
   bumps that did land there were security updates, which need no config entry.

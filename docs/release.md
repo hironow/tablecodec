@@ -158,7 +158,9 @@ live settings; the workflow wins on any disagreement.
 `[tool.uv] exclude-newer` is `"7 days"`: resolution only sees distributions
 public for a week, so a compromised-then-yanked release is not pulled in on day
 zero. uv records the span in `uv.lock` (`exclude-newer-span = "P7D"`), not a
-date. The reasoning, and what it supersedes in ADR 0014, is
+date. `packages/tablecodec-docling` declares the same window itself rather than
+inheriting the root's as parent configuration, so extracting it (ADR 0013)
+carries the window along. The reasoning, and what it supersedes in ADR 0014, is
 [ADR 0015](adr/0015-exclude-newer-is-a-relative-window.md).
 
 The window moving does not disturb `uv sync --locked`: the cutoff is an upper
