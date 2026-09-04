@@ -128,6 +128,8 @@ data-source decisions and the canonical-vs-real-shape caveats.
   defines vs. borrows (e.g. "loss" vs a "degenerate" bbox).
 - [`docs/intent.md`](docs/intent.md) — Implementation brief and roadmap
   (milestones, quality bar, §8 future work).
+- [`docs/release.md`](docs/release.md) — How a release reaches PyPI: repository
+  rules, versioning, the CI pipeline, and the checks to run first.
 - [`docs/adr/`](docs/adr/) — the decisions and their reasoning (the "Why").
 - [`CHANGELOG.md`](CHANGELOG.md) — Keep a Changelog format.
 
@@ -141,8 +143,9 @@ just ci-all       # core + the in-repo tablecodec-docling bridge
 ```
 
 Releases are published from GitHub Actions via PyPI **OIDC Trusted Publishing**
-(no long-lived token), carrying PEP 740 attestations and a SLSA build provenance
-([ADR 0014](docs/adr/0014-release-via-oidc-trusted-publishing.md)).
+(no long-lived token), carrying PEP 740 attestations and a SLSA build
+provenance. The procedure is [`docs/release.md`](docs/release.md); the reasoning
+is [ADR 0014](docs/adr/0014-release-via-oidc-trusted-publishing.md).
 
 ## License
 

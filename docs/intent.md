@@ -447,8 +447,9 @@ ADR 0011）。§8 STRICT は 0.0.17（ADR 0012）。docling bridge は read+writ
 - **PyPI 公開** — **完了（v0.0.18, 2026-06-07）**。OIDC Trusted Publishing で
   トークンレス公開、PEP 740 attestations + SLSA build provenance 付き（ADR 0014）。
   人間側の一回限り設定（PyPI pending publisher / GitHub Environment `release` /
-  Ruleset）も適用済み。以降の steady-state リリース手順は gitignore 下の
-  `private/PYPI_RELEASE_STEPS.md` §C。
+  Ruleset）も適用済み。リリース手順・リポジトリ設定・事前チェックは
+  `docs/release.md` に集約（メンテナ個人の runbook は引き続き gitignore 下の
+  `private/PYPI_RELEASE_STEPS.md` §C）。
 
 ### 機能フォローアップ（コード）
 
