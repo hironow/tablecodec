@@ -8,10 +8,10 @@
 # -- Dependabot SECURITY updates (vulnerability fixes) bypass it and still land
 # fast.
 #
-# NOTE on the uv ecosystem: pyproject.toml pins `[tool.uv] exclude-newer` to an
-# absolute date. A Dependabot uv PR cannot resolve distributions newer than that
-# cutoff, so when merging one, bump `exclude-newer` to that day's date and
-# re-run `uv lock` in the same change (see ADR 0014 / the release runbook).
+# NOTE on the uv ecosystem: pyproject.toml sets `[tool.uv] exclude-newer` to the
+# relative window `"7 days"` (ADR 0015), so a Dependabot uv pull request now
+# resolves without anyone editing a date first. Both delays are seven days on
+# purpose -- see the comment on the uv `cooldown` below.
 #
 # Ecosystems in this repo:
 #   github-actions  -> .github/workflows/*.yaml (SHA-pinned actions)
@@ -36,6 +36,13 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Seven days here is the same seven days as `[tool.uv] exclude-newer =
+    # "7 days"` in pyproject.toml (ADR 0015). Dependabot waits a week before
+    # proposing a version; uv refuses to resolve anything younger than a week.
+    # Change them together. If uv's window ever ends up the longer of the two,
+    # Dependabot proposes versions uv cannot resolve and the updater fails
+    # outright rather than degrading -- which is what the old absolute cutoff
+    # did to every uv run from 2026-07-22 until ADR 0015.
     cooldown:
       default-days: 7
     labels: ["dependencies", "python"]
