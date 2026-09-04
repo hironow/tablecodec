@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 14:24 (JST)
+**Last updated:** 2026-09-04 15:04 (JST)
 **Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq (delegated by hironow)
 
 ## Current State
@@ -21,18 +21,16 @@ workflow file in the repo — do not add one.
 
 ## In Progress
 
-No code work is active. The security board is clean — the aiohttp alerts have
-closed. The **Dependabot `uv` updater is still broken** for routine bumps,
-described below.
+No code work is active. The security board is clean. The `exclude-newer` cutoff
+is a relative window now, which should let the **Dependabot `uv` updater**
+resolve again — unproven until its next weekly run.
 
 ## Next Actions
 
-1. **Advance the global `exclude-newer` cutoff, as its own pull request.**
-   `just deps-refresh` rewrites the cutoff to today, relocks through the
-   screened index, and verifies the result. The timing is a human call, since it
-   moves every dependency at once. Drop the aiohttp `exclude-newer-package`
-   override in the same change: once the global cutoff passes 2026-07-24 the
-   override stops protecting and starts holding aiohttp back.
+1. **Confirm the Dependabot `uv` updater recovers.** It failed every run from
+   2026-07-22 because the absolute cutoff hid newer releases. The window is
+   relative now, so check the next weekly run. If it still fails, read the run
+   log first — that is where the previous diagnosis came from.
 2. **Decide whether `packages/tablecodec-docling` deserves its own Dependabot
    entry**, so the bridge gets routine bumps and not only security ones. Record
    the call in `docs/decision-queue.md`.
@@ -40,14 +38,13 @@ described below.
 
 ## Known Risks / Blockers
 
-- **The aiohttp fix rides on a per-package override.** `exclude-newer-package`
-  lifts the cutoff for aiohttp alone to 2026-07-24, which is how 3.14.3 got in
-  ahead of the global cutoff. It turns into a brake the moment that cutoff
-  moves past the same date.
-- **The cutoff still breaks every `uv` Dependabot run.** The updater last
-  succeeded on 2026-07-22 and has failed on every run since, reporting "No
-  solution found" for hypothesis, ruff, lxml, datasets, coverage and
-  pytest-benchmark. No routine Python bump lands until the cutoff moves.
+- **Locking from scratch is no longer time-independent.** The relative window
+  is recomputed on every fresh resolution, so `uv lock --upgrade` on two
+  different days can pick different versions. The lock is the reproducibility
+  artifact, and CI installs from it with `uv sync --locked`.
+- **The updater's recovery is unverified.** Its last success was 2026-07-22.
+  The six packages it choked on (hypothesis, ruff, lxml, datasets, coverage,
+  pytest-benchmark) should resolve now, but nothing has re-run yet.
 - **`packages/tablecodec-docling` gets no routine Dependabot bumps.**
   `.github/dependabot.yaml` configures only `/` for the `uv` ecosystem. The
   bumps that did land there were security updates, which need no config entry.
@@ -77,7 +74,7 @@ Project rules, the add-a-codec recipe and the hard-won gotchas live in
 
 - `docs/spec.md` — the contract. `docs/intent.md` §8 — the roadmap.
   `docs/release.md` — how a release reaches PyPI. `docs/adr/` — the reasoning.
-- `pyproject.toml` `[tool.uv] exclude-newer` — the cutoff behind both risks above.
+- `pyproject.toml` `[tool.uv] exclude-newer` — the window; `just deps-upgrade` moves it.
 - `just ci` — the full core gate (alias `just check`); `just docling-ci` the
   bridge, `just ci-all` both. `just docs` — regenerate the tables after any
   codec name or `lossy_*` change.
