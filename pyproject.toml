@@ -99,6 +99,21 @@ tablecodec = "tablecodec.cli:main"
 # exclude-newer-package = { some-package = false }.
 exclude-newer = "7 days"
 
+# The screened index Takumi Guard puts in front of PyPI, declared here so
+# pyproject.toml is the single source of truth for where dependencies resolve.
+# A local `uv lock` or `just deps-upgrade` now records this registry with no
+# environment variable to remember; CI injects the identical URL through
+# `UV_INDEX_URL`, so the two agree rather than fight; and Dependabot reaches the
+# same URL through `registries` in .github/dependabot.yaml.
+#
+# The URL must match `registry = "..."` in uv.lock character for character,
+# trailing slash included. `default = true` replaces PyPI rather than adding to
+# it, which is what makes an unset UV_INDEX_URL resolve the same way CI does.
+[[tool.uv.index]]
+name = "takumi-guard"
+url = "https://pypi.flatt.tech/simple/"
+default = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/tablecodec"]
 
