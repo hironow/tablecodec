@@ -36,6 +36,15 @@ docling-tables = "tablecodec_docling.codec:DoclingTablesCodec"
 Homepage = "https://github.com/hironow/tablecodec"
 Repository = "https://github.com/hironow/tablecodec"
 
+# The same seven-day supply-chain window the core package uses. uv would apply
+# the root pyproject.toml's setting anyway, as parent-directory configuration,
+# and the lockfile already records the resulting `exclude-newer-span = "P7D"`.
+# Declaring it here makes that explicit rather than inherited: extracting this
+# package to its own repository (ADR 0013) then carries the window with it
+# instead of silently losing it. See ADR 0015 for why the window is relative.
+[tool.uv]
+exclude-newer = "7 days"
+
 # Develop against the in-repo tablecodec (monorepo, ADR 0013). This keeps the
 # bridge's docling-core dependency out of the core repo's environment.
 [tool.uv.sources]
