@@ -57,7 +57,7 @@ jobs:
       # Blocking-only mode, no account needed. Must precede `uv build` so the
       # published artifact is built only from screened build dependencies.
       - name: Route installs through Takumi Guard
-        uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
+        uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
 
       - name: Set up Python 3.11
         run: uv python install 3.11
