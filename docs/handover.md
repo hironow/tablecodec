@@ -1,84 +1,77 @@
 # Handover
 
-**Last updated:** 2026-09-04 20:18 (JST)
-**Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq (delegated by hironow)
+**Last updated:** 2026-10-11 (JST)
+**Updated by:** Codex
 
 ## Current State
 
-`tablecodec` is feature-complete against `docs/spec.md` and **live on PyPI at
-0.0.19**; the in-repo `tablecodec-docling` bridge carries its own `0.0.2`.
-Shipped: the IR and invariants I-01..I-07, validation profiles, all nine core
-codecs behind the registry, streaming I/O, static loss analysis, the `[teds]`
-metric, the `[cli]` app, and the in-repo conformance corpus. The core keeps zero
-third-party runtime dependencies.
+The core package is version 0.0.19 and retains zero third-party runtime
+dependencies. The separate docling bridge is version 0.0.2.
 
-Since the release the movement has been supply-chain and gating work, all
-landed 2026-09-04. `exclude-newer` became a relative seven-day window
-(ADR 0015), which unblocked the Dependabot `uv` updater after six weeks of
-failures, and the screened index is now declared in both
-`pyproject.toml`s, the workflows and `dependabot.yaml`, so every lockfile
-records it — the bridge's included. The `protect` ruleset requires eleven status
-checks, and CI calls the justfile recipes rather than its own copies, so the
-justfile alone defines what lint and type checking cover. CI, Benchmark and
-CodeQL are green on the tip of `main`.
+The dependency rollup combines PRs #65, #66, #68, #69, and #70: coverage
+7.16.2, hypothesis 6.168.3, fsspec 2026.6.0, multidict 6.9.1, urllib3 2.8.0,
+mise-action 5.0.1, and setup-takumi-guard-pypi 1.3.0. #70 duplicates the urllib3
+update in #69 and is included once. Locks retain the screened registry and
+seven-day cooldown; no blanket re-resolution was performed.
 
-**CodeQL default setup was enabled 2026-09-04**: languages `actions` and
-`python`, default query suite, weekly schedule, first scan green with zero
-alerts. It runs from GitHub's default setup, so there is deliberately no CodeQL
-workflow file in the repo — do not add one.
+CI and Benchmark skip draft PRs and resume on `ready_for_review`. Four regression
+checks enforce this in the normal test suite. Core installation uses uv through
+`just core-install-check`, while preserving the required status-check name.
+Five redundant fixture type suppressions were removed; the existing strict type
+gate now reports zero errors and warnings.
 
 ## In Progress
 
-No code work is active. The security board is clean. The `exclude-newer` cutoff
-is a relative window now, which should let the **Dependabot `uv` updater**
-resolve again — unproven until its next weekly run.
+Branch `chore/dependency-rollup-20261011` is ready for rollup CI validation.
+Local `just check` passes with 349 tests, zero lint/type findings, all three
+Semgrep rule tests, zero source findings, and current generated docs.
+`just cov` passes with 91% coverage. `just lock-check` and the isolated
+`just core-install-check` pass.
+
+The optional real HF streaming check validated 20 rows per PubTabNet format
+(40 total) with no parse or validation failures, but timed out during process
+shutdown. The identical shutdown timeout reproduces with main's original lock;
+it is not introduced by the rollup. Stack sampling shows Arrow IO thread-pool
+shutdown waiting for a Python read callback during interpreter finalization.
+Command: `just e2e 20 --dataset apoidea/pubtabnet-html --no-shuffle --no-record`.
+This optional check is not a CI gate and is not claimed as a passing E2E run.
 
 ## Next Actions
 
-1. **Decide whether `packages/tablecodec-docling` deserves its own Dependabot
-   entry**, so the bridge gets routine bumps and not only security ones. Record
-   the call in `docs/decision-queue.md`.
-2. Beyond that, take work from `docs/intent.md` §8, which holds the roadmap.
+1. Verify all eleven CI/Benchmark jobs, both CodeQL language analyses, the
+   CodeQL result, and AI security review on the final rollup head.
+2. Squash merge that validated head and close the five superseded PRs.
 
 ## Known Risks / Blockers
 
-- **Locking from scratch is no longer time-independent.** The relative window
-  is recomputed on every fresh resolution, so `uv lock --upgrade` on two
-  different days can pick different versions. The lock is the reproducibility
-  artifact, and CI installs from it with `uv sync --locked`.
-- **The screened index is declared in four files** — both `pyproject.toml`s,
-  the workflows, and `.github/dependabot.yaml` — carrying one URL. Change one
-  alone and that lock drifts to pypi.org, where `--locked` rejects it.
-- **`packages/tablecodec-docling` gets no routine Dependabot bumps.**
-  `.github/dependabot.yaml` configures only `/` for the `uv` ecosystem. The
-  bumps that did land there were security updates, which need no config entry.
-- **Conformance corpus and the docling bridge are still in-repo** (ADR 0001 and
-  0013). Both must be extracted before v1.0.
+- Optional HF partial-stream shutdown hangs locally on Python 3.14.5 with
+  PyArrow 24.0.0, reproducing on main and the rollup. An isolated Arrow 25.0.1
+  trial also timed out and was reverted. Track the baseline tool issue separately;
+  the rollup preserves the original Arrow lock and harness.
+  Upstream context: [Arrow #45214](https://github.com/apache/arrow/issues/45214).
+
+- The previous bot heads had neutral CodeQL results due to missing analysis
+  configurations. The fresh rollup must receive successful results.
+- The docling bridge has its own lock and gate; this rollup does not modify it.
+- A fresh lock resolution recomputes the relative cooldown; the committed lock
+  remains the reproducibility artifact.
 
 ## Context the Next Actor Needs
 
-Project rules, the add-a-codec recipe and the hard-won gotchas live in
-`CLAUDE.md`; the release flow and the repository settings behind it live in
-`docs/release.md`. Read those first. What neither of them says:
-
-- **`main` is protected by the `protect` ruleset.** Pull requests are required,
-  squash-only, linear history, resolved review threads, **no bypass actors**.
-  Eleven checks are required, one per pull-request job in `ci.yaml` and
-  `benchmark.yaml`; rename a job and nothing merges until the ruleset matches.
-- **Issues are disabled on this repo.** Anything needing a human decision goes
-  into `docs/decision-queue.md`.
-- **`sha_pinning_required` is on for Actions.** A workflow naming an action by
-  tag is rejected at startup as a ~2s `startup_failure` with zero steps, which
-  reads like a billing problem and is not one.
-- **An agent security hook on hironow's machine blocks any edit containing the
-  substring `eval`**, which trips the `ast.literal_eval` in
-  `scripts/e2e_hf_check.py`. Surface it and ask rather than obfuscating.
+- Preserve the eleven required job names in CI and Benchmark. Main requires
+  PRs, squash merges, linear history, and resolved review threads.
+- CodeQL uses GitHub default setup for Actions and Python; do not add a workflow.
+- Issues are disabled; decisions belong in `docs/decision-queue.md`.
+- mise-action 5 adds a 24-hour release age default and verifies cached binaries.
+  The reviewed 5.0.1 configuration keeps the existing cache input.
+- The core invariants and codec contract are in `CLAUDE.md` and `docs/spec.md`;
+  future work stays in `docs/intent.md`.
 
 ## Relevant Files and Commands
 
-- `docs/spec.md` — the contract. `docs/intent.md` §8 — the roadmap.
-  `docs/release.md` — how a release reaches PyPI. `docs/adr/` — the reasoning.
-- `pyproject.toml` `[tool.uv] exclude-newer` — the window; `just deps-upgrade` moves it.
-- `just ci` — the full core gate (alias `just check`); `just docling-ci` the
-  bridge, `just ci-all` both. `just docs` — regenerate the tables after any
-  codec name or `lossy_*` change.
+- `.github/workflows/{ci,benchmark,release}.yaml` — gates and reviewed action pins.
+- `tests/test_workflow_policy.py` — draft/ready regression checks.
+- `just check` / `just cov` / `just lock-check` — core validation.
+- `just core-install-check` — extras-free editable install and import.
+- `just e2e LIMIT --dataset NAME` — targeted real HF streaming smoke check.
+- `just docling-ci` / `just ci-all` — bridge / whole-monorepo gates.

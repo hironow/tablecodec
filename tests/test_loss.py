@@ -12,7 +12,7 @@ from tablecodec.loss import LossReport, _classify  # pyright: ignore[reportPriva
 
 
 @pytest.fixture(autouse=True)
-def _seed_builtin_codecs() -> Iterator[None]:  # pyright: ignore[reportUnusedFunction]
+def _seed_builtin_codecs() -> Iterator[None]:
     # Register the FULL builtin set so the exhaustive matrix exercises every
     # classification (SPEC §9: CI runs analyze_loss across the whole product).
     saved = codecs._snapshot()  # type: ignore[attr-defined]

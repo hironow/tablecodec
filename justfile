@@ -73,8 +73,8 @@ e2e-selftest:
 
 # Stream Docling OTSL datasets through the codecs (needs [hf] extra + network).
 # Occasional / local-only. Override LIMIT to sample more/fewer rows per check.
-e2e limit="200":
-    uv run --extra hf python scripts/e2e_hf_check.py --limit {{limit}}
+e2e limit="200" *args:
+    uv run --locked --extra hf python scripts/e2e_hf_check.py --limit {{limit}} {{args}}
 
 # Download the native PubTables-1M VOC structure annotations (~30MB) into
 # input/ for the native pubtables-1m e2e check (download-only dataset).
@@ -142,3 +142,17 @@ clean:
     rm -rf .pytest_cache .ruff_cache .pyright htmlcov .coverage dist build .hypothesis
     find . -type d -name "*.egg-info" -prune -exec rm -rf {} +
     find . -type d -name __pycache__ -prune -exec rm -rf {} +
+
+# Verify the core lock with the same extras as CI
+lock-check:
+    uv sync --locked --extra dev --extra cli --extra teds
+
+# Check draft/ready policy in both pull-request workflows
+check-workflows:
+    uv run --locked pytest tests/test_workflow_policy.py -q
+
+# Verify editable core installation in a fresh environment without extras
+core-install-check:
+    uv venv .venv-check --python 3.11
+    uv pip install --python .venv-check/bin/python -e .
+    .venv-check/bin/python -c "import tablecodec; print(tablecodec.__version__)"

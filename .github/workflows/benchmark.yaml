@@ -12,6 +12,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 concurrency:
@@ -24,6 +25,7 @@ permissions:
 jobs:
   bench:
     name: pytest-benchmark
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -42,7 +44,7 @@ jobs:
       # packages before they execute; sets UV_INDEX_URL/PIP_INDEX_URL to the
       # screened registry for this job). Blocking-only mode, no account needed.
       - name: Route installs through Takumi Guard
-        uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
+        uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
 
       - name: Install (locked; dev + cli extras)
         run: uv sync --locked --extra dev --extra cli

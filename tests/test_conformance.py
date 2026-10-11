@@ -54,7 +54,7 @@ def _ir_to_dict(sample: TableSample) -> dict[str, Any]:
 
 
 @pytest.fixture(autouse=True)
-def _seed_registry() -> Any:  # pyright: ignore[reportUnusedFunction]
+def _seed_registry() -> Any:
     saved = codecs._snapshot()  # type: ignore[attr-defined]
     codecs._restore({})  # type: ignore[attr-defined]
     for codec in BUILTIN_CODECS:

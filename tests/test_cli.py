@@ -16,7 +16,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 @pytest.fixture(autouse=True)
-def _isolate_registry() -> Iterator[None]:  # pyright: ignore[reportUnusedFunction]
+def _isolate_registry() -> Iterator[None]:
     saved = codecs._snapshot()  # type: ignore[attr-defined]
     codecs._restore({})  # type: ignore[attr-defined]
     yield
