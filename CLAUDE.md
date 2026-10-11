@@ -2,7 +2,7 @@
 
 Project-specific guidance for AI assistants and contributors. This file
 **adds to** the global development guidelines (TDD, Tidy First,
-Conventional Commits, `uv`/`just`/`ruff`/`pyright`/`semgrep`, `.yaml`
+Conventional Commits, `uv`/`just`/`ruff`/`ty`/`semgrep`, `.yaml`
 extension, ASCII-only diagrams). It does not repeat them — read those
 first, then the rules here win on any project-specific point.
 
@@ -59,7 +59,7 @@ pre-push hook runs it). Specifically:
 - `just lint` — ruff check, ruff format --check (config in `pyproject.toml`),
   and markdownlint-cli2 over tracked markdown (`.markdownlint-cli2.yaml`
   ignores the generated tables; `docs/adr/` is excluded as immutable).
-- `just type` — pyright **strict** (`pyproject.toml [tool.pyright]`). Zero errors.
+- `just type` — ty (`pyproject.toml [tool.ty]`). Zero errors.
 - `just test` — pytest. Benchmarks are marked `benchmark` and excluded
   by default; run with `just bench`.
 - `just semgrep` — scan `src/` with the core meta-rules (`.semgrep/rules/`).
@@ -131,14 +131,14 @@ Most new work is "add codec X". The established recipe:
   the stdlib `pickle` module into the test tree (keeps the supply-chain
   surface clean). `deepcopy` exercises the same `__reduce_ex__` protocol
   the IR must support.
-- **pyright strict is picky.** Common fixes: type `field(default_factory=
+- **ty is picky.** Common fixes: type `field(default_factory=
   ...)` with a named helper (not a bare `dict`/`list`); narrow
   `json.loads` results with `cast("dict[str, Any]", x)`; give inline
   test payloads an explicit `dict[str, Any]` annotation.
 - **Lint complexity caps.** ruff enforces mccabe (C901) and
   PLR0911/PLR0913. When a function trips them, extract a helper rather
   than suppressing.
-- **CI installs `[dev,cli]`.** pyright must resolve click to type-check
+- **CI installs `[dev,cli]`.** ty must resolve click to type-check
   `cli.py`; the matrix install includes the cli extra. The separate
   `pip install -e .` job verifies the core still installs with no extras.
 

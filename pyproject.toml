@@ -70,8 +70,6 @@ dev = [
     "pytest-benchmark>=4.0",
     "hypothesis>=6.100",
     "jsonschema>=4.20",
-    "ruff>=0.6",
-    "pyright>=1.1.380",
     "coverage>=7.5",
 ]
 
@@ -98,20 +96,11 @@ tablecodec = "tablecodec.cli:main"
 # exempt that one package instead of widening the window for everything:
 # exclude-newer-package = { some-package = false }.
 exclude-newer = "7 days"
+exclude-newer-package = { ruff = false, ty = false }
 
-# The screened index Takumi Guard puts in front of PyPI, declared here so
-# pyproject.toml is the single source of truth for where dependencies resolve.
-# A local `uv lock` or `just deps-upgrade` now records this registry with no
-# environment variable to remember; CI injects the identical URL through
-# `UV_INDEX_URL`, so the two agree rather than fight; and Dependabot reaches the
-# same URL through `registries` in .github/dependabot.yaml.
-#
-# The URL must match `registry = "..."` in uv.lock character for character,
-# trailing slash included. `default = true` replaces PyPI rather than adding to
-# it, which is what makes an unset UV_INDEX_URL resolve the same way CI does.
 [[tool.uv.index]]
-name = "takumi-guard"
-url = "https://pypi.flatt.tech/simple/"
+name = "pypi"
+url = "https://pypi.org/simple"
 default = true
 
 [tool.hatch.build.targets.wheel]
@@ -218,24 +207,11 @@ quote-style = "double"
 indent-style = "space"
 docstring-code-format = true
 
-# Pyright configuration (strict). Kept in pyproject rather than a separate
-# pyrightconfig.json so the project has a single config file. pyright reads
-# [tool.pyright] only when pyrightconfig.json is absent.
-[tool.pyright]
-include = ["src", "tests"]
-exclude = ["**/__pycache__", "**/.venv", "build", "dist", "htmlcov"]
-pythonVersion = "3.11"
-pythonPlatform = "All"
-typeCheckingMode = "strict"
-useLibraryCodeForTypes = true
-reportMissingImports = "error"
-reportMissingTypeStubs = "warning"
-reportUnusedImport = "error"
-reportUnusedVariable = "warning"
-reportDuplicateImport = "error"
-reportImplicitStringConcatenation = "warning"
-reportUntypedFunctionDecorator = "error"
-reportUnnecessaryTypeIgnoreComment = "warning"
-strictListInference = true
-strictDictionaryInference = true
-strictSetInference = true
+[dependency-groups]
+lint = ["ruff==0.17.0", "ty==0.0.86"]
+
+[tool.ty.environment]
+python-version = "3.11"
+
+[tool.ty.terminal]
+error-on-warning = true

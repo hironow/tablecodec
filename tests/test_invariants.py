@@ -21,12 +21,14 @@ from tablecodec._invariants import (
 from tablecodec.ir import GridCell, TableSample
 
 
-def _single_cell_sample(nrows: int = 1, ncols: int = 1, **cell_kwargs: object) -> TableSample:
+def _single_cell_sample(
+    nrows: int = 1, ncols: int = 1, tokens: tuple[str, ...] = ()
+) -> TableSample:
     return TableSample(
         filename="x.png",
         nrows=nrows,
         ncols=ncols,
-        cells=(GridCell(row=0, col=0, rowspan=nrows, colspan=ncols, **cell_kwargs),),  # type: ignore[arg-type]
+        cells=(GridCell(row=0, col=0, rowspan=nrows, colspan=ncols, tokens=tokens),),
     )
 
 

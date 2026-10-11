@@ -137,7 +137,7 @@ data-source decisions and the canonical-vs-real-shape caveats.
 
 ```bash
 just install      # editable install with dev + cli + teds extras
-just ci           # lint + pyright (strict) + pytest + semgrep + docs-check
+just ci           # lint + ty (strict) + pytest + semgrep + docs-check
 just docs         # regenerate the codec/loss tables (docs-check enforces freshness)
 just ci-all       # core + the in-repo tablecodec-docling bridge
 ```
