@@ -14,7 +14,7 @@ FIXTURES = Path(__file__).parent / "fixtures" / "pubtabnet"
 
 
 @pytest.fixture(autouse=True)
-def _seed_registry() -> object:  # pyright: ignore[reportUnusedFunction]
+def _seed_registry() -> object:
     saved = codecs._snapshot()  # type: ignore[attr-defined]
     codecs.register(PubTabNet20Codec())
     yield

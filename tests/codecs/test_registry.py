@@ -36,7 +36,7 @@ class _DummyCodec:
 
 
 @pytest.fixture(autouse=True)
-def _restore_registry() -> Iterator[None]:  # pyright: ignore[reportUnusedFunction]
+def _restore_registry() -> Iterator[None]:
     # given — preserve registry state across tests.
     saved = codecs._snapshot()  # type: ignore[attr-defined]
     try:
