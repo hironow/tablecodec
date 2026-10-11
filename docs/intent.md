@@ -363,7 +363,7 @@ gitignore 下の `private/PYPI_RELEASE_STEPS.md`。
 - リリース時に `CHANGELOG.md` の `[Unreleased]` を `[0.0.N]` へ昇格
 - `.github/workflows/release.yaml`（`v*` タグで発火、Trusted Publishing / OIDC）
   — サプライチェーン硬化済み（全 action full-SHA pin / SLSA build provenance /
-  PEP 740 attestations / skip-existing / Takumi Guard 経由の screened build /
+  PEP 740 attestations / skip-existing / 公式 PyPI 経由の build /
   Dependabot 7日 cooldown、ADR 0014）。v0.0.18 で初公開・全ジョブ稼働確認済み
 - README に installation / basic usage / SPEC リンク（済）
 - （任意）GitHub Discussions / Issues テンプレート

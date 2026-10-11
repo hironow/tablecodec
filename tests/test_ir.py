@@ -25,7 +25,7 @@ class TestGridCell:
 
         # when / then
         with pytest.raises((AttributeError, TypeError)):
-            cell.row = 1  # type: ignore[misc]  # reason: verifying frozen contract
+            cell.row = 1  # ty: ignore[invalid-assignment]  # Tests the frozen runtime contract.
 
     def test_has_slots(self) -> None:
         # given
@@ -107,7 +107,7 @@ class TestTableSample:
 
         # when / then
         with pytest.raises((AttributeError, TypeError)):
-            sample.filename = "y.png"  # type: ignore[misc]  # reason: verifying frozen contract
+            sample.filename = "y.png"  # ty: ignore[invalid-assignment]  # Tests the frozen runtime contract.
 
     def test_has_slots(self) -> None:
         # given

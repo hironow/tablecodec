@@ -44,27 +44,22 @@ Repository = "https://github.com/hironow/tablecodec"
 # instead of silently losing it. See ADR 0015 for why the window is relative.
 [tool.uv]
 exclude-newer = "7 days"
+exclude-newer-package = { ruff = false, ty = false }
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
 
 # Develop against the in-repo tablecodec (monorepo, ADR 0013). This keeps the
 # bridge's docling-core dependency out of the core repo's environment.
 [tool.uv.sources]
 tablecodec = { path = "../../", editable = true }
 
-# The same screened index the core package declares. This is a separate uv
-# project with its own lockfile, so it needs its own declaration -- the root
-# pyproject.toml does not reach it. `default = true` replaces PyPI rather than
-# adding to it, so `uv lock` here records the screened registry with no
-# environment variable set, matching the core.
-[[tool.uv.index]]
-name = "takumi-guard"
-url = "https://pypi.flatt.tech/simple/"
-default = true
-
 [dependency-groups]
+lint = ["ruff==0.17.0", "ty==0.0.86"]
 dev = [
     "pytest>=8.0",
-    "pyright>=1.1.380",
-    "ruff>=0.6",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -91,3 +86,9 @@ extend-ignore = ["E501", "RUF002", "RUF003"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["tablecodec", "tablecodec_docling"]
+
+[tool.ty.environment]
+python-version = "3.11"
+
+[tool.ty.terminal]
+error-on-warning = true

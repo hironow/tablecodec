@@ -66,8 +66,7 @@ ever attempted on fully built, attested artifacts. Every job is guarded by
 `github.repository == 'hironow/tablecodec'`, and the concurrency group never
 cancels a run mid-publish.
 
-1. **build** — checkout, `astral-sh/setup-uv` pinned to uv 0.11.17, then Takumi
-   Guard before any resolution. `uv python install 3.11`, then `uv build`. The
+1. **build** — checkout, `astral-sh/setup-uv` pinned to uv 0.11.17. `uv python install 3.11`, then `uv build`. The
    next step compares the tag against the version in the built wheel filename
    and fails unless they match. `dist/` is uploaded as one artifact that the
    three downstream jobs each download.
@@ -86,30 +85,15 @@ cancels a run mid-publish.
 `benchmark.yaml` is **not on this path**. It runs pytest-benchmark on pushes and
 pull requests to `main` and uploads a JSON artifact. It gates nothing.
 
-### Installs route through Takumi Guard
+### Dependencies resolve from official PyPI
 
-Everything that resolves a Python dependency uses one screened index,
-`https://pypi.flatt.tech/simple/` — a proxy that blocks known-malicious packages
-before they execute. It is declared in three places, and each must match
-`registry = "..."` in `uv.lock` character for character:
+The core and Docling bridge declare `https://pypi.org/simple` as their default
+index. Their separate locks record official PyPI and files.pythonhosted.org URLs.
+CI, release builds, and Dependabot use that same registry without a proxy action
+or registry credentials. The seven-day resolution window remains in both
+projects. Ruff and ty are pinned in their lint groups and exempt from the window.
 
-- `pyproject.toml` — `[[tool.uv.index]]` with `default = true`. A local
-  `uv lock` or `just deps-upgrade` therefore records the screened registry with
-  no environment variable set; forgetting one is no longer a way to corrupt the
-  lock. `packages/tablecodec-docling` is a separate uv project with its own
-  lockfile, so it carries the same declaration, and `just docling-ci` runs
-  `--locked` to keep it honest.
-- The workflows — `flatt-security/setup-takumi-guard-pypi`, blocking-only mode,
-  sets `UV_INDEX_URL` and `PIP_INDEX_URL` for the CI test job, the benchmark
-  job, and the release build job. Same URL, so it agrees with `pyproject.toml`
-  rather than overriding it.
-- `.github/dependabot.yaml` — a `python-index` registry with `replaces-base`.
-  Dependabot reaches no registry it has not been given, so without this it
-  resolves against pypi.org, rewrites every registry line in `uv.lock`, and
-  `uv sync --locked` rejects the result.
-
-Consumers are unaffected: `pip install tablecodec` reaches PyPI directly, and
-the sdist ships no lockfile.
+Consumers install the zero-dependency core from PyPI. The sdist ships no lockfile.
 
 ## First release / bootstrap
 
@@ -146,7 +130,7 @@ live settings; the workflow wins on any disagreement.
   `CLAUDE.md` lists what it covers. CI calls the same recipes rather than its
   own copies of the commands, so the justfile is the only place that defines
   what lint and type checking cover. CI pins semgrep to 1.175.0 and installs it
-  through the screened index; Dependabot does not track it, so raising the
+  through official PyPI; Dependabot does not track it, so raising the
   version is a deliberate edit — pick one the proxy carries and that is older
   than the seven-day window.
 - `just ci-all` if anything under `packages/` changed.
@@ -172,7 +156,7 @@ outside a later window. What the relative form gives up is time-independent
 re-derivation — locking from scratch on two different days can pick different
 versions. The lock is the reproducibility artifact.
 
-**`just deps-upgrade` moves dependencies forward**, through the screened index
+**`just deps-upgrade` moves dependencies forward**, through official PyPI
 and verified with `uv sync --locked`. `--upgrade` forces the fresh resolution
 that recomputes the window; a plain `uv lock` keeps existing pins.
 

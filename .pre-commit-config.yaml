@@ -24,13 +24,13 @@ repos:
       # to match `just lint` (scripts/ is ungated; packages/ has its own gate).
       - id: ruff
         name: ruff (check --fix)
-        entry: uv run ruff check --fix --force-exclude
+        entry: uv run --group lint ruff check --fix --force-exclude
         language: system
         types: [python]
         files: ^(src|tests|scripts)/
       - id: ruff-format
         name: ruff format
-        entry: uv run ruff format --force-exclude
+        entry: uv run --group lint ruff format --force-exclude
         language: system
         types: [python]
         files: ^(src|tests|scripts)/
@@ -46,9 +46,9 @@ repos:
         files: '\.md$'
         exclude: '^(docs/adr/|docs/(format_support|loss_matrix)\.md$|conformance/|input/|output/|private/)'
 
-      - id: pyright
-        name: pyright (strict)
-        entry: uv run --extra teds pyright src/ tests/
+      - id: ty
+        name: ty
+        entry: uv run --locked --group lint --extra teds ty check src/ tests/
         language: system
         types: [python]
         pass_filenames: false

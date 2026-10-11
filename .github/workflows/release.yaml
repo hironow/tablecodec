@@ -51,14 +51,6 @@ jobs:
           enable-cache: true
           version: "0.11.17"
 
-      # Route the build-backend (hatchling) resolution through Takumi Guard
-      # (blocks known-malicious packages before they execute; sets
-      # UV_INDEX_URL/PIP_INDEX_URL to the screened registry for this job).
-      # Blocking-only mode, no account needed. Must precede `uv build` so the
-      # published artifact is built only from screened build dependencies.
-      - name: Route installs through Takumi Guard
-        uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
-
       - name: Set up Python 3.11
         run: uv python install 3.11
 
@@ -70,7 +62,10 @@ jobs:
           GIT_REF: ${{ github.ref }}
         run: |
           tag_version="${GIT_REF#refs/tags/v}"
-          built=$(ls dist/*.whl | sed -E 's/.*tablecodec-([0-9.]+)-.*/\1/')
+          wheels=(dist/tablecodec-*.whl)
+          test "${#wheels[@]}" -eq 1
+          built="${wheels[0]#dist/tablecodec-}"
+          built="${built%%-*}"
           echo "tag=$tag_version built=$built"
           test "$tag_version" = "$built"
 

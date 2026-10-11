@@ -178,7 +178,7 @@ class TestProfiles:
     def test_validate_rejects_a_non_profile(self) -> None:
         bad: object = "DEFAULT"  # a name string, not a Profile instance
         with pytest.raises(TypeError):
-            validate(_universal_sample(), profile=bad)  # type: ignore[arg-type]
+            validate(_universal_sample(), profile=bad)  # ty: ignore[invalid-argument-type]  # Tests rejection of invalid runtime input.
 
 
 # ---------- §9 loss analysis ----------

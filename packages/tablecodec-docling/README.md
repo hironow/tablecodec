@@ -14,10 +14,10 @@ entry-point group, so once installed it is discovered by
 ```python
 from tablecodec import codecs
 
-codecs.load_plugins()                     # discovers docling-tables
+codecs.load_plugins()  # discovers docling-tables
 codec = codecs.get("docling-tables")
-with open("docs.jsonl", encoding="utf-8") as f:   # one DoclingDocument per line
-    for sample in codec.read(f):                  # one TableSample per table
+with open("docs.jsonl", encoding="utf-8") as f:  # one DoclingDocument per line
+    for sample in codec.read(f):  # one TableSample per table
         ...
 ```
 

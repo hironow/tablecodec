@@ -311,7 +311,7 @@ class TestValidateRaisesOnUnknownProfile:
 
         # when / then
         with pytest.raises((ValueError, TypeError, AttributeError)):
-            validate(sample, profile="not-a-profile")  # type: ignore[arg-type]
+            validate(sample, profile="not-a-profile")  # ty: ignore[invalid-argument-type]  # Tests rejection of invalid runtime input.
 
 
 class TestValidationErrorReExported:
