@@ -9,6 +9,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 concurrency:
@@ -21,6 +22,7 @@ permissions:
 jobs:
   test:
     name: test (py${{ matrix.python-version }} / ${{ matrix.os }})
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -96,6 +98,7 @@ jobs:
 
   semgrep:
     name: semgrep (rules + core scan)
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -135,6 +138,7 @@ jobs:
 
   pip-install-check:
     name: pip install -e .
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -145,9 +149,16 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.11.17"
+
+      - name: Route installs through Takumi Guard
+        uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
+
+      - name: Install just
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+
       - name: Install (no extras) — verifies core stays stdlib-only at import time
-        run: |
-          python -m venv .venv-check
-          .venv-check/bin/python -m pip install --upgrade pip
-          .venv-check/bin/python -m pip install -e .
-          .venv-check/bin/python -c "import tablecodec; print(tablecodec.__version__)"
+        run: just core-install-check
