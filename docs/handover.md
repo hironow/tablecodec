@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-10-11 (JST)
+**Last updated:** 2026-10-12 (JST)
 **Updated by:** Codex
 
 ## Current State
@@ -33,5 +33,9 @@ shutdown; this was reproduced on the previous main and remains outside CI.
 
 ## Next Actions
 
-Verify PR CI, squash merge, then verify main CI and the Actions allowlist.
+PR #73 updates mise-action to 5.1.1. Its original head passed normal CI but
+had no default CodeQL analysis for either Python or Actions. A new commit
+triggered both analyses without changing the security configuration.
+
+Verify all checks on the latest PR head, squash merge, then verify main CI.
 Preserve accepted ADRs as historical records.
