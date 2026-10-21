@@ -850,7 +850,7 @@ provides-extras = ["teds", "cli", "hf", "all", "dev"]
 [package.metadata.requires-dev]
 lint = [
     { name = "ruff", specifier = "==0.17.0" },
-    { name = "ty", specifier = "==0.0.86" },
+    { name = "ty", specifier = "==0.0.87" },
 ]
 
 [[package]]
