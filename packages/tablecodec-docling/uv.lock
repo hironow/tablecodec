@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
@@ -1182,7 +1182,7 @@ provides-extras = ["teds", "cli", "hf", "all", "dev"]
 [package.metadata.requires-dev]
 lint = [
     { name = "ruff", specifier = "==0.17.0" },
-    { name = "ty", specifier = "==0.0.87" },
+    { name = "ty", specifier = "==0.0.95" },
 ]
 
 [[package]]
