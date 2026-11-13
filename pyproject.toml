@@ -208,7 +208,7 @@ indent-style = "space"
 docstring-code-format = true
 
 [dependency-groups]
-lint = ["ruff==0.17.3", "ty==0.0.96"]
+lint = ["ruff==0.17.4", "ty==0.0.99"]
 
 [tool.ty.environment]
 python-version = "3.11"
